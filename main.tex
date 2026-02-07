@@ -1,0 +1,104 @@
+\documentclass{article}
+
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amsthm}
+\newtheorem{definition}{Definition}
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}{Lemma}
+\newtheorem{claim}{Claim}
+\usepackage{authblk}
+\usepackage{cryptocode}
+\usepackage{csquotes}
+\usepackage{enumerate}
+\usepackage{float}
+\usepackage{framed}
+\usepackage[colorlinks]{hyperref}
+\def\tmp#1#2#3{
+  \definecolor{Hy#1color}{#2}{#3}
+  \hypersetup{#1color=Hy#1color}}
+\tmp{link}{HTML}{800006}
+\tmp{cite}{HTML}{2E7E2A} % better default colors for hyperref links; see https://tex.stackexchange.com/a/525297
+\usepackage[capitalise]{cleveref}
+
+\newcommand{\group}{\mathbb{G}}
+\newcommand{\Z}{\mathbb{Z}}
+
+\newcommand{\negl}{\mathsf{negl}}
+
+\newcommand{\adv}{\mathcal{A}}
+\newcommand{\env}{\mathcal{Z}}
+\renewcommand{\sim}{\mathcal{S}}
+\newcommand{\red}{\mathcal{R}}
+\newcommand{\func}{\mathcal{F}}
+\newcommand{\Fpake}{\func_\mathrm{PAKE}}
+
+\newcommand{\Adv}{\mathbf{Adv}}
+\newcommand{\Dist}{\mathbf{Dist}}
+
+\newcommand{\ICEnc}{\mathcal{E}}
+\newcommand{\ICDec}{\mathcal{D}}
+
+\newcommand{\pw}{\mathsf{pw}}
+
+\newcommand{\NewSession}{\mathsf{NewSession}}
+\newcommand{\TestPwd}{\mathsf{TestPwd}}
+\newcommand{\NewKey}{\mathsf{NewKey}}
+
+\newcommand{\fresh}{\mathsf{fresh}}
+\newcommand{\compromised}{\mathsf{compromised}}
+\newcommand{\interrupted}{\mathsf{interrupted}}
+\newcommand{\completed}{\mathsf{completed}}
+
+\interfootnotelinepenalty=10000 % force footnotes to appear on the same page
+
+\begin{document}
+
+\title{The Most Efficient Protocol for PAKE: \\
+\medskip
+\large{What Exact Stuff Do You Need to Hash at the End?}}
+
+\author{Jiayu Xu}
+\affil{Oregon State University, \texttt{xujiay@oregonstate.edu}}
+\date{}
+
+\maketitle
+
+\section{Introduction}
+
+\section{Security Analysis of Basic OEKE}
+
+\subsection{The Simulator}
+\subsubsection{Simulation Strategy}
+A large portion of the simulator is routine; below we explain the idea behind the non-trivial parts.
+\paragraph{Extracting password guess from malicious $P$.}
+When the adversary $\adv$ sends a message $(s^*,T^*)$ to $P'$, the simulator $\sim$ must extract a password guess (if any) and send a corresponding $\TestPwd$ command to $\Fpake$. There are two types of attack, which need to be addressed separately:
+\begin{enumerate}
+  \item \emph{``Normal'' online attack:} $\adv$ executes $P$'s algorithm on a password guess $\pw^*$. That is, $\adv$ samples public key $pk^*$ and randomness $r^*$, computes
+      \begin{align*}
+      R^* &:= H_1(\pw^*,r^*), &T^* &:= pk^* \cdot R^*, \\
+      t^* &:= H_2(\pw^*,T^*), &s^* &:= t^* \oplus r^*,
+      \end{align*}
+      and sends $(s^*,T^*)$ to $P'$. \\
+      It takes a while to realize how to extract $\pw^*$ from $(s^*,T^*)$. First, $\sim$ should scan all $H_2(\star,T^*)$ queries, which yields multiple $\pw^*$ values (and multiple $t^*$ values); $\sim$ must decide which one is the ``actual'' password guess. This can be done via the following. For each such $(\pw^*,t^*)$ pair, $\sim$ computes the corresponding $r^* := s^* \oplus t^*$, and checks if (and when) $H_1(\pw^*,r^*)$ was queried. \emph{With overwhelming probability, there is at most one such $H_1$ query made before the $H_2(\pw^*,T^*)$ query}, from which $\sim$ can extract the ``actual'' password guess $\pw^*$. (This special $H_1(\pw^*,r^*)$ query is called the ``anchor query'' in \cite{CCS:McQRosRoy20,EC:JanRoyXu25}.)
+  \item \emph{Related key attack:} This attack works only after $\adv$ receive an honest $(s,T)$ pair from $P$. $\adv$ skips sampling $pk^*$ or $r^*$; instead, $\adv$ picks any $\Delta \in \group$, computes $T^* := T \cdot \Delta$ and
+      \begin{align*}
+      t^* &:= H_2(\pw^*,T), &(t^*)' &:= H_2(\pw^*,T^*), \\
+      \delta &:= t^* \oplus (t')^*, &s^* &:= s \oplus \delta,
+      \end{align*}
+      and sends $(s^*,T^*)$ to $P'$. \\
+      Let us first explain what $\adv$ is trying to achieve here. The same randomness $r$ yields two valid messages, $(s,T)$ and $(s^*,T^*)$, such that
+      \[
+      s \oplus s^* = H_2(\pw,T) \oplus H_2(\pw,T^*),
+      \]
+      which allows $\adv$ to pick $T^*$ and ``reverse engineer'' the corresponding $s^*$ if it guesses $\pw$ correctly. $(s^*,T^*)$ implicitly encrypts $pk^* = T^*/H_1(\pw,r)$, which $\adv$ can compute as $pk \cdot (T^*/T)$. \\
+      To extract $\pw^*$ from $(s^*,T^*)$, $\sim$ should scan all $H_2(\star,T)$ and $H_2(\star,T^*)$ queries (which yield multiple candidate $\pw^*$ values) and check which one satisfies
+      \[
+      H_2(\pw^*,T) \oplus H_2(\pw^*,T^*) = s \oplus s^*.
+      \]
+      With overwhelming probability, at most one $\pw^*$ will satisfy this equation.
+\end{enumerate}
+
+\bibliographystyle{alpha}
+\bibliography{bib.bib}
+\end{document} 
