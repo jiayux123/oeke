@@ -111,7 +111,7 @@ When the adversary $\adv$ sends a message $(s^*,T^*)$ to $P'$, if it is differen
 \paragraph{Extracting password guess from malicious $P'$.}
 When the adversary $\adv$ sends a message $(c^*,\tau^*)$ to $P$, if $\adv$ is not passive (i.e., it is not the case that $(s^*,T^*) = (s,T)$ \emph{and} $(c^*,\tau^*) = (c,\tau)$), the simulator $\sim$ must extract a password guess (if any) and send a corresponding $\TestPwd$ command to $\Fpake$.
 
-$\sim$ should find the $\Htag$ query whose result is $\tau^*$, which includes $(\pw^*,pk^*,K^*)$. However, $\pw^*$ constitutes a password guess only if it is consistent with $pk^*$ and $K^*$, i.e., $K^* = \Decap(sk^*,c^*)$ for $sk^*$ corresponding to $pk^*$. $\sim$ can check this condition because it has stored the correspondence between $\pw^*$ and $(pk^*,sk^*)$, and can use $sk^*$ to check if the equation holds. (This extraction strategy does not work anymore if $\pw^*$ is not included in $\Htag$. In later sections we will explain how to simulate the ``not hashing $\pw$'' version of the protocol.)
+$\sim$ should find the $\Htag$ query whose result is $\tau^*$, which includes $(\pw^*,pk^*,K^*)$. However, $\pw^*$ constitutes a password guess only if it is consistent with $pk^*$ and $K^*$, i.e., $K^* = \Decap(sk^*,c^*)$ for $sk^*$ corresponding to $pk^*$. $\sim$ can check this condition because it has stored the correspondence between $\pw^*$ and $(pk^*,sk^*)$ (see the ``Simulating honest $P$-to-$P'$ message'' paragraph above), and can use $sk^*$ to check if the equation holds. (This extraction strategy does not work anymore if $\pw^*$ is not included in $\Htag$. In later sections we will explain how to simulate the ``not hashing $\pw$'' version of the protocol.)
 
 \bibliographystyle{alpha}
 \bibliography{bib.bib}
