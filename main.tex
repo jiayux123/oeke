@@ -36,8 +36,12 @@
 \newcommand{\Adv}{\mathbf{Adv}}
 \newcommand{\Dist}{\mathbf{Dist}}
 
-\newcommand{\ICEnc}{\mathcal{E}}
-\newcommand{\ICDec}{\mathcal{D}}
+\newcommand{\Gen}{\mathsf{Gen}}
+\newcommand{\Encap}{\mathsf{Encap}}
+\newcommand{\Decap}{\mathsf{Decap}}
+
+\newcommand{\Hkey}{H_\mathsf{key}}
+\newcommand{\Htag}{H_\mathsf{tag}}
 
 \newcommand{\pw}{\mathsf{pw}}
 
@@ -66,13 +70,19 @@
 
 \section{Introduction}
 
-\section{Security Analysis of Basic OEKE}
+\section{Security Analysis of the ``Hash Everything'' Version}
 
 \subsection{The Simulator}
 \subsubsection{Simulation Strategy}
 A large portion of the simulator is routine; below we explain the idea behind the non-trivial parts.
+\paragraph{Simulating honest $P$-to-$P'$ message.}
+When $P$'s session begins, $\sim$ must simulate its message $(s,T)$ to $P'$. This can be easily done: just sample $(s,T)$ at random. However, every time $\adv$ queries $H_2(\pw',T)$ (let the result be $t'$), $\sim$ needs to generate a KEM key pair $(pk',sk')$ for later use (see the ``Extracting password guess from malicious $P'$'' paragraph below) and make sure that $(pk',sk')$ are consistent with the RO queries. This can be done as follows: $\sim$ computes
+\[
+r' := s \oplus t', \quad R' := T/pk',
+\]
+and programs $H_1(\pw',r') := R'$. This also allows $\sim$ to store the association between $\pw'$ and $(pk',sk')$. (Note that $(pk',sk')$ need to be freshly generated every time $\adv$ queries $H_2(\star,T)$; otherwise $R'$ never changes and $\adv$ can easily find collisions in $H_1$.)
 \paragraph{Extracting password guess from malicious $P$.}
-When the adversary $\adv$ sends a message $(s^*,T^*)$ to $P'$, the simulator $\sim$ must extract a password guess (if any) and send a corresponding $\TestPwd$ command to $\Fpake$. There are two types of attack, which need to be addressed separately:
+When the adversary $\adv$ sends a message $(s^*,T^*)$ to $P'$, if it is different from the honest message $(s,T)$, the simulator $\sim$ must extract a password guess (if any) and send a corresponding $\TestPwd$ command to $\Fpake$. There are two types of attack, which need to be addressed separately:
 \begin{enumerate}
   \item \emph{``Normal'' online attack:} $\adv$ executes $P$'s algorithm on a password guess $\pw^*$. That is, $\adv$ samples public key $pk^*$ and randomness $r^*$, computes
       \begin{align*}
@@ -98,6 +108,10 @@ When the adversary $\adv$ sends a message $(s^*,T^*)$ to $P'$, the simulator $\s
       \]
       With overwhelming probability, at most one $\pw^*$ will satisfy this equation.
 \end{enumerate}
+\paragraph{Extracting password guess from malicious $P'$.}
+When the adversary $\adv$ sends a message $(c^*,\tau^*)$ to $P$, if $\adv$ is not passive (i.e., it is not the case that $(s^*,T^*) = (s,T)$ \emph{and} $(c^*,\tau^*) = (c,\tau)$), the simulator $\sim$ must extract a password guess (if any) and send a corresponding $\TestPwd$ command to $\Fpake$.
+
+$\sim$ should find the $\Htag$ query whose result is $\tau^*$, which includes $(\pw^*,pk^*,K^*)$. However, $\pw^*$ constitutes a password guess only if it is consistent with $pk^*$ and $K^*$, i.e., $K^* = \Decap(sk^*,c^*)$ for $sk^*$ corresponding to $pk^*$. $\sim$ can check this condition because it has stored the correspondence between $\pw^*$ and $(pk^*,sk^*)$, and can use $sk^*$ to check if the equation holds. (This extraction strategy does not work anymore if $\pw^*$ is not included in $\Htag$. In later sections we will explain how to simulate the ``not hashing $\pw$'' version of the protocol.)
 
 \bibliographystyle{alpha}
 \bibliography{bib.bib}
