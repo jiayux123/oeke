@@ -54,6 +54,8 @@
 \newcommand{\interrupted}{\mathsf{interrupted}}
 \newcommand{\completed}{\mathsf{completed}}
 
+\newcommand{\qtag}{q_\mathsf{tag}}
+
 \interfootnotelinepenalty=10000 % force footnotes to appear on the same page
 
 \begin{document}
@@ -69,6 +71,9 @@
 \maketitle
 
 \section{Introduction}
+
+\section{Preliminaries}
+\label{sec:prelim}
 
 \section{Security Analysis of the ``Hash Everything'' Version}
 
@@ -111,7 +116,49 @@ When the adversary $\adv$ sends a message $(s^*,T^*)$ to $P'$, if it is differen
 \paragraph{Extracting password guess from malicious $P'$.}
 When the adversary $\adv$ sends a message $(c^*,\tau^*)$ to $P$, if $\adv$ is not passive (i.e., it is not the case that $(s^*,T^*) = (s,T)$ \emph{and} $(c^*,\tau^*) = (c,\tau)$), the simulator $\sim$ must extract a password guess (if any) and send a corresponding $\TestPwd$ command to $\Fpake$.
 
-$\sim$ should find the $\Htag$ query whose result is $\tau^*$, which includes $(\pw^*,pk^*,K^*)$. However, $\pw^*$ constitutes a password guess only if it is consistent with $pk^*$ and $K^*$, i.e., $K^* = \Decap(sk^*,c^*)$ for $sk^*$ corresponding to $pk^*$. $\sim$ can check this condition because it has stored the correspondence between $\pw^*$ and $(pk^*,sk^*)$ (see the ``Simulating honest $P$-to-$P'$ message'' paragraph above), and can use $sk^*$ to check if the equation holds. (This extraction strategy does not work anymore if \emph{any} of $\pw^*,pk^*,K^*$ is not included in $\Htag$. In later sections we will explain how to simulate other versions of the protocol.)
+$\sim$ should find the $\Htag$ query whose result is $\tau^*$, which includes $(\pw^*,pk^*,K^*)$. However, $\pw^*$ constitutes a password guess only if it is consistent with $pk^*$ and $K^*$, i.e., $K^* = \Decap(sk^*,c^*)$ for $sk^*$ corresponding to $pk^*$. $\sim$ can check this condition because it has stored the correspondence between $\pw^*$ and $(pk^*,sk^*)$ (see the ``Simulating honest $P$-to-$P'$ message'' paragraph above), and can use $sk^*$ to check if the equation holds. (This extraction strategy does not work anymore if \emph{any} of $\pw^*,pk^*,c^*$ is not included in $\Htag$. In later sections we will explain how to simulate other versions of the protocol.)
+
+\subsubsection{Formal Description of the Simulator}
+\label{sec:sim}
+
+\subsection{Hybrid Argument}
+We now prove that for any PPT environment $\env$, the simulator $\sim$ in \Cref{sec:sim} generates an ideal-world view indistinguishable from $\env$'s real-world view. The sequence of games start from the real world (Game 0) and ends at the ideal world.
+
+\medskip\noindent\emph{Game 0:} This is the real world. Recall that the passwords of $P$ and $P'$ are $\pw$ and $\pw'$, respectively; the flow of events is:
+\begin{itemize}
+  \item $P$ sends $(s,T)$ to $P'$;
+  \item It is intercepted by the man-in-the-middle adversary $\adv$, who sends $(s^*,T^*)$ (which may or may not be equal to $(s,T)$) to $P'$;
+  \item $P'$ outputs session key $SK'$ and sends $(c,\tau')$ to $P$;
+  \item It is again intercepted by $\adv$, who sends $(c^*,\tau^*)$ to $P$;
+  \item $P$ computes $\tau$. If $\tau^* = \tau$ then $P$ outputs $SK$, otherwise $P$ outputs $\bot$.
+\end{itemize}
+(Note that there are three $\tau$ values: $\tau'$ computed and sent by $P'$, $\tau^*$ sent by $\adv$, and $\tau$ computed by $P$ used in $P$'s check.)
+
+\medskip\noindent\emph{Game 1:} In the case where $\pw = \pw' \land (s^*,T^*) = (s,T) \land c^* = c$, do the following:
+\begin{itemize}
+  \item If $\tau^* = \tau'$ (i.e., $\adv$ is passive), set $SK := SK'$.
+  \item If $\tau^* \neq \tau'$, set $SK := \bot$.
+\end{itemize}
+By correctness of the protocol (see \Cref{sec:prelim}), in Game 0 $\tau = \tau'$ except with probability $\Adv^\text{correctness}$. This means that except with probability $\Adv^\text{correctness}$, $P$'s check $\tau^* \stackrel{?}{=} \tau$ in Game 0 is equivalent to $P$'s check $\tau^* \stackrel{?}{=} \tau'$ in Game 1. If the check passes then both games set $SK := \Hkey(\pw,pk,c,K)$, otherwise both games set $SK := \bot$. We have
+\[
+\Dist_\env^{0,1} = \Adv^\text{correctness}.
+\]
+
+\medskip\noindent\emph{Game 2:} In the case where $\tau^* \neq \tau'$, set $SK := \bot$ if either of the following happens:
+\begin{itemize}
+  \item $\adv$ never makes an $\Htag$ query resulting in $\tau^*$, or
+  \item $\adv$ makes two different $\Htag(\pw,pk,c^*,\star)$ queries, both resulting in $\tau^*$.
+\end{itemize}
+
+In the first event, Game 1 and Game 2 differ if $\adv$ never makes an $\Htag$ query resulting in $\tau^*$, yet $P$'s check $\tau^* \stackrel{?}{=} \Htag(\pw,pk,c^*,K)$ passes. Clearly,
+\begin{itemize}
+  \item $\adv$ does not query $\Htag(\pw,pk,c^*,K)$ (otherwise the result is $\tau^*$), and
+  \item $P'$ does not query $\Htag(\pw,pk,c^*,K)$ (otherwise $\tau' = \Htag(\pw,pk,c^*,K) = \tau^*$).
+\end{itemize}
+So $\Htag(\pw,pk,c^*,K)$ is independent of $\adv$'s view, and the probability that $\adv$ sends $\tau^* = \Htag(\pw,pk,c^*,K)$ is $1/2^n$. The second event is collision in $\Htag$, whose probability is upper-bounded by $\qtag(\qtag-1)/2^{n+1}$. Overall,
+\[
+\Dist_\env^{1,2} = \frac{\qtag(\qtag-1)+2}{2^{n+1}}.
+\]
 
 \bibliographystyle{alpha}
 \bibliography{bib.bib}
