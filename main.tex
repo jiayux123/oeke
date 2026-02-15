@@ -40,6 +40,8 @@
 \newcommand{\Encap}{\mathsf{Encap}}
 \newcommand{\Decap}{\mathsf{Decap}}
 
+\newcommand{\PC}{\mathsf{PC}}
+
 \newcommand{\Hkey}{H_\mathsf{key}}
 \newcommand{\Htag}{H_\mathsf{tag}}
 
@@ -54,7 +56,10 @@
 \newcommand{\interrupted}{\mathsf{interrupted}}
 \newcommand{\completed}{\mathsf{completed}}
 
+\newcommand{\qkey}{q_\mathsf{key}}
 \newcommand{\qtag}{q_\mathsf{tag}}
+
+\newcommand{\Query}{\mathsf{Query}}
 
 \interfootnotelinepenalty=10000 % force footnotes to appear on the same page
 
@@ -146,18 +151,46 @@ By correctness of the protocol (see \Cref{sec:prelim}), in Game 0 $\tau = \tau'$
 
 \medskip\noindent\emph{Game 2:} In the case where $\tau^* \neq \tau'$, set $SK := \bot$ if either of the following happens:
 \begin{itemize}
-  \item $\adv$ never makes an $\Htag$ query resulting in $\tau^*$, or
+  \item $\adv$ never makes an $\Htag(\pw,pk,c^*,\star)$ query resulting in $\tau^*$, or
   \item $\adv$ makes two different $\Htag(\pw,pk,c^*,\star)$ queries, both resulting in $\tau^*$.
 \end{itemize}
 
-In the first event, Game 1 and Game 2 differ if $\adv$ never makes an $\Htag$ query resulting in $\tau^*$, yet $P$'s check $\tau^* \stackrel{?}{=} \Htag(\pw,pk,c^*,K)$ passes. Clearly,
+In the first event, Game 1 and Game 2 differ if $\adv$ never makes an $\Htag(\pw,pk,c^*,\star)$ query resulting in $\tau^*$, yet $P$'s check $\tau^* \stackrel{?}{=} \Htag(\pw,pk,c^*,K)$ passes. Clearly,
 \begin{itemize}
   \item $\adv$ does not query $\Htag(\pw,pk,c^*,K)$ (otherwise the result is $\tau^*$), and
   \item $P'$ does not query $\Htag(\pw,pk,c^*,K)$ (otherwise $\tau' = \Htag(\pw,pk,c^*,K) = \tau^*$).
 \end{itemize}
 So $\Htag(\pw,pk,c^*,K)$ is independent of $\adv$'s view, and the probability that $\adv$ sends $\tau^* = \Htag(\pw,pk,c^*,K)$ is $1/2^n$. The second event is collision in $\Htag$, whose probability is upper-bounded by $\qtag(\qtag-1)/2^{n+1}$. Overall,
 \[
-\Dist_\env^{1,2} = \frac{\qtag(\qtag-1)+2}{2^{n+1}}.
+\Dist_\env^{1,2} \leq \frac{\qtag(\qtag-1)+2}{2^{n+1}}.
+\]
+
+\noindent\emph{Game 3:} In the case where $\pw = \pw' \land (s^*,T^*) = (s,T)$, sample  $SK',\tau' \gets \{0,1\}^n$. ($c$ is still computed as in Game 2.)
+
+Let $\Query_1$ be the event that $\adv$ queries \emph{either} $\Hkey(\pw,pk,c,K')$ \emph{or} $\Htag(\pw,pk,c,K')$. Clearly Game 2 and Game 3 are identical unless $\Query_1$ happens. We upper-bound $\Pr[\Query_1]$ via a reduction $\red_\text{OW-1PCA1}$ to the OW-1PCA property of KEM:
+
+\bigskip\noindent\textbf{\underline{Reduction $\red_\mathrm{OW-1PCA1}$}:} \quad \textcolor[gray]{0.5}{// \fbox{boxed text} indicates the single $\PC$ oracle query; same for reductions below}
+
+\medskip\noindent
+Sample $i \gets [\qkey+\qtag]$ as a guess that $\adv$'s $i$-th $\Hkey$ or $\Htag$ query triggers $\Query_1$. \\
+On input $(pk,c)$,
+\begin{enumerate}
+  \item Invoke $\env$. On $(\NewSession, sid, P, P', \pw, \text{``initiator''})$ from $\env$, run $P$'s algorithm to compute $(s,T)$. (Note that computing $(s,T)$ does not require knowing $sk$.) Send $(s,T)$ to $\adv$.
+  \item On $(\NewSession, sid, P', P, \pw', \text{``respondent''})$ from $\env$ and $(s^*,T^*)$ from $\adv$, if $\neg(\pw = \pw' \land (s^*,T^*) = (s,T))$, abort. Otherwise sample $SK',\tau' \gets \{0,1\}^n$, output $SK'$ to $\env$, and send $(c,\tau')$ to $\adv$. ($c$ is part of $\red_\text{OW-PCA1}$'s inputs.)
+  \item On $(c^*,\tau^*)$ from $\adv$,
+      \begin{enumerate}
+        \item If $c^* = c$, do what's described in Game 1.
+        \item If $c^* \neq c$, find $\adv$'s $\Htag(\pw,pk,c^*,K^*)$ query whose result is $\tau^*$. If there is none or more than one, set $SK := \bot$. (This matches Game 2.)
+        \item \fbox{Query $\PC(sk,c^*,K^*)$}. \\
+            If the result is 1, output $SK := \Htag(\pw,pk,c^*,K^*)$ to $\env$. \\
+            If the result is 0, output $SK := \bot$ to $\env$.
+      \end{enumerate}
+  \item On $\adv$'s $i$-th $\Hkey$ or $\Htag$ query, if it is in the form of $\Hkey(\pw,pk,c,(K')^*)$ for some $(K')^*$, output $(K')^*$; otherwise abort.
+\end{enumerate}
+
+Assuming $\Query_1$ happens, the only difference between Game 2/3 and $\red_\text{OW-1PCA1}$'s simulation (until $\Query_1$ happens) is that $\red_\text{OW-1PCA1}$ uses its input $pk$ on the $P$ side, and then uses its input $c \gets \Encap(pk)$ on the $P'$ side. Since we assume $\pw = \pw' \land (s^*,T^*) = (s,T)$, in Game 2/3 $P'$'s algorithm will recover $pk' = pk$, so there $c$ is also generated as $\Encap(pk)$ and thus $\red_\text{OW-1PCA1}$ simulates Game 2/3 perfectly. Furthermore, if $\red_\text{OW-1PCA1}$'s guess is correct then it wins the OW-1PCA game. We have
+\[
+\Dist_\env^{2,3} \leq \Pr[\Query_1] \leq (\qkey+\qtag)\Adv_{\red_\text{OW-1PCA1}}^\text{OW-1PCA}.
 \]
 
 \bibliographystyle{alpha}
