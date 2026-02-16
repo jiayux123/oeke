@@ -190,7 +190,7 @@ On input $(pk,c)$,
       \begin{enumerate}
         \item If $c^* = c$, do what's described in Game 1.
         \item If $c^* \neq c$, find $\adv$'s $\Htag(\pw,pk,c^*,K^*)$ query whose result is $\tau^*$. If there is none or more than one, output $SK := \bot$ to $\env$. (This matches Game 2.)
-        \item \fbox{Query $\PC(sk,c^*,K^*)$}. \\
+        \item \fbox{Query $\PC(sk,c^*,K^*)$}. \quad // \textcolor[gray]{0.5}{This is a valid query since we do this step only if $c^* \neq c$} \\
             If the result is 1, output $SK := \Htag(\pw,pk,c^*,K^*)$ to $\env$. \\
             If the result is 0, output $SK := \bot$ to $\env$.
       \end{enumerate}
@@ -202,7 +202,12 @@ Assuming $\Query_1$ happens, the only difference between Game 2/3 and $\red_\tex
 \Dist_\env^{2,3} \leq \Pr[\Query_1] \leq (\qkey+\qtag)\Adv_{\red_\text{OW-1PCA1}}^\text{OW-1PCA}.
 \]
 
-\emph{{\color{red}This game corresponds to game $\mathsf{G}_8$ in \cite{EPRINT:ArrBarJar25}. Note that if we reduce to the OW-PCA property of KEM where the adversary can query the $\PC$ oracle polynomially many times, then step 4 of the reduction above can query $\PC(sk,c,(K')^*)$ $\qkey+\qtag$ times to check which of $\adv$'s query (if any) triggers $\Query_1$, hence avoiding the $\qkey+\qtag$ loss in its advantage. This is the approach taken by \cite{EPRINT:ArrBarJar25}.}}
+\emph{{\color{red}This game corresponds to game $\mathsf{G}_8$ in \cite{EPRINT:ArrBarJar25}. However, there are two differences:
+\begin{enumerate}
+  \item \cite{EPRINT:ArrBarJar25} reduces to OW-PCA (where the KEM adversary can query its plaintext-checking oracle polynomially many times), rather than OW-1PCA. In this case, step 4 of the reduction above can query $\PC(sk,c,(K')^*)$ $\qkey+\qtag$ times to check which of $\adv$'s query (if any) triggers $\Query_1$, hence avoiding the $\qkey+\qtag$ loss in its advantage.
+  \item The above also means that the plaintext-checking oracle in their OW-PCA game has to allow for $\PC(sk,c,\star)$ queries, whereas our reduction to OW-1PCA never makes a query in this form and thus the plaintext-checking oracle in our OW-1PCA game can disallow such queries.
+\end{enumerate}
+}}
 
 \medskip\noindent\emph{Game 4:} Again in the case where $\pw = \pw' \land (s^*,T^*) = (s,T)$, generate $P'$'s KEM public key $pk' \gets \Gen$ and compute $(c,\star) \gets \Encap(pk')$. (Note that $K'$ is not used anywhere since Game 3 --- in particular, $P'$ does not use $K'$ to compute $SK'$ or $\tau'$ anymore --- so we do not need to explicitly mention it.)
 
@@ -219,7 +224,7 @@ On input $(pk,c)$,
       \begin{enumerate}
         \item If $c^* = c$, do what's described in Game 1.
         \item If $c^* \neq c$, find $\adv$'s $\Htag(\pw,pk,c^*,K^*)$ query whose result is $\tau^*$. If there is none or more than one, output $SK := \bot$ to $\env$. (This matches Game 2.)
-        \item \fbox{Query $\PC(sk,c^*,K^*)$}. \quad // {\color{blue}This is a valid query since we do this step only if $c^* \neq c$} \\
+        \item \fbox{Query $\PC(sk,c^*,K^*)$}. \quad // \textcolor[gray]{0.5}{This is a valid query since we do this step only if $c^* \neq c$} \\
             If the result is 1, output $SK := \Htag(\pw,pk,c^*,K^*)$ to $\env$. \\
             If the result is 0, output $SK := \bot$ to $\env$.
       \end{enumerate}
@@ -233,7 +238,7 @@ $\red_\text{ANO-1PCA}$ uses its input $pk$ on the $P$ side and $c$ on the $P'$ s
 
 \emph{{\color{red}This game corresponds to game $\mathsf{G}_9$ in \cite{EPRINT:ArrBarJar25}. However, there are two differences:
 \begin{enumerate}
-  \item \cite{EPRINT:ArrBarJar25} reduces to ANO-PCA (where the KEM adversary can query its PCA oracle polynomially many times), rather than ANO-PCA1. Unlike in Game 3, here reducing to this stronger assumption does not provide any advantage.
+  \item \cite{EPRINT:ArrBarJar25} reduces to ANO-PCA (where the KEM adversary can query its plaintext-checking oracle polynomially many times), rather than ANO-1PCA. Unlike in Game 3, here reducing to this stronger assumption does not provide any advantage.
   \item The assumption \cite{EPRINT:ArrBarJar25} reduces to is even further stronger in that their KEM adversary's inputs are $(pk,pk',c)$, whereas we do not give $pk'$ to the KEM adversary. Note that the reduction does not need $pk'$ at all (it only needs to send $c$ which is an encapsulation of either $pk$ or $pk'$), so the assumption in \cite{EPRINT:ArrBarJar25} is unnecessarily strong.
 \end{enumerate}
 }}
