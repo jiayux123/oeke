@@ -250,7 +250,7 @@ $\red_\text{ANO-1PCA}$ uses its input $pk$ on the $P$ side and $c$ on the $P'$ s
 \[
 r^* := s \oplus t^*, \quad R^* := T/pk^*.
 \]
-($(s,T)$ are the honest $P$-to-$P'$ message.) If $H_1(\pw^*,r^*)$ has already been defined, abort. Otherwise program $H_1(\pw^*,r^*) := R^*$ and store $\left<\pw^*,pk^*,sk^*\right>$.
+($(s,T)$ are the honest $P$-to-$P'$ message.) If $H_1(\pw^*,r^*)$ has already been defined and it is not $R^*$, abort. Otherwise program $H_1(\pw^*,r^*) := R^*$ and store $\left<\pw^*,pk^*,sk^*\right>$.
 
 We first upper-bound the aborting probability. For every fresh $H_2(\pw^*,T)$ query, an independent $t^* \gets \{0,1\}^{3n}$ value is sampled, which results in an independent $r^* \gets \{0,1\}^{3n}$ (regardless of the distribution of $s$). As such, there are up to $q_2+2$ independent and uniformly random $r^*$ values. The probability that one of $\adv$'s $q_1$ $H_1(\pw^*,r^*)$ query inputs happens to be any of them is upper-bounded by $q_1(q_2+2)/2^{3n}$.
 
@@ -262,7 +262,7 @@ and programs $H_1(\pw^*,r^*) := R^*$. (Note that the $\left<\pw^*,pk^*,sk^*\righ
 
 A standard hybrid argument shows that (assuming the aborting condition does not happen) $\env$'s distinguishing advantage between Game 4 and Game 5 is upper-bounded by $q_2\cdot\Adv_{\red_\text{PR-PK}}^\text{PR-PK}$.\footnote{Note that here we cannot make $q_2$ separate reductions to the PR-PK property, and must reduce to PR-PK ``in one blow''. Furthermore, the calculation of the reduction's winning probability is more complicated than the normal case where the reduction wins as long as its guess is correct. This is similar to, say, why composing a PRG polynomial times yields another PRG; see, e.g., \cite[Sec~3.4.3]{book:BonSho23} for details.} Overall, we have
 \[
-\Dist_\env^{4,5} \leq (q_2+2)\Adv_{\red_\text{PR-PK}}^\text{PR-PK} + \frac{q_1q_2}{2^{3n}}.
+\Dist_\env^{4,5} \leq (q_2+2)\Adv_{\red_\text{PR-PK}}^\text{PR-PK} + \frac{q_1(q_2+2)}{2^{3n}}.
 \]
 
 \emph{{\color{red}This game corresponds to game $\mathsf{G}_{10}$ in \cite{EPRINT:ArrBarJar25}, except that the aborting case was ruled out in game $\mathsf{G}_2$ in \cite{EPRINT:ArrBarJar25} (as aborting condition [A2b1]).}}
@@ -308,7 +308,7 @@ It is very subtle why the reduction needs to guess the index $j$ and lose a fact
       \]
   \item Initiate $P'$'s session on password $\pw'$ and instruct $\adv$ to forward $(s,T)$ to $P'$.
 \end{enumerate}
-To simulate Game 5/6 correctly, $\red_\text{OW1}$ must use its input $pk'$ to program $H_1(\pw',r') := T/pk'$ in step 3. The problem is that \emph{$\red_\mathrm{OW1}$ does not know $\pw'$ until step 4, so it has no idea which $H_1(\pw',r')$ query in step 3 needs to be programmed using $pk'$}! The only getaround is to make a guess over all $H_2$ queries, which incurs a $q_2+1$ loss.\footnote{It is $q_2+1$ rather than $q_2+2$, since $P$'s $H_2(\pw,T)$ query is guaranteed to be different from $H_2(\pw',T)$ (otherwise $\red_\text{OW1}$ would abort in step 3) and thus can be excluded from the guess.} (If we require $\env$ to always initiate $P$ and $P'$'s sessions simultaneously, this loss can be avoided since in step 3 $\red_\mathrm{OW1}$ must have already known $\pw'$.)
+To simulate Game 5/6 correctly, $\red_\text{OW1}$ must use its input $pk'$ to program $H_1(\pw',r') := T/pk'$ in step 3. The problem is that \emph{$\red_\mathrm{OW1}$ does not know $\pw'$ until step 4, so it has no idea which $H_1(\pw',r')$ query in step 3 needs to be programmed using $pk'$}! The only getaround is to make a guess over all $H_2$ queries, which incurs a $q_2+1$ loss.\footnote{It is $q_2+1$ rather than $q_2+2$, since $P$'s $H_2(\pw,T)$ query is guaranteed to be different from $H_2(\pw',T)$ (otherwise $\red_\text{OW1}$ would abort in step 3) and thus can be excluded from the guess.} (If we require $\env$ to always initiate $P$ and $P'$'s sessions simultaneously, this loss can be avoided since in step 3 $\red_\mathrm{OW1}$ must have already learned $\pw'$.)
 
 \medskip\emph{{\color{red}This game corresponds to game $\mathsf{G}_{11}$ in \cite{EPRINT:ArrBarJar25}, except that they reduce to OW-PCA and avoids the $\qkey+\qtag$ loss (cf. the comment after Game 3).}}
 
