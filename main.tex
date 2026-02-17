@@ -184,20 +184,20 @@ Let $\Query_1$ be the event that $\adv$ queries \emph{either} $\Hkey(\pw,pk,c,K'
 Sample $i \gets [\qkey+\qtag]$ as a guess that $\adv$'s $i$-th $\Hkey$ or $\Htag$ query triggers $\Query_1$. \\
 On input $(pk,c)$,
 \begin{enumerate}
-  \item Invoke $\env$. On $(\NewSession, sid, P, P', \pw, \text{``initiator''})$ from $\env$, run $P$'s algorithm to compute $(s,T)$. (Note that computing $(s,T)$ does not require knowing $sk$.) Send $(s,T)$ to $\adv$.
+  \item Invoke $\env$. On $(\NewSession, sid, P, P', \pw, \text{``initiator''})$ from $\env$, run $P$'s algorithm to compute $(s,T)$, except that $\red_\text{ANO-1PCA}$ uses its input $pk$ rather than $(pk,\star) \gets \Gen$. (Note that computing $(s,T)$ does not require knowing $sk$.) Send $(s,T)$ to $\adv$.
   \item On $(\NewSession, sid, P', P, \pw', \text{``respondent''})$ from $\env$ and $(s^*,T^*)$ from $\adv$, if $\neg(\pw = \pw' \land (s^*,T^*) = (s,T))$, abort. Otherwise sample $SK',\tau' \gets \{0,1\}^n$, output $SK'$ to $\env$, and send $(c,\tau')$ to $\adv$. ($c$ is part of $\red_\text{OW-PCA1}$'s inputs.)
   \item On $(c^*,\tau^*)$ from $\adv$,
       \begin{enumerate}
         \item If $c^* = c$, do what's described in Game 1.
         \item If $c^* \neq c$, find $\adv$'s $\Htag(\pw,pk,c^*,K^*)$ query whose result is $\tau^*$. If there is none or more than one, output $SK := \bot$ to $\env$. (This matches Game 2.)
         \item \fbox{Query $\PC(sk,c^*,K^*)$}. \quad // \textcolor[gray]{0.5}{This is a valid query since we do this step only if $c^* \neq c$} \\
-            If the result is 1, output $SK := \Htag(\pw,pk,c^*,K^*)$ to $\env$. \\
+            If the result is 1, output $SK := \Hkey(\pw,pk,c^*,K^*)$ to $\env$. \\
             If the result is 0, output $SK := \bot$ to $\env$.
       \end{enumerate}
   \item On $\adv$'s $i$-th $\Hkey$ or $\Htag$ query, if it is in the form of $\Hkey(\pw,pk,c,(K')^*)$ or $\Htag(\pw,pk,c,(K')^*)$ for some $(K')^*$, output $(K')^*$; otherwise abort.
 \end{enumerate}
 
-Assuming $\Query_1$ happens, the only difference between Game 2/3 and $\red_\text{OW-1PCA1}$'s simulation (until $\Query_1$ happens) is that $\red_\text{OW-1PCA1}$ uses its input $pk$ on the $P$ side, and then uses its input $c \gets \Encap(pk)$ on the $P'$ side. Since we assume $\pw = \pw' \land (s^*,T^*) = (s,T)$, in Game 2/3 $P'$'s algorithm will recover $pk' = pk$, so there $c$ is also generated as $\Encap(pk)$ and thus $\red_\text{OW-1PCA1}$ simulates Game 2/3 perfectly. Furthermore, if $\red_\text{OW-1PCA1}$'s guess is correct then it wins the OW-1PCA game. We have
+Assuming $\Query_1$ happens, the only difference between Game 2/3 and $\red_\text{OW-1PCA1}$'s simulation (until $\Query_1$ happens) is that $\red_\text{OW-1PCA1}$ uses its input $pk$ on the $P$ side, and then uses its input $c \gets \Encap(pk)$ on the $P'$ side. Since we assume $\pw = \pw' \land (s^*,T^*) = (s,T)$, in Game 2/3 $P'$'s algorithm will recover $pk' = pk$, so there $c$ is also computed as $\Encap(pk)$ and thus $\red_\text{OW-1PCA1}$ simulates Game 2/3 perfectly. Furthermore, if $\red_\text{OW-1PCA1}$'s guess is correct then it wins the OW-1PCA game. We have
 \[
 \Dist_\env^{2,3} \leq \Pr[\Query_1] \leq (\qkey+\qtag)\Adv_{\red_\text{OW-1PCA1}}^\text{OW-1PCA}.
 \]
@@ -211,14 +211,14 @@ Assuming $\Query_1$ happens, the only difference between Game 2/3 and $\red_\tex
 
 \medskip\noindent\emph{Game 4:} Again in the case where $\pw = \pw' \land (s^*,T^*) = (s,T)$, generate $P'$'s KEM public key $pk' \gets \Gen$ and compute $(c,\star) \gets \Encap(pk')$. (Note that $K'$ is not used anywhere since Game 3 --- in particular, $P'$ does not use $K'$ to compute $SK'$ or $\tau'$ anymore --- so we do not need to explicitly mention it.)
 
-The difference between Game 3 and Game 4 is that in Game 3 both $P$ and $P'$ use the same $pk$, whereas in Game 4 $P$ uses $pk$ and $P'$ uses an independent $pk'$. We construct a reduction $\red_\text{ANO-1PCA}$ to the ANO-1PCA property of KEM. This reduction, in fact, is very similar to the reduction $\red_\text{OW-1PCA1}$ to the OW-1PCA property in Game 3, and we highlight their differences in {\color{blue}blue}:
+The difference between Game 3 and Game 4 is that in Game 3 both $P$ and $P'$ use the same $pk$, whereas in Game 4 $P$ uses $pk$ and $P'$ uses an independent $pk'$. We construct a reduction $\red_\text{ANO-1PCA}$ to the ANO-1PCA property of KEM. This reduction, in fact, is identical to the reduction $\red_\text{OW-1PCA1}$ to the OW-1PCA property in Game 3 except the last step; for completeness, we still present the full reduction and highlight the difference in {\color{blue}blue}:
 
 \medskip\noindent\textbf{\underline{Reduction $\red_\mathrm{ANO\text{-}1PCA}$}:}
 
 \medskip\noindent
 On input $(pk,c)$,
 \begin{enumerate}
-  \item Invoke $\env$. On $(\NewSession, sid, P, P', \pw, \text{``initiator''})$ from $\env$, run $P$'s algorithm to compute $(s,T)$, {\color{blue}except that $\red_\text{ANO-1PCA}$ uses its input $pk$ rather than $(pk,\star) \gets \Gen$}. (Note that computing $(s,T)$ does not require knowing $sk$.) Send $(s,T)$ to $\adv$.
+  \item Invoke $\env$. On $(\NewSession, sid, P, P', \pw, \text{``initiator''})$ from $\env$, run $P$'s algorithm to compute $(s,T)$, except that $\red_\text{ANO-1PCA}$ uses its input $pk$ rather than $(pk,\star) \gets \Gen$. (Note that computing $(s,T)$ does not require knowing $sk$.) Send $(s,T)$ to $\adv$.
   \item On $(\NewSession, sid, P', P, \pw', \text{``respondent''})$ from $\env$ and $(s^*,T^*)$ from $\adv$, if $\neg(\pw = \pw' \land (s^*,T^*) = (s,T))$, abort. Otherwise sample $SK',\tau' \gets \{0,1\}^n$, output $SK'$ to $\env$, and send $(c,\tau')$ to $\adv$. ($c$ is part of $\red_\text{ANO-PCA1}$'s inputs.)
   \item On $(c^*,\tau^*)$ from $\adv$,
       \begin{enumerate}
@@ -246,28 +246,71 @@ $\red_\text{ANO-1PCA}$ uses its input $pk$ on the $P$ side and $c$ on the $P'$ s
 \paragraph{$P$ and $P'$'s passwords do not match, and $\adv$ forwards the $P$-to-$P'$ message.}
 \mbox{}
 
-\medskip\noindent\emph{Game 5:} When $\adv$ makes a fresh query $H_2(\pw^*,T)$ (let the result be $t^*$), generate $(pk^*,sk^*) \gets \Gen$ and compute
+\medskip\noindent\emph{Game 5:} When either $\adv$ or an honest party makes a fresh query $H_2(\pw^*,T)$ (let the result be $t^*$)\footnote{When $P$ makes such a query, it is in the form of $H_2(\pw,T)$ and the result is $t$; when $P'$ makes such a query, it is in the form of $H_2(\pw',T)$ and the result is $t'$. Of course $P'$ makes this query only if $T^* = T$.}, generate $(pk^*,sk^*) \gets \Gen$ and compute
 \[
 r^* := s \oplus t^*, \quad R^* := T/pk^*.
 \]
 ($(s,T)$ are the honest $P$-to-$P'$ message.) If $H_1(\pw^*,r^*)$ has already been defined, abort. Otherwise program $H_1(\pw^*,r^*) := R^*$ and store $\left<\pw^*,pk^*,sk^*\right>$.
 
-We first upper-bound the aborting probability. For every fresh $H_2(\pw^*,T)$ query, an independent $t^* \gets \{0,1\}^{3n}$ value is sampled, which results in an independent $t^* \gets \{0,1\}^{3n}$ (no matter what the distribution of $s$ is). As such, there are $q_2$ independent and uniformly random $r^*$ values. The probability that one of $\adv$'s $q_1$ $H_1(\pw^*,r^*)$ query inputs happens to be any of them is upper-bounded by $q_1q_2/2^{3n}$.
+We first upper-bound the aborting probability. For every fresh $H_2(\pw^*,T)$ query, an independent $t^* \gets \{0,1\}^{3n}$ value is sampled, which results in an independent $r^* \gets \{0,1\}^{3n}$ (regardless of the distribution of $s$). As such, there are up to $q_2+2$ independent and uniformly random $r^*$ values. The probability that one of $\adv$'s $q_1$ $H_1(\pw^*,r^*)$ query inputs happens to be any of them is upper-bounded by $q_1(q_2+2)/2^{3n}$.
 
-Now suppose the aborting condition does not happen. The difference between Game 4 and Game 5 is that Game 4 samples $H_1(\pw^*,r^*)$ uniformly at random, whereas Game 5 defines it as $T/pk^*$. Note that $pk^*$ is not used anywhere else in the game, so the distinguishing advantage between Game 4 and Game 5 can be reduced to the PR-PK property of KEM. We only sketch the reduction $\red_\text{PR-PK}$ here: $\red_\text{PR-PK}$, on input $pk^*$ (which is either an honestly generated public key or a uniformly random value), samples $i \gets [q_2]$, and answers $\adv$'s first $i-1$ $H_2$ queries as in Game 4 and $\adv$'s last $q_2-i$ $H_2$ queries as in Game 5; for $\adv$'s $i$-th $H_2$ query, $\red_\text{PR-PK}$ computes
+Now suppose the aborting condition does not happen. The difference between Game 4 and Game 5 is that Game 4 samples $H_1(\pw^*,r^*)$ uniformly at random, whereas Game 5 defines it as $T/pk^*$. Note that $pk^*$ is not used anywhere else in the game, so the distinguishing advantage between Game 4 and Game 5 can be reduced to the PR-PK property of KEM. We only sketch the reduction $\red_\text{PR-PK}$ here: $\red_\text{PR-PK}$, on input $pk^*$ (which is either an honestly generated public key or a uniformly random value), samples $i \gets [q_2+2]$, and answers the (either $\adv$'s or an honest parties') first $i-1$ $H_2$ queries as in Game 4 and the last $q_2-i+2$ $H_2$ queries as in Game 5; for the $i$-th $H_2$ query, $\red_\text{PR-PK}$ computes
 \[
 r^* := s \oplus t^*, \quad R^* := T/pk^*
 \]
 and programs $H_1(\pw^*,r^*) := R^*$. (Note that the $\left<\pw^*,pk^*,sk^*\right>$ record is not actually used in Game 5, so $\red_\text{PR-PK}$ does not need to store it.) $\red_\text{PR-PK}$ simulates other parts of Game 4/5 honestly. Finally, $\red_\text{PR-PK}$ copies $\env$'s output bit.
 
-A standard hybrid argument shows that (assuming the aborting condition does not happen) $\env$'s distinguishing advantage between Game 4 and Game 5 is upper-bounded by $q_2\cdot\Adv_{\red_\text{PR-PK}}^\text{PR-PK}$.\footnote{Note that here we cannot make $q_2$ separate reductions to the PR-PK property, and must reduce to PR-PK ``in one blow''. This is similar to, say, why composing a PRG polynomial times yields another PRG; see, e.g., \cite[Sec~3.4.3]{book:BonSho23} for details.} Overall, we have
+A standard hybrid argument shows that (assuming the aborting condition does not happen) $\env$'s distinguishing advantage between Game 4 and Game 5 is upper-bounded by $q_2\cdot\Adv_{\red_\text{PR-PK}}^\text{PR-PK}$.\footnote{Note that here we cannot make $q_2$ separate reductions to the PR-PK property, and must reduce to PR-PK ``in one blow''. Furthermore, the calculation of the reduction's winning probability is more complicated than the normal case where the reduction wins as long as its guess is correct. This is similar to, say, why composing a PRG polynomial times yields another PRG; see, e.g., \cite[Sec~3.4.3]{book:BonSho23} for details.} Overall, we have
 \[
-\Dist_\env^{4,5} \leq q_2\cdot\Adv_{\red_\text{PR-PK}}^\text{PR-PK} + \frac{q_1q_2}{2^{3n}}.
+\Dist_\env^{4,5} \leq (q_2+2)\Adv_{\red_\text{PR-PK}}^\text{PR-PK} + \frac{q_1q_2}{2^{3n}}.
 \]
 
-\emph{{\color{red}This game corresponds to game $\mathsf{G}_{10}$ and in \cite{EPRINT:ArrBarJar25}, except that the aborting case was ruled out in game $\mathsf{G}_2$ in \cite{EPRINT:ArrBarJar25} (as aborting condition [A2b1]).}}
+\emph{{\color{red}This game corresponds to game $\mathsf{G}_{10}$ in \cite{EPRINT:ArrBarJar25}, except that the aborting case was ruled out in game $\mathsf{G}_2$ in \cite{EPRINT:ArrBarJar25} (as aborting condition [A2b1]).}}
 
-\medskip\noindent\emph{Game 6:} In the case where $\pw \neq \pw' \land (s^*,T^*) = (s,T)$, sample  $SK',\tau' \gets \{0,1\}^n$. ($c$ is still computed as before.)
+\medskip\noindent\emph{Game 6:} Again in the case where $\pw \neq \pw' \land (s^*,T^*) = (s,T)$, sample $SK',\tau' \gets \{0,1\}^n$.
+
+Let $\Query_2$ be the event that $\adv$ queries \emph{either} $\Hkey(\pw',pk',c,K')$ \emph{or} $\Htag(\pw',\allowbreak pk',c,K')$. Clearly Game 5 and Game 6 are identical unless $\Query_2$ happens. We upper-bound $\Pr[\Query_2]$ via a reduction $\red_\text{OW1}$ to the OW property of KEM. This is somewhat similar to the reduction $\red_\text{OW-1PCA1}$ to the OW-1PCA property in Game 3, and we highlight the differences in {\color{blue}blue}:
+
+\medskip\noindent\textbf{\underline{Reduction $\red_\mathrm{OW1}$}:} \\
+Sample $i \gets [\qkey+\qtag]$ as a guess that $\adv$'s $i$-th $\Hkey$ or $\Htag$ query triggers $\Query_2$, {\color{blue}and $j \gets [q_2+1]$ as a guess that the $j$-th $H_2$ query (by either $\adv$ or $P'$) is $H_2(\pw',T)$}. \\
+On input $(pk',c)$,
+\begin{enumerate}
+  \item Invoke $\env$. On $(\NewSession, sid, P, P', \pw, \text{``initiator''})$ from $\env$, run $P$'s algorithm to compute $(s,T)$. {\color{blue}(This involves making an $H_2(\pw,T)$ query on behalf of $P$.)} Send $(s,T)$ to $\adv$.
+  \item {\color{blue}Whenever there is an $H_2(\star,T)$ query (by either $\adv$ or $\red_\mathrm{OW1}$ itself on behalf of $P'$ --- see step 3 below), do what's described in Game 5. However, if this is the $j$-th query, use $\red_\mathrm{OW1}$'s input $pk'$ instead of generating $pk^*$ freshly.}
+  \item On $(\NewSession, sid, P', P, \pw', \text{``respondent''})$ from $\env$ and $(s^*,T^*)$ from $\adv$, if $\neg({\color{blue}\pw \neq \pw'} \land (s^*,T^*) = (s,T))$, abort. Otherwise
+      \begin{enumerate}
+        {\color{blue}\item If $\adv$ has not queried $H_2(\pw',T)$, make this query on behalf of $P'$.}
+        \item Sample $SK',\tau' \gets \{0,1\}^n$, output $SK'$ to $\env$, and send $(c,\tau')$ to $\adv$. ($c$ is part of $\red_\text{OW1}$'s inputs.)
+      \end{enumerate}
+  \item On $(c^*,\tau^*)$ from $\adv$,
+      \begin{enumerate}
+        \item Find $\adv$'s $\Htag(\pw,pk,c^*,K^*)$ query whose result is $\tau^*$. If there is none or more than one, output $SK := \bot$ to $\env$. (This matches Game 2.)
+        \item {\color{blue}Compute $K := \Decap(sk,c)$. ($sk$ is the KEM secret key generated in step 1.)} \quad \textcolor[gray]{0.5}{// No need to query a plaintext-checking oracle since $pk$ on the $P$ side and $pk'$ on the $P'$ side are independent of each other, so the reduction can sample $sk$ on its own} \\
+            If {\color{blue}$K = K^*$}, output $SK := \Hkey(\pw,pk,c^*,K)$ to $\env$. \\
+            If {\color{blue}$K \neq K^*$}, output $SK := \bot$ to $\env$.
+      \end{enumerate}
+  \item On $\adv$'s $i$-th $\Hkey$ or $\Htag$ query, if it is in the form of $\Hkey(\pw',pk',c,(K')^*)$ or $\Htag(\pw',pk',c,(K')^*)$ for some $(K')^*$, output $(K')^*$; otherwise abort.
+\end{enumerate}
+
+Assuming $\Query_2$ happens and $\red_\text{OW1}$'s guess of index $j$ is correct, the only difference between Game 5/6 and $\red_\text{OW1}$'s simulation (until $\Query_2$ happens) is that $\red_\text{OW1}$ uses its input $pk'$ to program $H_1(\pw',r')$, and then uses its input $c \gets \Encap(pk')$ as the $P'$-to-$P$ message. Since $c$ is also computed as $\Encap(pk')$ in Game 5/6, $\red_\text{OW1}$ simulates Game 5/6 perfectly. Furthermore, if $\red_\text{OW1}$'s guess of index $i$ is correct then it wins the OW game. We have
+\[
+\Dist_\env^{5,6} \leq \Pr[\Query_2] \leq (q_2+1)(\qkey+\qtag)\Adv_{\red_\text{OW1}}^\text{OW}.
+\]
+
+\paragraph{Remark.}
+It is very subtle why the reduction needs to guess the index $j$ and lose a factor of $q_2+1$ (and we applaud \cite{EPRINT:ArrBarJar25} for doing it correctly). The reason is as follows. Consider the following environment $\env$:
+\begin{enumerate}
+  \item Initiate $P$'s session on password $\pw$ and receive $(s,T)$.
+  \item Instruct $\adv$ to make a large number of $H_2(\pw^*,T)$ queries (let the result be $t^*$), one of which is $H_2(\pw',T)$ for a special value $\pw'$.
+  \item For each of the $H_2$ queries in step 2,
+      \[
+      \text{compute }r^* := s \oplus t^*, \quad \text{query }H_1(\pw^*,r^*).
+      \]
+  \item Initiate $P'$'s session on password $\pw'$ and instruct $\adv$ to forward $(s,T)$ to $P'$.
+\end{enumerate}
+To simulate Game 5/6 correctly, $\red_\text{OW1}$ must use its input $pk'$ to program $H_1(\pw',r') := T/pk'$ in step 3. The problem is that \emph{$\red_\mathrm{OW1}$ does not know $\pw'$ until step 4, so it has no idea which $H_1(\pw',r')$ query in step 3 needs to be programmed using $pk'$}! The only getaround is to make a guess over all $H_2$ queries, which incurs a $q_2+1$ loss.\footnote{It is $q_2+1$ rather than $q_2+2$, since $P$'s $H_2(\pw,T)$ query is guaranteed to be different from $H_2(\pw',T)$ (otherwise $\red_\text{OW1}$ would abort in step 3) and thus can be excluded from the guess.} (If we require $\env$ to always initiate $P$ and $P'$'s sessions simultaneously, this loss can be avoided since in step 3 $\red_\mathrm{OW1}$ must have already known $\pw'$.)
+
+\medskip\emph{{\color{red}This game corresponds to game $\mathsf{G}_{11}$ in \cite{EPRINT:ArrBarJar25}, except that they reduce to OW-PCA and avoids the $\qkey+\qtag$ loss (cf. the comment after Game 3).}}
 
 \bibliographystyle{alpha}
 \bibliography{bib.bib}
