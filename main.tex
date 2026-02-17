@@ -172,9 +172,9 @@ So $\Htag(\pw,pk,c^*,K)$ is independent of $\adv$'s view, and the probability th
 \Dist_\env^{1,2} \leq \frac{\qtag(\qtag-1)+2}{2^{n+1}}.
 \]
 
-\emph{{\color{red}This game corresponds to games $\mathsf{G}_6$ and $\mathsf{G}_7$ in \cite{EPRINT:ArrBarJar25}.}}
+\emph{{\color{red}This game corresponds to games $\mathsf{G}_6$ and $\mathsf{G}_7$ in \cite{EPRINT:ArrBarJar25}, except that the $\Htag$ collision case was ruled out in game $\mathsf{G}_2$ in \cite{EPRINT:ArrBarJar25} (as aborting condition [A1]).}}
 
-\medskip\noindent\emph{Game 3:} In the case where $\pw = \pw' \land (s^*,T^*) = (s,T)$, sample  $SK',\tau' \gets \{0,1\}^n$. ($c$ is still computed as in Game 2.)
+\medskip\noindent\emph{Game 3:} In the case where $\pw = \pw' \land (s^*,T^*) = (s,T)$, sample  $SK',\tau' \gets \{0,1\}^n$. ($c$ is still computed as before.)
 
 Let $\Query_1$ be the event that $\adv$ queries \emph{either} $\Hkey(\pw,pk,c,K')$ \emph{or} $\Htag(\pw,\allowbreak pk,c,K')$. Clearly Game 2 and Game 3 are identical unless $\Query_1$ happens. We upper-bound $\Pr[\Query_1]$ via a reduction $\red_\text{OW-1PCA1}$ to the OW-1PCA property of KEM:
 
@@ -242,6 +242,32 @@ $\red_\text{ANO-1PCA}$ uses its input $pk$ on the $P$ side and $c$ on the $P'$ s
   \item The assumption \cite{EPRINT:ArrBarJar25} reduces to is even further stronger in that their KEM adversary's inputs are $(pk,pk',c)$, whereas we do not give $pk'$ to the KEM adversary. Note that the reduction does not need $pk'$ at all (it only needs to send $c$ which is an encapsulation of either $pk$ or $pk'$), so the assumption in \cite{EPRINT:ArrBarJar25} is unnecessarily strong.
 \end{enumerate}
 }}
+
+\paragraph{$P$ and $P'$'s passwords do not match, and $\adv$ forwards the $P$-to-$P'$ message.}
+\mbox{}
+
+\medskip\noindent\emph{Game 5:} When $\adv$ makes a fresh query $H_2(\pw^*,T)$ (let the result be $t^*$), generate $(pk^*,sk^*) \gets \Gen$ and compute
+\[
+r^* := s \oplus t^*, \quad R^* := T/pk^*.
+\]
+($(s,T)$ are the honest $P$-to-$P'$ message.) If $H_1(\pw^*,r^*)$ has already been defined, abort. Otherwise program $H_1(\pw^*,r^*) := R^*$ and store $\left<\pw^*,pk^*,sk^*\right>$.
+
+We first upper-bound the aborting probability. For every fresh $H_2(\pw^*,T)$ query, an independent $t^* \gets \{0,1\}^{3n}$ value is sampled, which results in an independent $t^* \gets \{0,1\}^{3n}$ (no matter what the distribution of $s$ is). As such, there are $q_2$ independent and uniformly random $r^*$ values. The probability that one of $\adv$'s $q_1$ $H_1(\pw^*,r^*)$ query inputs happens to be any of them is upper-bounded by $q_1q_2/2^{3n}$.
+
+Now suppose the aborting condition does not happen. The difference between Game 4 and Game 5 is that Game 4 samples $H_1(\pw^*,r^*)$ uniformly at random, whereas Game 5 defines it as $T/pk^*$. Note that $pk^*$ is not used anywhere else in the game, so the distinguishing advantage between Game 4 and Game 5 can be reduced to the PR-PK property of KEM. We only sketch the reduction $\red_\text{PR-PK}$ here: $\red_\text{PR-PK}$, on input $pk^*$ (which is either an honestly generated public key or a uniformly random value), samples $i \gets [q_2]$, and answers $\adv$'s first $i-1$ $H_2$ queries as in Game 4 and $\adv$'s last $q_2-i$ $H_2$ queries as in Game 5; for $\adv$'s $i$-th $H_2$ query, $\red_\text{PR-PK}$ computes
+\[
+r^* := s \oplus t^*, \quad R^* := T/pk^*
+\]
+and programs $H_1(\pw^*,r^*) := R^*$. (Note that the $\left<\pw^*,pk^*,sk^*\right>$ record is not actually used in Game 5, so $\red_\text{PR-PK}$ does not need to store it.) $\red_\text{PR-PK}$ simulates other parts of Game 4/5 honestly. Finally, $\red_\text{PR-PK}$ copies $\env$'s output bit.
+
+A standard hybrid argument shows that (assuming the aborting condition does not happen) $\env$'s distinguishing advantage between Game 4 and Game 5 is upper-bounded by $q_2\cdot\Adv_{\red_\text{PR-PK}}^\text{PR-PK}$.\footnote{Note that here we cannot make $q_2$ separate reductions to the PR-PK property, and must reduce to PR-PK ``in one blow''. This is similar to, say, why composing a PRG polynomial times yields another PRG; see, e.g., \cite[Sec~3.4.3]{book:BonSho23} for details.} Overall, we have
+\[
+\Dist_\env^{4,5} \leq q_2\cdot\Adv_{\red_\text{PR-PK}}^\text{PR-PK} + \frac{q_1q_2}{2^{3n}}.
+\]
+
+\emph{{\color{red}This game corresponds to game $\mathsf{G}_{10}$ and in \cite{EPRINT:ArrBarJar25}, except that the aborting case was ruled out in game $\mathsf{G}_2$ in \cite{EPRINT:ArrBarJar25} (as aborting condition [A2b1]).}}
+
+\medskip\noindent\emph{Game 6:} In the case where $\pw \neq \pw' \land (s^*,T^*) = (s,T)$, sample  $SK',\tau' \gets \{0,1\}^n$. ($c$ is still computed as before.)
 
 \bibliographystyle{alpha}
 \bibliography{bib.bib}
