@@ -275,7 +275,7 @@ Let $\Query_2$ be the event that $\adv$ queries \emph{either} $\Hkey(\pw',pk',c,
 Sample $i \gets [\qkey+\qtag]$ as a guess that $\adv$'s $i$-th $\Hkey$ or $\Htag$ query triggers $\Query_2$, {\color{blue}and $j \gets [q_2+1]$ as a guess that the $j$-th $H_2$ query (by either $\adv$ or $P'$) is $H_2(\pw',T)$}. \\
 On input $(pk',c)$,
 \begin{enumerate}
-  \item Invoke $\env$. On $(\NewSession, sid, P, P', \pw, \text{``initiator''})$ from $\env$, run $P$'s algorithm to compute $(s,T)$. {\color{blue}(This involves making an $H_2(\pw,T)$ query on behalf of $P$.)} Send $(s,T)$ to $\adv$.
+  \item Invoke $\env$. On $(\NewSession, sid, P, P', \pw, \text{``initiator''})$ from $\env$, run $P$'s algorithm to compute $(s,T)$. Send $(s,T)$ to $\adv$.
   \item {\color{blue}Whenever there is an $H_2(\star,T)$ query (by either $\adv$ or $\red_\mathrm{OW1}$ itself on behalf of $P'$ --- see step 3 below), do what's described in Game 5. However, if this is the $j$-th query, use $\red_\mathrm{OW1}$'s input $pk'$ instead of generating $pk^*$ freshly.}
   \item On $(\NewSession, sid, P', P, \pw', \text{``respondent''})$ from $\env$ and $(s^*,T^*)$ from $\adv$, if $\neg({\color{blue}\pw \neq \pw'} \land (s^*,T^*) = (s,T))$, abort. Otherwise
       \begin{enumerate}
