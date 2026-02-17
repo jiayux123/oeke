@@ -271,7 +271,9 @@ A standard hybrid argument shows that (assuming the aborting condition does not 
 
 Let $\Query_2$ be the event that $\adv$ queries \emph{either} $\Hkey(\pw',pk',c,K')$ \emph{or} $\Htag(\pw',\allowbreak pk',c,K')$. Clearly Game 5 and Game 6 are identical unless $\Query_2$ happens. We upper-bound $\Pr[\Query_2]$ via a reduction $\red_\text{OW1}$ to the OW property of KEM. This is somewhat similar to the reduction $\red_\text{OW-1PCA1}$ to the OW-1PCA property in Game 3, and we highlight the differences in {\color{blue}blue}:
 
-\medskip\noindent\textbf{\underline{Reduction $\red_\mathrm{OW1}$}:} \\
+\medskip\noindent\textbf{\underline{Reduction $\red_\mathrm{OW1}$}:}
+
+\medskip\noindent
 Sample $i \gets [\qkey+\qtag]$ as a guess that $\adv$'s $i$-th $\Hkey$ or $\Htag$ query triggers $\Query_2$, {\color{blue}and $j \gets [q_2+1]$ as a guess that the $j$-th $H_2$ query (by either $\adv$ or $P'$) is $H_2(\pw',T)$}. \\
 On input $(pk',c)$,
 \begin{enumerate}
