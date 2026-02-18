@@ -352,13 +352,17 @@ On input $(pk',c)$,
 
 Assume $\red_\text{ANO1}$'s guess of index $j$ is correct. If $b = 0$ then $c \gets \Encap(pk')$, i.e., the computation of $R'$ and $c$ use the same $pk'$, so $\red_\text{ANO-1PCA}$ simulates Game 6; if $b = 1$ then $c \gets \Encap(pk'')$, i.e., the computation of $c$ uses an independently generated $pk''$, so $\red_\text{ANO-1PCA}$ simulates Game 7. We have
 \[
-\Dist_\env^{6,7} \leq \Adv_{\red_\text{ANO-1PCA}}^\text{ANO-1PCA}.
+\Dist_\env^{6,7} \leq (q_2+1)\Adv_{\red_\text{ANO-1PCA}}^\text{ANO-1PCA}.
 \]
-
 
 \medskip\noindent\emph{Game 8:} Again in the case where $\pw \neq \pw' \land (s^*,T^*) = (s,T)$, we outright skip the computation of $t',r',R'$ and the programming of $H_1$ (the {\color{brown}brown} text in Game 6). (Since $pk'$ is not generated anymore, we can rename $pk''$ --- the KEM public key from which $c$ is computed --- to $pk'$.)
 
-Note that the aborting condition, which was originally introduced in Game 5, is removed (for the specific $H_2(\pw',T)$ query by $P'$). By an analysis similar to that in Game 5, the aborting probability in Game 7 is upper-bounded by $q_1/2^{3n}$.
+Note that the aborting condition, which was originally introduced in Game 5, is removed (for the specific $H_2(\pw',T)$ query by $P'$). By an analysis similar to that in Game 5, the aborting probability in Game 7 is upper-bounded by $q_1/2^{3n}$. If the aborting condition does not happen, the {\color{brown}brown} text is independent of the rest of the game, so removing it does not affect the distribution of $\env$'s output. We have
+\[
+\Dist_\env^{6,7} \leq \frac{q_1}{2^{3n}}.
+\]
+
+\emph{{\color{red}The two games above combined correspond to game $\mathsf{G}_{12}$ in \cite{EPRINT:ArrBarJar25}. \cite{EPRINT:ArrBarJar25} does not have the intermediate Game 7 in our proof, and outright removes the brown text from what's our Game 6. We believe it is clearer to include our Game 7, where $H_2$ is still queried and $H_1$ is still programmed: in this way it is easier to see why the reduction to ANO simulates the games correctly. (Of course, it is possible that an experienced cryptographer can see through the two game hops in one shot, but the author of this paper admits that he is not that experienced and has to work out the game hops and reductions the ``dumb'' way.) Also, \cite{EPRINT:ArrBarJar25} reduces to ANO-PCA, although it also says that the plaintext-checking oracle is not needed.}}
 
 \bibliographystyle{alpha}
 \bibliography{bib.bib}
