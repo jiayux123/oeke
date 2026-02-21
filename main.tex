@@ -19,8 +19,9 @@
   \hypersetup{#1color=Hy#1color}}
 \tmp{link}{HTML}{800006}
 \tmp{cite}{HTML}{2E7E2A} % better default colors for hyperref links; see https://tex.stackexchange.com/a/525297
-\usepackage[capitalise]{cleveref}
 \usepackage{soul} % allow line break in underline
+\usepackage[capitalise]{cleveref}
+\Crefname{claim}{Claim}{Claims}
 
 \newcommand{\group}{\mathbb{G}}
 \newcommand{\Z}{\mathbb{Z}}
@@ -157,25 +158,53 @@ By correctness of the protocol (see \Cref{sec:prelim}), in Game 0 $\tau = \tau'$
 \paragraph{$P$ and $P'$'s passwords match, and $\adv$ forwards the $P$-to-$P'$ message.}
 \mbox{}
 
-\medskip\noindent\emph{Game 2:} In the case where $\tau^* \neq \tau'$, set $SK := \bot$ if either of the following happens:
+\medskip\noindent\emph{Game 2:} In the case where $\neg(\pw = \pw' \land (s^*,T^*) = (s,T) \land c^* = c)$, find $\adv$'s $\Htag(\pw,pk,c^*,K^*)$ query resulting in $\tau^*$. If there is none or more than one, set $SK := \bot$. If there is a unique such query, do the following:
 \begin{itemize}
-  \item $\adv$ never makes an $\Htag(\pw,pk,c^*,\star)$ query resulting in $\tau^*$, or
-  \item $\adv$ makes two different $\Htag(\pw,pk,c^*,\star)$ queries, both resulting in $\tau^*$.
+  \item If $K^* = K$, set $SK := \Hkey(\pw,pk,c,K)$ (i.e., there is no change from Game 1).
+  \item If $K^* \neq K$, set $SK := \bot$.
 \end{itemize}
 
-In the first event, Game 1 and Game 2 differ if $\adv$ never makes an $\Htag(\pw,pk,c^*,\star)$ query resulting in $\tau^*$, yet $P$'s check $\tau^* \stackrel{?}{=} \Htag(\pw,pk,c^*,K)$ passes. Clearly,
+\begin{claim}
+\label{clm:htag}
+The probability that $P'$ queries $\Htag(\pw,pk,c^*,K)$ is at most $(q_1+1)/|\group|$.
+\end{claim}
+
+$P'$ makes a single $\Htag$ query, on $(\pw',pk',c,K')$. If $\pw \neq \pw' \lor c^* \neq c$ then of course $P'$'s query is not $\Htag(\pw,pk,c^*,K)$. Otherwise $\pw = \pw' \land c^* = c$, so $(s^*,T^*) \neq (s,T)$. We upper-bound $\Pr[pk' = pk]$ in this case:
+
+We have
+\begin{gather*}
+pk = \frac{T}{R} = \frac{T}{H_1(\pw,r)} = \frac{T}{H_1(\pw,s \oplus H_2(\pw,T))}, \\
+pk' = \frac{T^*}{R^*} = \frac{T^*}{H_1(\pw,r^*)} = \frac{T^*}{H_1(\pw,s^* \oplus H_2(\pw,T^*))}.
+\end{gather*}
+There are two cases:
 \begin{itemize}
-  \item $\adv$ does not query $\Htag(\pw,pk,c^*,K)$ (otherwise the result is $\tau^*$), and
-  \item $P'$ does not query $\Htag(\pw,pk,c^*,K)$ (otherwise $\tau' = \Htag(\pw,pk,c^*,K) = \tau^*$).
+  \item $s \oplus H_2(\pw,T) = s^* \oplus H_2(\pw,T^*)$. In this case $T^* \neq T$ (otherwise $T^* = T \Rightarrow H_2(\pw,T^*) = H_2(\pw,T) \Rightarrow s^* = s$, so $(s^*,T^*) = (s,T)$, which is impossible). But then it is impossible that $pk' = pk$.
+  \item $s \oplus H_2(\pw,T) \neq s^* \oplus H_2(\pw,T^*)$. In this case $H_1(\pw,s^* \oplus H_2(\pw,T^*))$ is uniformly random in $\group$ and independent of both $pk$ and $T^*$, so the probability that $pk' = pk$, i.e., $H_1(\pw,s^* \oplus H_2(\pw,T^*))$ happens to be equal to $T^*/pk$, is $1/|\group|$ for a single $H_1$ query.
 \end{itemize}
-So $\Htag(\pw,pk,c^*,K)$ is independent of $\adv$'s view, and the probability that $\adv$ sends $\tau^* = \Htag(\pw,pk,c^*,K)$ is $1/2^n$. The second event is collision in $\Htag$, whose probability is upper-bounded by $\qtag(\qtag-1)/2^{n+1}$. Overall,
+
+Since there are $q_1+1$ $H_1$ queries ($q_1$ by $\adv$ and 1 by $P'$), the probability that $pk' = pk$ is upper-bounded by $(q_1+1)/|\group|$. If $pk' \neq pk$ then of course $P'$'s query is not $\Htag(\pw,pk,c^*,K)$. This yields the claim.
+
+\medskip
+Going back to the game hop, Game 1 and Game 2 are identical unless of the following happens:
+\begin{enumerate}
+  \item $\adv$ never makes an $\Htag(\pw,pk,c^*,\star)$ query resulting in $\tau^*$, yet $P$'s check $\tau^* \stackrel{?}{=} \Htag(\pw,pk,c^*,K)$ passes.
+  \item $\adv$ makes two different $\Htag(\pw,pk,c^*,\star)$ queries, both resulting in $\tau^*$.
+  \item $\adv$ makes an $\Htag(\pw,pk,c^*,K^*)$ query resulting in $\tau^*$, and $P$'s $\Htag(\pw,pk,\allowbreak c^*,K)$ query also results in $\tau^*$.
+\end{enumerate}
+
+In the first event, by the claim $P'$ does not query $\Htag(\pw,pk,c^*,K)$ except with probability up to $(q_1+1)/|\group|$. $\adv$ itself also does not query $\Htag(\pw,pk,c^*,K)$ (otherwise the result is $\tau^*$). So $\Htag(\pw,pk,c^*,K)$ is independent of $\adv$'s view, and the probability that $\adv$ sends $\tau^* = \Htag(\pw,pk,c^*,K)$ is $1/2^{2n}$. The second and third events are collision in $\Htag$, whose (combined) probability is upper-bounded by $\qtag(\qtag+1)/2^{2n+1}$. Overall,
 \[
-\Dist_\env^{1,2} \leq \frac{\qtag(\qtag-1)+2}{2^{n+1}}.
+\Dist_\env^{1,2} \leq \frac{\qtag(\qtag+1)+2}{2^{2n+1}} + \frac{q_1+1}{|\group|}.
 \]
 
-\emph{{\color{red}This game corresponds to games $\mathsf{G}_6$ and $\mathsf{G}_7$ in \cite{EPRINT:ArrBarJar25}, except that the $\Htag$ collision case was ruled out in game $\mathsf{G}_2$ in \cite{EPRINT:ArrBarJar25} (as aborting condition [A1]).}}
+\emph{{\color{red}This game corresponds to games $\mathsf{G}_6$ and $\mathsf{G}_7$ in \cite{EPRINT:ArrBarJar25}. However, there are two differences:
+\begin{enumerate}
+  \item The protocol in \cite{EPRINT:ArrBarJar25} additionally includes $(s,T)$ as part of $P$'s input to $\Htag$. Then \Cref{clm:htag} is trivial (and the probability in the claim is 0): $P$'s $\Htag$ query is on $(\pw,pk,s,T,c^*,K)$ and $P'$'s $\Htag$ query is on $(\pw',pk',s^*,T^*,c,K')$; if they are equal then $\pw = \pw' \land (s^*,T^*) = (s,T) \land c^* = c$, violating the assumption of this game.
+  \item The $\Htag$ collision cases (events (2) and (3) above) were ruled out in game $\mathsf{G}_2$ in \cite{EPRINT:ArrBarJar25} (as aborting condition [A1]).
+\end{enumerate}
+}}
 
-\medskip\noindent\emph{Game 3:} In the case where $\pw = \pw' \land (s^*,T^*) = (s,T)$, sample  $SK',\tau' \gets \{0,1\}^n$. ($c$ is still computed as before.)
+\medskip\noindent\emph{Game 3:} In the case where $\pw = \pw' \land (s^*,T^*) = (s,T)$, sample $SK',\tau' \gets \{0,1\}^n$. ($c$ is still computed as before.)
 
 Let $\Query_1$ be the event that $\adv$ queries \emph{either} $\Hkey(\pw,pk,c,K')$ \emph{or} $\Htag(\pw,\allowbreak pk,c,K')$. Clearly Game 2 and Game 3 are identical unless $\Query_1$ happens. We upper-bound $\Pr[\Query_1]$ via a reduction $\red_\text{OW-1PCA1}$ to the OW-1PCA property of KEM:
 
@@ -268,7 +297,7 @@ A standard hybrid argument shows that (assuming the aborting condition does not 
 \Dist_\env^{4,5} \leq (q_2+1)\Adv_{\red_\text{PR-PK}}^\text{PR-PK} + \frac{q_1(q_2+1)}{2^{3n}}.
 \]
 
-\emph{{\color{red}This game corresponds to game $\mathsf{G}_{10}$ in \cite{EPRINT:ArrBarJar25}, with two differences:
+\emph{{\color{red}This game corresponds to game $\mathsf{G}_{10}$ in \cite{EPRINT:ArrBarJar25}. However, there are two differences:
 \begin{enumerate}
    \item \cite{EPRINT:ArrBarJar25} runs the procedure above to generate $pk',r',R'$ and program $H_1$ as long as $P'$ makes an $H_2(\pw',T)$ query --- that is, including the case where $s^* \neq s \land T^* = T$. (If $T^* \neq T$ then of course $P'$ does not make an $H_2(\pw',T)$ query and there is no change from the real world.) The reason for making this change is to prepare for Game 6 and Game 7 below, which simplifies $P'$'s algorithm when $\pw \neq \pw' \land (s^*,T^*) = (s,T)$ (i.e., if we did not make the change in Game 5 first, the reductions in Game 6 and Game 7 would not go through); therefore, it is unnecessary (and potentially confusing) to make this change when $s^* \neq s \land T^* = T$.
    \item The aborting case was ruled out in game $\mathsf{G}_2$ in \cite{EPRINT:ArrBarJar25} (as aborting condition [A2b1]).
@@ -444,13 +473,15 @@ s \gets \{0,1\}^{3n}; T \gets \group \< \< \< \< \\
 \< \< \< \< \t SK' := \Hkey(\pw',pk',c,K') \\
 \< \< \< \< \t \tau' := \Htag(\pw',pk',c,K') \\
 \< \sendmessageleft*[1.5cm]{c^*,\tau^*} \< \< \sendmessageleft*[1.5cm]{c,\tau'} \< \\
-\text{if }\pw = \pw' \land (s^*,T^*) = (s,T) \\
-\land c^* = c \\
-\t \text{if }\tau^* = \tau \\
-\t \t SK := SK' \\
-\t \text{otherwise} \\
+\text{if }\pw = \pw' \land (s^*,T^*) = (s,T) \land c^* = c \< \< \< \< \\
+\t \text{if }\tau^* = \tau \< \< \< \< \\
+\t \t SK := SK' \< \< \< \< \\
+\t \text{otherwise} \< \< \< \< \\
+\t \t SK := \bot \< \< \< \< \\
+\text{otherwise } \< \< \< \< \\
+\t \text{fetch }\adv\text{'s }\Htag(\pw,pk,c^*,K) = \tau\text{ query} \< \< \< \< \\
+\t \text{if none} \< \< \< \< \\
 \t \t SK := \bot \\
-\text{otherwise } \\
 \t \text{fetch }\left<\pw,sk\right>\text{ record} \< \< \< \< \\
 \t \text{if none} \< \< \< \< \\
 \t \t t := H_2(\pw,T) \< \< \< \< \\
@@ -459,7 +490,7 @@ s \gets \{0,1\}^{3n}; T \gets \group \< \< \< \< \\
 \t \t R := T/pk \< \< \< \< \\
 \t \t H_1(\pw,r) := R \< \< \< \< \\
 \t K := \Decap(sk,c^*) \< \< \< \< \\
-\t \text{if }\tau^* = \Htag(\pw,pk,c^*,K) \< \< \< \< \\
+\t \text{if }K^* = K \< \< \< \< \\
 \t \t SK := \Hkey(\pw,pk,c^*,K) \< \< \< \< \\
 \t \text{otherwise } \< \< \< \< \\
 \t \t SK := \bot \< \< \< \< \\
