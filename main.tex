@@ -247,13 +247,15 @@ $\red_\text{ANO-1PCA}$ uses its input $pk$ on the $P$ side and $c$ on the $P'$ s
 \paragraph{$P$ and $P'$'s passwords do not match, and $\adv$ forwards the $P$-to-$P'$ message.}
 \mbox{}
 
-\medskip\noindent\emph{Game 5:} When either $\adv$ or $P'$ makes a fresh query $H_2(\pw^*,T)$ (let the result be $t^*$)\footnote{When $P'$ makes such a query, it is in the form of $H_2(\pw',T)$ and the result is $t'$. Of course $P'$ makes this query only if $T^* = T$.}, generate $(pk^*,sk^*) \gets \Gen$, and compute
+\medskip\noindent\emph{Game 5:} When $\adv$ makes a fresh query $H_2(\pw^*,T)$ (let the result be $t^*$), generate $(pk^*,sk^*) \gets \Gen$, and compute
 \[
 r^* := s \oplus t^*, \quad R^* := T/pk^*.
 \]
-($(s,T)$ are the honest $P$-to-$P'$ message.) If $H_1(\pw^*,r^*)$ has already been defined and it is not $R^*$, abort. Otherwise program $H_1(\pw^*,r^*) := R^*$, and store $\left<\pw^*,pk^*,sk^*\right>$. (This in particular means that in the case where $\pw \neq \pw' \land (s^*,T^*) = (s,T)$, the generation of $pk',r',R'$ is replaced by the method described above. Note that the case where $\pw = \pw' \land (s^*,T^*) = (s,T)$ has already been addressed in Game 3 and Game 4, and $P'$ does not need to make an $H_2$ query there.)
+($(s,T)$ are the honest $P$-to-$P'$ message.) If $H_1(\pw^*,r^*)$ has already been defined and it is not $R^*$, abort. Otherwise program $H_1(\pw^*,r^*) := R^*$, and store $\left<\pw^*,pk^*,sk^*\right>$.
 
-We first upper-bound the aborting probability. For every fresh $H_2(\pw^*,T)$ query, an independent $t^* \gets \{0,1\}^{3n}$ value is sampled, which results in an independent $r^* \gets \{0,1\}^{3n}$ (regardless of the distribution of $s$). As such, there are up to $q_2+1$ independent and uniformly random $r^*$ values. The probability that one of $\adv$'s $q_1$ $H_1(\pw^*,r^*)$ query inputs happens to be any of them is upper-bounded by $q_1(q_2+1)/2^{3n}$.
+Furthermore, in the case where $\pw \neq \pw' \land (s^*,T^*) = (s,T)$, when $P'$ queries $H_2(\pw',T)$, use the method described above to generate $pk',r',R'$ and program $H_1$. (Note that the case where $\pw = \pw' \land (s^*,T^*) = (s,T)$ has already been addressed in Game 3 and Game 4, and $P'$ does not need to make an $H_2$ query there.)
+
+In the analysis below, we combine $\adv$'s $H_2(\pw^*,T)$ queries and $P'$'s (possible) $H_2(\pw',T)$ query, and call all of them ``$H_2(\pw^*,T)$''. We first upper-bound the aborting probability. For every fresh $H_2(\pw^*,T)$ query, an independent $t^* \gets \{0,1\}^{3n}$ value is sampled, which results in an independent $r^* \gets \{0,1\}^{3n}$ (regardless of the distribution of $s$). As such, there are up to $q_2+1$ independent and uniformly random $r^*$ values. The probability that one of $\adv$'s $q_1$ $H_1(\pw^*,r^*)$ query inputs happens to be any of them is upper-bounded by $q_1(q_2+1)/2^{3n}$.
 
 Now suppose the aborting condition does not happen. The difference between Game 4 and Game 5 is that Game 4 samples $H_1(\pw^*,r^*)$ uniformly at random, whereas Game 5 defines it as $T/pk^*$. Note that $pk^*$ is not used anywhere else in the game, so the distinguishing advantage between Game 4 and Game 5 can be reduced to the PR-PK property of KEM. We only sketch the reduction $\red_\text{PR-PK}$ here: $\red_\text{PR-PK}$, on input $pk^*$ (which is either an honestly generated public key or a uniformly random value), samples $i \gets [q_2+1]$, and answers the (either $\adv$'s or an honest parties') first $i-1$ $H_2$ queries as in Game 4 and the last $q_2-i+1$ $H_2$ queries as in Game 5; for the $i$-th $H_2$ query, $\red_\text{PR-PK}$ computes
 \[
@@ -266,7 +268,12 @@ A standard hybrid argument shows that (assuming the aborting condition does not 
 \Dist_\env^{4,5} \leq (q_2+1)\Adv_{\red_\text{PR-PK}}^\text{PR-PK} + \frac{q_1(q_2+1)}{2^{3n}}.
 \]
 
-\emph{{\color{red}This game corresponds to game $\mathsf{G}_{10}$ in \cite{EPRINT:ArrBarJar25}, except that the aborting case was ruled out in game $\mathsf{G}_2$ in \cite{EPRINT:ArrBarJar25} (as aborting condition [A2b1]).}}
+\emph{{\color{red}This game corresponds to game $\mathsf{G}_{10}$ in \cite{EPRINT:ArrBarJar25}, with two differences:
+\begin{enumerate}
+   \item \cite{EPRINT:ArrBarJar25} runs the procedure above to generate $pk',r',R'$ and program $H_1$ as long as $P'$ makes an $H_2(\pw',T)$ query --- that is, including the case where $s^* \neq s \land T^* = T$. (If $T^* \neq T$ then of course $P'$ does not make an $H_2(\pw',T)$ query and there is no change from the real world.) The reason for making this change is to prepare for Game 6 and Game 7 below, which simplifies $P'$'s algorithm when $\pw \neq \pw' \land (s^*,T^*) = (s,T)$ (i.e., if we did not make the change in Game 5 first, the reductions in Game 6 and Game 7 would not go through); therefore, it is unnecessary (and potentially confusing) to make this change when $s^* \neq s \land T^* = T$.
+   \item The aborting case was ruled out in game $\mathsf{G}_2$ in \cite{EPRINT:ArrBarJar25} (as aborting condition [A2b1]).
+\end{enumerate}
+}}
 
 \medskip\noindent\emph{Game 6:} In the case where $\pw \neq \pw' \land (s^*,T^*) = (s,T)$, sample $SK',\tau' \gets \{0,1\}^n$.
 
@@ -386,7 +393,7 @@ Here, $pk$ is generated by $\Gen$, and $H_2(\pw,T)$ is fixed by an $H_2$ query o
 
 \emph{{\color{red}The game above corresponds to game $\mathsf{G}_{13}$ in \cite{EPRINT:ArrBarJar25}, with one difference: our game aborts if $\adv$ has queried $H_2(\pw^*,T)$ on any $\pw^*$ when $T$ is sampled, whereas the game in \cite{EPRINT:ArrBarJar25} aborts only if $\adv$ has queried $H_2(\pw,T)$. Note that the simulator does not know $\pw$, so it cannot tell if $\adv$ has queried $H_2(\pw,T)$ and instead has to abort as long as $\adv$ has queried $H_2(\star,T)$. (The simulator in \cite{EPRINT:ArrBarJar25} is correct, but its game hops do not match the ideal world regarding which $H_2$ queries will trigger an abortion.) Also, we believe our argument under this game is much more concise and cleaner.}}
 
-\medskip\noindent\emph{Game 10:} When $P$'s session begins, halt after checking if $H_2(\pw,T)$ has been defined (i.e., before the {\color{brown} brown} text in Game 9). Then when $P$ receives $(c^*,\tau^*)$,
+\medskip\noindent\emph{Game 10:} When $P$'s session begins, halt after checking if $H_2(\star,T)$ has been defined (i.e., before the {\color{brown} brown} text in Game 9). Then when $P$ receives $(c^*,\tau^*)$, if $\pw = \pw' \land (s^*,T^*) = (s,T) \land c^* = c$, do what's described in Game 1. Otherwise,
 \begin{itemize}
   \item If $H_2(\pw,T)$ has now been defined (via a query by either $\adv$ or $P'$), an $sk$ must have been defined together with $H_2(\pw,T)$ (see Game 5).
   \item If $H_2(\pw,T)$ is still undefined, run the {\color{brown} brown} text in Game 9.
@@ -399,6 +406,23 @@ The only difference between Game 9 and Game 10 lies in the fact that when we mov
 \]
 
 \emph{{\color{red}The game above corresponds to game $\mathsf{G}_{14}$ in \cite{EPRINT:ArrBarJar25}. Note that we have a $q_1/2^{3n}$ loss in both Game 9 and Game 10; if we remove Game 9 and directly jump to Game 10 from Game 8, this loss does not need to be repeated (since Game 8 and Game 10 are identical unless one of the two aborting events happens). We (as well as \cite{EPRINT:ArrBarJar25}) choose to include Game 9 for clarity.}}
+
+\paragraph{Intermission.}
+Let's pause a bit and review the changes we have made so far:
+\begin{enumerate}
+  \item \emph{$P$-to-$P'$ message:} Game 10 outright samples $(s,T)$ at random.
+  \item \emph{$P'$'s session key and $P'$-to-$P$ message:} On $(s^*,T^*)$ from $\adv$ to $P'$, if $(s^*,T^*) = (s,T)$, Game 10 outright samples $SK',\tau'$ at random. Regarding $c$, Game 10 generates $(pk',\star) \gets \Gen$ and computes $c \gets \Encap(pk')$. (If $(s^*,T^*) \neq (s,T)$ then there is no change from the real world.)
+  \item \emph{$P$'s session key:} On $(c^*,\tau^*)$ from $\adv$ to $P$, we have made two changes:
+      \begin{enumerate}
+        \item If $\pw = \pw' \land (s^*,T^*) = (s,T) \land c^* = c$, Game 10 outright sets $SK := SK'$ if $\tau^* = \tau'$ and $SK := \bot$ otherwise.
+        \item Otherwise if $sk$ has not been defined yet, Game 10 queries $H_2(\pw,T)$, which generates $sk$ (see below). The remaining part is unchanged from the real world.
+      \end{enumerate}
+  \item \emph{$H_2$ queries:} When either $\adv$ or an honest party makes a fresh query $H_2(\pw^*,T)$ (let the result be $t^*$), Game 10 runs the following procedure: Generate $(pk^*,sk^*) \gets \Gen$, and compute
+      \[
+      r^* := s \oplus t^*, \quad R^* := T/pk^*.
+      \]
+      If $H_1(\pw^*,r^*)$ has already been defined and it is not $R^*$, abort. Otherwise program $H_1(\pw^*,r^*) := R^*$.
+\end{enumerate}
 
 \bibliographystyle{alpha}
 \bibliography{bib.bib}
