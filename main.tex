@@ -428,13 +428,13 @@ See \Cref{fig:intermediate-game} for a summary of Game 10.
 
 \begin{figure}[H]
 \pseudocodeblock{
-P \< \< \adv \< \< P' \\ 
+P(\pw) \< \< \adv \< \< P'(\pw') \\ 
 s \gets \{0,1\}^{3n}; T \gets \group \< \< \< \< \\
 \< \sendmessageright*[1.5cm]{s,T} \< \< \sendmessageright*[1.5cm]{s^*,T^*} \< \\
 \< \< \< \< \text{if }(s^*,T^*) = (s,T) \\
 \< \< \< \< \t SK',\tau' \gets \{0,1\}^n \\
 \< \< \< \< \t (pk',\star) \gets \Gen \\
-\< \< \< \< \t c \gets \Encap(pk') \\
+\< \< \< \< \t (c,\star) \gets \Encap(pk') \\
 \< \< \< \< \text{otherwise} \\
 \< \< \< \< \t t' := H_2(\pw',T^*) \\
 \< \< \< \< \t r' := s^* \oplus t' \\
@@ -465,11 +465,12 @@ s \gets \{0,1\}^{3n}; T \gets \group \< \< \< \< \\
 \t \t SK := \bot \< \< \< \< \\
 \text{output }SK \< \< \< \< \text{output }SK' \\
 \text{on }\adv\text{'s fresh }H_2(\pw^*,T)=:t^*\text{ query:} \< \< \< \< \\
-(pk^*,sk^*) \gets \Gen \< \< \< \< \\
-r^* := s \oplus t^* \< \< \< \< \\
-R^* := T/pk^* \< \< \< \< \\
-H_1(\pw^*,r^*) := R^* \< \< \< \< \\
-\text{store }\left<\pw^*,sk^*\right> \< \< \< \<
+\text{if }P\text{ has not made this query} \\
+\t (pk^*,sk^*) \gets \Gen \< \< \< \< \\
+\t r^* := s \oplus t^* \< \< \< \< \\
+\t R^* := T/pk^* \< \< \< \< \\
+\t H_1(\pw^*,r^*) := R^* \< \< \< \< \\
+\t \text{store }\left<\pw^*,sk^*\right> \< \< \< \<
 }
 \caption{Game 10 (with various aborting conditions omitted)}
 \label{fig:intermediate-game}
