@@ -473,7 +473,7 @@ s \gets \{0,1\}^{3n}; T \gets \group \< \< \< \< \\
 \< \< \< \< \t t' := H_2(\pw',T^*) \\
 \< \< \< \< \t r' := s^* \oplus t' \\
 \< \< \< \< \t R' := H_1(\pw',r') \\
-\< \< \< \< \t pk' := T'/R' \\
+\< \< \< \< \t pk' := T^*/R' \\
 \< \< \< \< \t (c,K') \gets \Encap(pk') \\
 \< \< \< \< \t SK' := \Hkey(\pw',pk',c,K') \\
 \< \< \< \< \t \tau' := \Htag(\pw',pk',c,K') \\
@@ -553,7 +553,7 @@ We conclude that
   \item $\adv$ queried $H_1(\pw^*,r^*)$ \emph{before} the $H_2(\pw^*,T^*)$ query, where $r^* = s^* \oplus t^*$.
   \item $\adv$ also queried $H_2(\pw^*,T)$, and
       \[
-      s \oplus s^* = H_2(\pw^*,T) \oplus t^*.\footnote{Note that in this case $T^* \neq T$ since otherwise $T^* = T \Rightarrow H_2(\pw^*,T) = t^* \Rightarrow s^* = s \oplus H_2(\pw^*,T) \oplus t^* = s$, so $(s^*,T^*) = (s,T)$ which violates the assumption in this game.}
+      s \oplus s^* = H_2(\pw^*,T) \oplus t^*.\footnote{Note that in this case $T^* \neq T$ since otherwise $T^* = T \Rightarrow H_2(\pw^*,T) = t^* \Rightarrow s^* = s \oplus H_2(\pw^*,T) \oplus t^* = s$, so $(s^*,T^*) = (s,T)$ which violates the condition in this game.}
       \]
 \end{enumerate}
 (This $H_2(\pw^*,T^*)$ query is what's called the ``anchor query'' in \cite{EC:JanRoyXu25}.) If there is more than one such query, abort.
@@ -585,6 +585,26 @@ Summing up, we have
 \emph{{\color{red}This game corresponds to part of game $\mathsf{G}_2$ in \cite{EPRINT:ArrBarJar25} (as aborting conditions [A2a] and [A2b2]). The game in \cite{EPRINT:ArrBarJar25} aborts more often than necessary, though: every time $\adv$ makes an $H_2(\star,\star)$ query, the game performs the checks and aborts accordingly, while it is only necessary to go over all of $\adv$'s $H_2(\star,T^*)$ queries for the specific $T^*$ as part of $\adv$'s message to $P'$. \\
 \indent Performing the checks on $\adv$'s $H_2$ query, instead of when $\adv$ sends the $(s^*,T^*)$ message, also adds more bookkeeping and complicates the proof. In \cite{EPRINT:ArrBarJar25}, after performing the checks, the game (if it does not abort) computes the corresponding KEM public key and stores it together with $(\pw^*,T^*)$ (the record is called $\mathsf{ForwS}$); later when $\adv$ sends $(s^*,T^*)$, the game first fetches the record to recover $\pw^*$, and if $\pw^* = \pw'$, the game then recovers the KEM public key and uses it to complete the remaining part of $P'$'s algorithm. This creates a conceptual discrepancy with the ideal world, and a game hop (game $\mathsf{G}_{16}$ in \cite{EPRINT:ArrBarJar25}) is needed. By performing the checks when $\adv$ sends the $(s^*,T^*)$, we avoid all these and skip their game $\mathsf{G}_{16}$.
 }}
+
+\paragraph{Correct password guess for $P'$.}
+\mbox{}
+
+\medskip\noindent\emph{Game 14:} Again in the case where $(s^*,T^*) \neq (s,T)$, if $\pw^*$ is defined in type (2) in Game 13 and $\pw^* = \pw'$, fetch record $\left<\pw^*,pk^*,\star\right>$ (there must be one since such a record is created when $\adv$ queries $H_2(\pw^*,T)$, as per Game 5) and set $pk' := pk^* \cdot (T^*/T)$.
+
+In Game 13, we have (in $P'$'s algorithm)
+\[
+pk' = \frac{T^*}{R'} = \frac{T^*}{H_1(\pw',r')} = \frac{T^*}{H_1(\pw',s^* \oplus t')} = \frac{T^*}{H_1(\pw',s^* \oplus H_2(\pw',T^*))},
+\]
+but also (in the creation of the record $\left<\pw^*,pk^*,\star\right>$)
+\[
+pk^* = \frac{T}{R^*} = \frac{T}{H_1(\pw^*,r^*)} = \frac{T}{H_1(\pw^*,s \oplus t^*)} = \frac{T}{H_1(\pw^*,s \oplus H_2(\pw^*,T))}.
+\]
+The condition in this game specifies that $\pw^* = \pw'$, and type (2) in Game 13 specifies that $s \oplus H_2(\pw^*,T) = s \oplus H_2(\pw^*,T^*)$. This means that the denominators in the expressions of $pk'$ and $pk^*$ are equal, and thus $pk' = pk^* \cdot (T^*/T)$ --- exactly as in Game 14. We have
+\[
+\Dist_\env^{13,14} = 0.
+\]
+
+\emph{{\color{red}This game corresponds to part of game $\mathsf{G}_{17}$ in \cite{EPRINT:ArrBarJar25}.}}
 
 \bibliographystyle{alpha}
 \bibliography{bib.bib}
