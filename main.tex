@@ -526,6 +526,19 @@ Game 10 and Game 11 differ only if $\adv$ does not make an $H_2(\pw,T)$ query, b
   \item If $\pw^* = \pw$, run the remaining part of $P'$'s algorithm except that we now use $\pw^*$ instead of $\pw$ --- that is, if there is no $\left<\pw^*,sk^*\right>$ record then set $SK := \bot$; otherwise compute $K := \Decap(sk^*,c^*)$, and if $K^* = K$ then set $SK := \Htag(\pw^*,pk,c^*,K)$, otherwise set $SK := \bot$.
 \end{itemize}
 
+If $\adv$ makes no $\Htag(\star,pk,c^*,\star)$ query resulting in $\tau^*$, then in particular $\adv$ makes no $\Htag(\pw,pk,c^*,\star)$ query resulting in $\tau^*$, so both Game 11 and Game 12 set $SK := \bot$. The probability that $\adv$ makes two different $\Htag(\star,pk,c^*,\star)$ queries both resulting in $\tau^*$ is upper-bounded by $\qtag(\qtag-1)/2^{2n+1}$. Now suppose $\adv$ makes a unique $\Htag(\pw^*,pk,c^*,K^*)$ query resulting in $\tau^*$:
+\begin{itemize}
+  \item If $\pw^* \neq \pw$, then $\adv$ does not make a $\Htag(\pw,pk,c^*,\star)$ query resulting in $\tau^*$ (because there is only one $\Htag(\star,pk,c^*,\star)$ query resulting in $\tau^*$, and it is on $\pw^*$), so both Game 11 and Game 12 set $SK := \bot$.
+  \item If $\pw^* = \pw$, then there is no difference between Game 11 (which uses $\pw$) and Game 12 (which uses $\pw^*$).
+\end{itemize}
+
+We conclude that
+\[
+\Dist_\env^{10,11} \leq \frac{\qtag(\qtag-1)}{2^{2n+1}}.
+\]
+
+\emph{{\color{red}The game above is missing in \cite{EPRINT:ArrBarJar25}. The $\Htag$ collision case was ruled out in game $\mathsf{G}_2$ in \cite{EPRINT:ArrBarJar25} (as aborting condition [A1])\footnote{In our game hops, we ruled out $\Htag$ collisions for different $K^*$ values in Game 2, and then additionally rule out $\Htag$ collisions for different $(\pw^*,K^*)$ pairs in Game 12. We could have done both in Game 2 and avoid the additional loss here; however, we believe the current approach is clearer.}; however, conceptually speaking there still needs to be such a bridge game, to make sure that the game hops match the ideal world at the end.}}
+
 \bibliographystyle{alpha}
 \bibliography{bib.bib}
 \end{document} 
