@@ -564,7 +564,7 @@ The aborting condition is met only in the following three cases:
       \[
       r^* \oplus t^* = (r^*)' \oplus (t^*)'
       \]
-      (so $\adv$ can set $s^*$ to be this value). Note that all four values in the equation are determined by two (different) $H_1$ queries and one $H_2$ query, and for each set of these queries, there is a $1/2^{3n}$ chance that the equation will hold. Therefore, the probability of this case is upper-bounded by $q_1(q_1-1)q_2/2^{3n}$.\footnote{A sloppier argument would say that there are $q_1$ possible $r^*$ values and $q_2$ possible $t^*$ values, so there are $q_1q_2$ possible $r^* \oplus t^*$ values and the probability of a collision is upper-bounded by $q_1q_2(q_1q_2-1)/2^{3n+1}$. This yields a looser bound since those $r^* \oplus t^*$ values are not all independent of each other.}
+      (so $\adv$ can set $s^*$ to be this value). Note that all four values in the equation are determined by two (different) $H_1$ queries and one $H_2$ query, and for each set of these queries, there is a $1/2^{3n}$ chance that the equation will hold. Therefore, the probability of this case is upper-bounded by $q_1(q_1-1)q_2/2^{3n}$.\footnote{A sloppier argument would say that there are $q_1$ possible $r^*$ values and $q_2$ possible $t^*$ values, so there are $q_1q_2$ possible $r^* \oplus t^*$ values and the probability of a collision is upper-bounded by $q_1q_2(q_1q_2-1)/2^{3n+1}$. This yields a looser bound since those $r^* \oplus t^*$ values are not all independent of each other. The same goes for the two cases below.}
   \item There is a collision in type (2) above, i.e., there are $\pw^*,t^*,(\pw^*)',(t^*)'$ such that
       \[
       H_2(\pw^*,T) \oplus t^* = H_2((\pw^*)',T) \oplus (t^*)'
@@ -604,7 +604,14 @@ The condition in this game specifies that $\pw^* = \pw'$, and type (2) in Game 1
 \Dist_\env^{13,14} = 0.
 \]
 
-\emph{{\color{red}This game corresponds to part of game $\mathsf{G}_{17}$ in \cite{EPRINT:ArrBarJar25}.}}
+\emph{{\color{red}This game corresponds to game $\mathsf{G}_{17}$ in \cite{EPRINT:ArrBarJar25}.}}
+
+\paragraph{Inorrect password guess for $P'$.}
+\mbox{}
+
+\medskip\noindent\emph{Game 15:} Again in the case where $(s^*,T^*) \neq (s,T)$, if $\pw^* \neq \pw'$ or no $\pw^*$ is defined, sample $SK',\tau' \gets \{0,1\}^n$. ($c$ is still computed as before.)
+
+Let $\Query_3$ be the event that $\adv$ queries \emph{either} $\Hkey(\pw',pk',c,K')$ \emph{or} $\Htag(\pw',\allowbreak pk',c,K')$. Clearly Game 14 and Game 15 are identical unless $\Query_3$ happens.
 
 \bibliographystyle{alpha}
 \bibliography{bib.bib}
