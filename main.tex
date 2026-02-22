@@ -439,19 +439,19 @@ The only difference between Game 9 and Game 10 lies in the fact that when we mov
 \paragraph{Intermission.}
 Let's pause a bit and review the changes we have made so far:
 \begin{enumerate}
-  \item \emph{$P$-to-$P'$ message:} Game 10 outright samples $(s,T)$ at random.
-  \item \emph{$P'$'s session key and $P'$-to-$P$ message:} On $(s^*,T^*)$ from $\adv$ to $P'$, if $(s^*,T^*) = (s,T)$, Game 10 outright samples $SK',\tau'$ at random. Regarding $c$, Game 10 generates $(pk',\star) \gets \Gen$ and computes $c \gets \Encap(pk')$. (If $(s^*,T^*) \neq (s,T)$ then there is no change from the real world.)
+  \item \emph{$P$-to-$P'$ message:} Game 10 outright samples $(s,T)$ at random. [changed in Game 9]
+  \item \emph{$P'$'s session key and $P'$-to-$P$ message:} On $(s^*,T^*)$ from $\adv$ to $P'$, if $(s^*,T^*) = (s,T)$, Game 10 outright samples $SK',\tau'$ at random. Regarding $c$, Game 10 generates $(pk',\star) \gets \Gen$ and computes $c \gets \Encap(pk')$. (If $(s^*,T^*) \neq (s,T)$ then there is no change from the real world.) [changed in Games 3, 4, 6, 7, 8]
   \item \emph{$P$'s session key:} On $(c^*,\tau^*)$ from $\adv$ to $P$, we have made two changes:
       \begin{enumerate}
-        \item If $\pw = \pw' \land (s^*,T^*) = (s,T) \land c^* = c$, Game 10 outright sets $SK := SK'$ if $\tau^* = \tau'$ and $SK := \bot$ otherwise.
-        \item Otherwise if $\adv$ makes no $\Htag(\pw,pk,c^*,K^*)$ resulting in $\tau^*$, or more than one such query, Game 10 outright sets $SK := \bot$.
+        \item If $\pw = \pw' \land (s^*,T^*) = (s,T) \land c^* = c$, Game 10 outright sets $SK := SK'$ if $\tau^* = \tau'$ and $SK := \bot$ otherwise. [changed in Game 1]
+        \item Otherwise if $\adv$ makes no $\Htag(\pw,pk,c^*,K^*)$ resulting in $\tau^*$, or more than one such query, Game 10 outright sets $SK := \bot$. [changed in Game 2]
         \item Otherwise if $sk$ has not been defined yet, Game 10 queries $H_2(\pw,T)$ on behalf of $P$, which generates $sk$ (see below). The remaining part is unchanged from the real world.
       \end{enumerate}
   \item \emph{$H_2$ queries:} When either $\adv$ or $P$ makes a fresh query $H_2(\pw^*,T)$ (let the result be $t^*$), Game 10 runs the following procedure: Generate $(pk^*,sk^*) \gets \Gen$, and compute
       \[
       r^* := s \oplus t^*, \quad R^* := T/pk^*.
       \]
-      If $H_1(\pw^*,r^*)$ has already been defined and it is not $R^*$, abort. Otherwise program $H_1(\pw^*,r^*) := R^*$.
+      If $H_1(\pw^*,r^*)$ has already been defined and it is not $R^*$, abort. Otherwise program $H_1(\pw^*,r^*) := R^*$. [changed in Games 5, 10]
 \end{enumerate}
 
 See \Cref{fig:intermediate-game} for a summary of Game 10.
@@ -519,6 +519,12 @@ Game 10 and Game 11 differ only if $\adv$ does not make an $H_2(\pw,T)$ query, b
 \]
 
 \emph{{\color{red}The game above corresponds to game $\mathsf{G}_{15}$ in \cite{EPRINT:ArrBarJar25}. \cite{EPRINT:ArrBarJar25} does not include the condition $\neg(\pw = \pw' \land (s^*,T^*) = (s,T) \land c^* = c)$, i.e., it appears that this game rewrites what our Game 2 does, which is incorrect. \ul{The argument in this game critically relies on $pk$ being included in $\Htag$ inputs.}}}
+
+\medskip\noindent\emph{Game 12:} Again in the case where $\neg(\pw = \pw' \land (s^*,T^*) = (s,T) \land c^* = c)$, find $\adv$'s $\Htag(\pw^*,pk,c^*,K^*)$ query whose result is $\tau^*$. (The difference is that Game 11 only goes over all of $\adv$'s queries in the form of $\Htag(\pw,pk,c^*,\star)$, whereas this game goes over all of $\adv$'s queries in the form of $\Htag(\star,pk,c^*,\star)$.) If there is none or more than one, set $SK := \bot$. Otherwise there is a unique such $\Htag(\pw^*,pk,c^*,K^*)$ query, and
+\begin{itemize}
+  \item If $\pw^* \neq \pw$, set $SK := \bot$.
+  \item If $\pw^* = \pw$, run the remaining part of $P'$'s algorithm except that we now use $\pw^*$ instead of $\pw$ --- that is, if there is no $\left<\pw^*,sk^*\right>$ record then set $SK := \bot$; otherwise compute $K := \Decap(sk^*,c^*)$, and if $K^* = K$ then set $SK := \Htag(\pw^*,pk,c^*,K)$, otherwise set $SK := \bot$.
+\end{itemize}
 
 \bibliographystyle{alpha}
 \bibliography{bib.bib}
