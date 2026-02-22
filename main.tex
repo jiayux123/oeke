@@ -140,7 +140,7 @@ We now prove that for any PPT environment $\env$, the simulator $\sim$ in \Cref{
   \item $P$ computes $\tau$. If $\tau^* = \tau$ then $P$ outputs $SK$, otherwise $P$ outputs $\bot$.
 \end{itemize}
 (Note that there are three $\tau$ values: $\tau'$ computed and sent by $P'$, $\tau^*$ sent by $\adv$, and $\tau$ computed by $P$ used in $P$'s check.)
-\paragraph{$\adv$ is passive, except maybe modifying the tag.}
+\paragraph{Passwords match and $\adv$ is passive, except maybe modifying the tag.}
 \mbox{}
 
 \medskip\noindent\emph{Game 1:} In the case where $\pw = \pw' \land (s^*,T^*) = (s,T) \land c^* = c$, do the following:
@@ -182,7 +182,7 @@ There are two cases:
   \item $s \oplus H_2(\pw,T) \neq s^* \oplus H_2(\pw,T^*)$. In this case $H_1(\pw,s^* \oplus H_2(\pw,T^*))$ is uniformly random in $\group$ and independent of both $pk$ and $T^*$, so the probability that $pk' = pk$, i.e., $H_1(\pw,s^* \oplus H_2(\pw,T^*))$ happens to be equal to $T^*/pk$, is $1/|\group|$ for a single $H_1$ query.
 \end{itemize}
 
-Since there are $q_1+1$ $H_1$ queries ($q_1$ by $\adv$ and 1 by $P'$), the probability that $pk' = pk$ is upper-bounded by $(q_1+1)/|\group|$. If $pk' \neq pk$ then of course $P'$'s query is not $\Htag(\pw,pk,c^*,K)$. This yields the claim.
+Since there are $q_1+1$ $H_1$ queries ($q_1$ by $\adv$ and one by $P'$), the probability that $pk' = pk$ is upper-bounded by $(q_1+1)/|\group|$. If $pk' \neq pk$ then of course $P'$'s query is not $\Htag(\pw,pk,c^*,K)$. This yields the claim.
 
 \medskip
 Going back to the game hop, Game 1 and Game 2 are identical unless of the following happens:
@@ -444,6 +444,7 @@ Let's pause a bit and review the changes we have made so far:
   \item \emph{$P$'s session key:} On $(c^*,\tau^*)$ from $\adv$ to $P$, we have made two changes:
       \begin{enumerate}
         \item If $\pw = \pw' \land (s^*,T^*) = (s,T) \land c^* = c$, Game 10 outright sets $SK := SK'$ if $\tau^* = \tau'$ and $SK := \bot$ otherwise.
+        \item Otherwise if $\adv$ makes no $\Htag(\pw,pk,c^*,K^*)$ resulting in $\tau^*$, or more than one such query, Game 10 outright sets $SK := \bot$.
         \item Otherwise if $sk$ has not been defined yet, Game 10 queries $H_2(\pw,T)$ on behalf of $P$, which generates $sk$ (see below). The remaining part is unchanged from the real world.
       \end{enumerate}
   \item \emph{$H_2$ queries:} When either $\adv$ or $P$ makes a fresh query $H_2(\pw^*,T)$ (let the result be $t^*$), Game 10 runs the following procedure: Generate $(pk^*,sk^*) \gets \Gen$, and compute
@@ -456,7 +457,7 @@ Let's pause a bit and review the changes we have made so far:
 See \Cref{fig:intermediate-game} for a summary of Game 10.
 
 \begin{figure}[H]
-\pseudocodeblock{
+\pseudocodeblock[codesize=\scriptsize]{
 P(\pw) \< \< \adv \< \< P'(\pw') \\ 
 s \gets \{0,1\}^{3n}; T \gets \group \< \< \< \< \\
 \< \sendmessageright*[1.5cm]{s,T} \< \< \sendmessageright*[1.5cm]{s^*,T^*} \< \\
@@ -479,16 +480,16 @@ s \gets \{0,1\}^{3n}; T \gets \group \< \< \< \< \\
 \t \text{otherwise} \< \< \< \< \\
 \t \t SK := \bot \< \< \< \< \\
 \text{otherwise } \< \< \< \< \\
-\t \text{fetch }\adv\text{'s }\Htag(\pw,pk,c^*,K) = \tau\text{ query} \< \< \< \< \\
-\t \text{if none} \< \< \< \< \\
+\t \text{fetch }\adv\text{'s }\Htag(\pw,pk,c^*,K^*) = \tau^*\text{ query} \< \< \< \< \\
+\t \text{if none or more than one} \< \< \< \< \\
 \t \t SK := \bot \\
 \t \text{fetch }\left<\pw,sk\right>\text{ record} \< \< \< \< \\
 \t \text{if none} \< \< \< \< \\
-\t \t t := H_2(\pw,T) \< \< \< \< \\
-\t \t (pk,sk) \gets \Gen \< \< \< \< \\
-\t \t r := s \oplus t \< \< \< \< \\
-\t \t R := T/pk \< \< \< \< \\
-\t \t H_1(\pw,r) := R \< \< \< \< \\
+\t \t {\color{brown}t := H_2(\pw,T)} \< \< \< \< \\
+\t \t {\color{brown}(pk,sk) \gets \Gen} \< \< \< \< \\
+\t \t {\color{brown}r := s \oplus t} \< \< \< \< \\
+\t \t {\color{brown}R := T/pk} \< \< \< \< \\
+\t \t {\color{brown}H_1(\pw,r) := R} \< \< \< \< \\
 \t K := \Decap(sk,c^*) \< \< \< \< \\
 \t \text{if }K^* = K \< \< \< \< \\
 \t \t SK := \Hkey(\pw,pk,c^*,K) \< \< \< \< \\
