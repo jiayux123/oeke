@@ -102,7 +102,7 @@ When the adversary $\adv$ sends a message $(s^*,T^*)$ to $P'$, if it is differen
       t^* &:= H_2(\pw^*,T^*), &s^* &:= t^* \oplus r^*,
       \end{align*}
       and sends $(s^*,T^*)$ to $P'$. \\
-      It takes a while to realize how to extract $\pw^*$ from $(s^*,T^*)$. First, $\sim$ should scan all $H_2(\star,T^*)$ queries, which yields multiple $\pw^*$ values (and multiple $t^*$ values); $\sim$ must decide which one is the ``actual'' password guess. This can be done via the following. For each $(\pw^*,t^*)$ pair (as a result of an $H_2$ query), $\sim$ computes the corresponding $r^* := s^* \oplus t^*$, and checks if (and when) $H_1(\pw^*,r^*)$ was queried. \emph{With overwhelming probability, there is at most one such $H_1$ query made before the $H_2(\pw^*,T^*)$ query}, from which $\sim$ can extract the ``actual'' password guess $\pw^*$. (This special $H_1(\pw^*,r^*)$ query is called the ``anchor query'' in \cite{CCS:McQRosRoy20,EC:JanRoyXu25}.)
+      It takes a while to realize how to extract $\pw^*$ from $(s^*,T^*)$. First, $\sim$ should scan all $H_2(\star,T^*)$ queries, which yields multiple $\pw^*$ values (and multiple $t^*$ values); $\sim$ must decide which one is the ``actual'' password guess. This can be done via the following. For each $(\pw^*,t^*)$ pair (as a result of an $H_2$ query), $\sim$ computes the corresponding $r^* := s^* \oplus t^*$, and checks if (and when) $H_1(\pw^*,r^*)$ was queried. \emph{With overwhelming probability, there is at most one such $H_1$ query made before the $H_2(\pw^*,T^*)$ query}, from which $\sim$ can extract the ``actual'' password guess $\pw^*$.
   \item \emph{Related key attack:} This attack works only after $\adv$ receive an honest $(s,T)$ pair from $P$. $\adv$ skips sampling $pk^*$ or $r^*$; instead, $\adv$ picks any $\Delta \in \group$, computes $T^* := T \cdot \Delta$ and
       \begin{align*}
       t^* &:= H_2(\pw^*,T), &(t^*)' &:= H_2(\pw^*,T^*), \\
@@ -120,6 +120,10 @@ When the adversary $\adv$ sends a message $(s^*,T^*)$ to $P'$, if it is differen
       \]
       With overwhelming probability, at most one $\pw^*$ will satisfy this equation.
 \end{enumerate}
+
+\paragraph{Remark: On the term ``anchor query''.}
+The term ``anchor query'' was coined in \cite[Section~3.3]{CCS:McQRosRoy20}, where it refers to the special $H_1(\pw^*,r^*)$ query made before the $H_2(\pw^*,T^*)$ query in case (1) above; case (2) is completely missing in \cite{CCS:McQRosRoy20}. This error is fixed in \cite{EC:JanRoyXu25}, which uses ``anchor query'' to refer to something else: the $H_2(\pw^*,T^*)$ query in either case (1) or (2) (see \cite[Section~4.3.1]{EC:JanRoyXu25} and \cite[Figure~11,~step~4]{EC:JanRoyXu25}). This term is not used in \cite{EPRINT:ArrBarJar25}.
+
 \paragraph{Extracting password guess from malicious $P'$.}
 When the adversary $\adv$ sends a message $(c^*,\tau^*)$ to $P$, if $\adv$ is not passive (i.e., it is not the case that $(s^*,T^*) = (s,T)$ \emph{and} $(c^*,\tau^*) = (c,\tau)$), the simulator $\sim$ must extract a password guess (if any) and send a corresponding $\TestPwd$ command to $\Fpake$.
 
@@ -539,7 +543,7 @@ We conclude that
 \Dist_\env^{10,11} \leq \frac{\qtag(\qtag-1)}{2^{2n+1}}.
 \]
 
-\emph{{\color{red}The game above is missing in \cite{EPRINT:ArrBarJar25}. The $\Htag$ collision case was ruled out in game $\mathsf{G}_2$ in \cite{EPRINT:ArrBarJar25} (as aborting condition [A1])\footnote{In our game hops, we ruled out $\Htag$ collisions for different $K^*$ values in Game 2, and then additionally rule out $\Htag$ collisions for different $(\pw^*,K^*)$ pairs in Game 12. We could have done both in Game 2 and avoid the additional loss here; however, we believe the current approach is clearer.}; however, conceptually speaking there still needs to be such a bridge game, to make sure that the game hops match the ideal world at the end.}}
+\emph{{\color{red}The game above is missing in \cite{EPRINT:ArrBarJar25}. The $\Htag$ collision case was ruled out in game $\mathsf{G}_2$ in \cite{EPRINT:ArrBarJar25} (as aborting condition [A1])\footnote{In our game hops, we ruled out $\Htag$ collisions for different $K^*$ values in Game 2, and then additionally rule out $\Htag$ collisions for different $(\pw^*,K^*)$ pairs in Game 12. We could have done both in Game 2 and avoided the additional loss here; however, we believe the current approach is clearer.}; however, conceptually speaking there still needs to be such a bridge game, to make sure that the game hops match the ideal world at the end.}}
 
 \bibliographystyle{alpha}
 \bibliography{bib.bib}
