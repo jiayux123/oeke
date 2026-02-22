@@ -164,7 +164,7 @@ By correctness of the protocol (see \Cref{sec:prelim}), in Game 0 $\tau = \tau'$
 
 \medskip\noindent\emph{Game 2:} In the case where $\neg(\pw = \pw' \land (s^*,T^*) = (s,T) \land c^* = c)$, find $\adv$'s $\Htag(\pw,pk,c^*,K^*)$ query resulting in $\tau^*$. If there is none or more than one, set $SK := \bot$. If there is a unique such query, do the following:
 \begin{itemize}
-  \item If $K^* = K$, set $SK := \Hkey(\pw,pk,c,K)$ (i.e., there is no change from Game 1).
+  \item If $K^* = K$, set $SK := \Hkey(\pw,pk,c^*,K)$ (i.e., there is no change from Game 1).
   \item If $K^* \neq K$, set $SK := \bot$.
 \end{itemize}
 
@@ -177,8 +177,8 @@ $P'$ makes a single $\Htag$ query, on $(\pw',pk',c,K')$. If $\pw \neq \pw' \lor 
 
 We have
 \begin{gather*}
-pk = \frac{T}{R} = \frac{T}{H_1(\pw,r)} = \frac{T}{H_1(\pw,s \oplus H_2(\pw,T))}, \\
-pk' = \frac{T^*}{R^*} = \frac{T^*}{H_1(\pw,r^*)} = \frac{T^*}{H_1(\pw,s^* \oplus H_2(\pw,T^*))}.
+pk = \frac{T}{R} = \frac{T}{H_1(\pw,r)} = \frac{T}{H_1(\pw,s \oplus t)} = \frac{T}{H_1(\pw,s \oplus H_2(\pw,T))}, \\
+pk' = \frac{T^*}{R'} = \frac{T^*}{H_1(\pw,r')} = \frac{T^*}{H_1(\pw,s^* \oplus t')} = \frac{T^*}{H_1(\pw,s^* \oplus H_2(\pw,T^*))}.
 \end{gather*}
 There are two cases:
 \begin{itemize}
@@ -207,6 +207,10 @@ In the first event, by the claim $P'$ does not query $\Htag(\pw,pk,c^*,K)$ excep
   \item The $\Htag$ collision cases (events (2) and (3) above) were ruled out in game $\mathsf{G}_2$ in \cite{EPRINT:ArrBarJar25} (as aborting condition [A1]).
 \end{enumerate}
 }}
+% has to do two separate \emph commands since otherwise \indent immediately after \end{enumerate} does not show up
+\emph{{\indent\color{red}\ul{The proof of \mbox{\Cref{clm:htag}}
+% has to do this \mbox trick since \ul directly on \Cref does not compile
+critically relies on $\pw,pk,c$ being included in $\Htag$ inputs: $\pw$ and $c$ have to be included in order to rule out the $\pw \neq \pw' \lor c^* \neq c$ case; $pk$ has to be included because in the $\pw = \pw' \land c^* = c$ case, we show that $P$ and $P'$'s $\Htag$ queries are different by comparing $P$'s query input $pk$ and $P'$'s query input $pk'$.}}}
 
 \medskip\noindent\emph{Game 3:} In the case where $\pw = \pw' \land (s^*,T^*) = (s,T)$, sample $SK',\tau' \gets \{0,1\}^n$. ($c$ is still computed as before.)
 
@@ -460,7 +464,7 @@ Let's pause a bit and review the changes we have made so far:
 
 See \Cref{fig:intermediate-game} for a summary of Game 10.
 
-\begin{figure}[H]
+\begin{figure}
 \pseudocodeblock[codesize=\scriptsize]{
 P(\pw) \< \< \adv \< \< P'(\pw') \\ 
 s \gets \{0,1\}^{3n}; T \gets \group \< \< \< \< \\
@@ -543,7 +547,9 @@ We conclude that
 \Dist_\env^{11,12} \leq \frac{\qtag(\qtag-1)}{2^{2n+1}}.
 \]
 
-\emph{{\color{red}The game above is missing in \cite{EPRINT:ArrBarJar25}. The $\Htag$ collision case was ruled out in game $\mathsf{G}_2$ in \cite{EPRINT:ArrBarJar25} (as aborting condition [A1])\footnote{In our game hops, we ruled out $\Htag$ collisions for different $K^*$ values in Game 2, and then additionally rule out $\Htag$ collisions for different $(\pw^*,K^*)$ pairs in Game 12. We could have done both in Game 2 and avoided the additional loss here; however, we believe the current approach is clearer.}; however, conceptually speaking there still needs to be such a bridge game, to make sure that the game hops match the ideal world at the end.}}
+\emph{{\color{red}The game above is missing in \cite{EPRINT:ArrBarJar25}. The $\Htag$ collision case was ruled out in game $\mathsf{G}_2$ in \cite{EPRINT:ArrBarJar25} (as aborting condition [A1])\footnote{In our game hops, we ruled out $\Htag$ collisions for different $K^*$ values in Game 2, and then additionally rule out $\Htag$ collisions for different $(\pw^*,K^*)$ pairs in Game 12. We could have done both in Game 2 and avoided the additional loss here; however, we believe the current approach is clearer.}; however, conceptually speaking there still needs to be such a bridge game, to make sure that the game hops match the ideal world at the end. \\
+\indent\ul{The definition of this game, together with its argument, critically rely on $\pw$ being included in $\Htag$ inputs.}
+}}
 
 \paragraph{Password extraction from $P$-to-$P'$ message.}
 \mbox{}
@@ -553,7 +559,7 @@ We conclude that
   \item $\adv$ queried $H_1(\pw^*,r^*)$ \emph{before} the $H_2(\pw^*,T^*)$ query, where $r^* = s^* \oplus t^*$.
   \item $\adv$ also queried $H_2(\pw^*,T)$, and
       \[
-      s \oplus s^* = H_2(\pw^*,T) \oplus t^*.\footnote{Note that in this case $T^* \neq T$ since otherwise $T^* = T \Rightarrow H_2(\pw^*,T) = t^* \Rightarrow s^* = s \oplus H_2(\pw^*,T) \oplus t^* = s$, so $(s^*,T^*) = (s,T)$ which violates the condition in this game.}
+      s \oplus s^* = H_2(\pw^*,T) \oplus t^*.\footnote{Note that in this case $T^* \neq T$ since otherwise $T^* = T \Rightarrow H_2(\pw^*,T) = t^* \Rightarrow s^* = s \oplus H_2(\pw^*,T) \oplus t^* = s$, so $(s^*,T^*) = (s,T)$ which violates the condition in this game. (A very similar argument was made in the proof of \Cref{clm:htag} in Game 2.)}
       \]
 \end{enumerate}
 (This $H_2(\pw^*,T^*)$ query is what's called the ``anchor query'' in \cite{EC:JanRoyXu25}.) If there is more than one such query, abort.
@@ -570,7 +576,7 @@ The aborting condition is met only in the following three cases:
       H_2(\pw^*,T) \oplus t^* = H_2((\pw^*)',T) \oplus (t^*)'
       \]
       (so $\adv$ can set $s^*$ to be $s \oplus H_2(\pw^*,T) \oplus t^*$). Note that all four values in the equation are determined by three (different) $H_2$ queries $H_2(\pw^*,T)$, $H_2((\pw^*)',T)$ and $H_2(\pw^*,T^*)$; by an argument similar to above, the probability of this case is upper-bounded by $q_2(q_2-1)(q_2-2)/2^{3n}$.
-  \item There is a collision between type (1) and type (2), i.e., there are $r*,t^*,(\pw^*)',\allowbreak(t^*)'$ such that
+  \item There is a collision between type (1) and type (2), i.e., there are $r^*,t^*,(\pw^*)',\allowbreak(t^*)'$ such that
       \[
       r^* \oplus t^* = s \oplus H_2((\pw^*)',T) \oplus (t^*)'
       \]
@@ -606,7 +612,7 @@ The condition in this game specifies that $\pw^* = \pw'$, and type (2) in Game 1
 
 \emph{{\color{red}This game corresponds to game $\mathsf{G}_{17}$ in \cite{EPRINT:ArrBarJar25}.}}
 
-\paragraph{Inorrect password guess for $P'$.}
+\paragraph{Incorrect password guess for $P'$.}
 \mbox{}
 
 \medskip\noindent\emph{Game 15:} Again in the case where $(s^*,T^*) \neq (s,T)$, if $\pw^* \neq \pw'$ or no $\pw^*$ is defined, sample $SK',\tau' \gets \{0,1\}^n$. ($c$ is still computed as before.)
