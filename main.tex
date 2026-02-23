@@ -152,7 +152,7 @@ We now prove that for any PPT environment $\env$, the simulator $\sim$ in \Cref{
   \item If $\tau^* = \tau'$ (i.e., $\adv$ is passive), set $SK := SK'$.
   \item If $\tau^* \neq \tau'$, set $SK := \bot$.
 \end{itemize}
-By correctness of the protocol (see \Cref{sec:prelim}), in Game 0 $\tau = \tau'$ except with probability $\Adv^\text{correctness}$. This means that except with probability $\Adv^\text{correctness}$, $P$'s check $\tau^* \stackrel{?}{=} \tau$ in Game 0 is equivalent to $P$'s check $\tau^* \stackrel{?}{=} \tau'$ in Game 1. If the check passes then both games set $SK := \Hkey(\pw,pk,c,K)$, otherwise both games set $SK := \bot$. We have
+By correctness of the protocol (see \Cref{sec:prelim}), in Game 0 $\tau = \tau'$ except with probability $\Adv^\text{correctness}$. This means that except with probability $\Adv^\text{correctness}$, $P$'s check $\tau^* \stackrel{?}{=} \tau$ in Game 0 is equivalent to $P$'s check $\tau^* \stackrel{?}{=} \tau'$ in Game 1. If the check passes then both games set $SK := \Hkey(K)$, otherwise both games set $SK := \bot$. We have
 \[
 \Dist_\env^{0,1} = \Adv^\text{correctness}.
 \]
@@ -164,7 +164,7 @@ By correctness of the protocol (see \Cref{sec:prelim}), in Game 0 $\tau = \tau'$
 
 \medskip\noindent\emph{Game 2:} In the case where $\neg(\pw = \pw' \land (s^*,T^*) = (s,T) \land c^* = c)$, find $\adv$'s $\Htag(\pw,pk,c^*,K^*)$ query resulting in $\tau^*$. If there is none or more than one, set $SK := \bot$. If there is a unique such query, do the following:
 \begin{itemize}
-  \item If $K^* = K$, set $SK := \Hkey(\pw,pk,c^*,K)$ (i.e., there is no change from Game 1).
+  \item If $K^* = K$, set $SK := \Hkey(K)$ (i.e., there is no change from Game 1).
   \item If $K^* \neq K$, set $SK := \bot$.
 \end{itemize}
 
@@ -229,10 +229,10 @@ On input $(pk,c)$,
         \item If $c^* = c$, do what's described in Game 1.
         \item If $c^* \neq c$, find $\adv$'s $\Htag(\pw,pk,c^*,K^*)$ query whose result is $\tau^*$. If there is none or more than one, output $SK := \bot$ to $\env$. (This matches Game 2.)
         \item \fbox{Query $\PC(sk,c^*,K^*)$}. \quad // \textcolor[gray]{0.5}{This is a valid query since we do this step only if $c^* \neq c$} \\
-            If the result is 1, output $SK := \Hkey(\pw,pk,c^*,K^*)$ to $\env$. \\
+            If the result is 1, output $SK := \Hkey(K^*)$ to $\env$. \\
             If the result is 0, output $SK := \bot$ to $\env$.
       \end{enumerate}
-  \item On $\adv$'s $i$-th $\Hkey$ or $\Htag$ query, if it is in the form of $\Hkey(\pw,pk,c,(K')^*)$ or $\Htag(\pw,pk,c,(K')^*)$ for some $(K')^*$, output $(K')^*$; otherwise abort.
+  \item On $\adv$'s $i$-th $\Hkey$ or $\Htag$ query, if it is in the form of $\Hkey((K')^*)$ or $\Htag(\pw,pk,c,(K')^*)$ for some $(K')^*$, output $(K')^*$; otherwise abort.
 \end{enumerate}
 
 Assuming $\Query_1$ happens, the only difference between Game 2/3 and $\red_\text{OW-1PCA1}$'s simulation (until $\Query_1$ happens) is that $\red_\text{OW-1PCA1}$ uses its input $pk$ on the $P$ side, and then uses its input $c \gets \Encap(pk)$ on the $P'$ side. Since we assume $\pw = \pw' \land (s^*,T^*) = (s,T)$, in Game 2/3 $P'$'s algorithm will recover $pk' = pk$, so there $c$ is also computed as $\Encap(pk)$ and thus $\red_\text{OW-1PCA1}$ simulates Game 2/3 perfectly. Furthermore, if $\red_\text{OW-1PCA1}$'s guess is correct then it wins the OW-1PCA game. We have
@@ -263,7 +263,7 @@ On input $(pk,c)$,
         \item If $c^* = c$, do what's described in Game 1.
         \item If $c^* \neq c$, find $\adv$'s $\Htag(\pw,pk,c^*,K^*)$ query whose result is $\tau^*$. If there is none or more than one, output $SK := \bot$ to $\env$. (This matches Game 2.)
         \item \fbox{Query $\PC(sk,c^*,K^*)$}. \quad // \textcolor[gray]{0.5}{This is a valid query since we do this step only if $c^* \neq c$} \\
-            If the result is 1, output $SK := \Htag(\pw,pk,c^*,K^*)$ to $\env$. \\
+            If the result is 1, output $SK := \Hkey(K^*)$ to $\env$. \\
             If the result is 0, output $SK := \bot$ to $\env$.
       \end{enumerate}
   \item {\color{blue}When $\env$ outputs bit $b^*$, copy $\env$'s output.}
@@ -314,7 +314,7 @@ A standard hybrid argument shows that (assuming the aborting condition does not 
 
 \medskip\noindent\emph{Game 6:} In the case where $\pw \neq \pw' \land (s^*,T^*) = (s,T)$, sample $SK',\tau' \gets \{0,1\}^n$.
 
-Let $\Query_2$ be the event that $\adv$ queries \emph{either} $\Hkey(\pw',pk',c,K')$ \emph{or} $\Htag(\pw',\allowbreak pk',c,K')$. Clearly Game 5 and Game 6 are identical unless $\Query_2$ happens. We upper-bound $\Pr[\Query_2]$ via a reduction $\red_\text{OW1}$ to the OW property of KEM. This is somewhat similar to the reduction $\red_\text{OW-1PCA1}$ to the OW-1PCA property in Game 3, and we highlight the differences in {\color{blue}blue}:
+Let $\Query_2$ be the event that $\adv$ queries \emph{either} $\Hkey(K')$ \emph{or} $\Htag(\pw',\allowbreak pk',c,K')$. Clearly Game 5 and Game 6 are identical unless $\Query_2$ happens. We upper-bound $\Pr[\Query_2]$ via a reduction $\red_\text{OW1}$ to the OW property of KEM. This is somewhat similar to the reduction $\red_\text{OW-1PCA1}$ to the OW-1PCA property in Game 3, and we highlight the differences in {\color{blue}blue}:
 
 \medskip\noindent\textbf{\underline{Reduction $\red_\mathrm{OW1}$}:}
 
@@ -333,10 +333,10 @@ On input $(pk',c)$,
       \begin{enumerate}
         \item Find $\adv$'s $\Htag(\pw,pk,c^*,K^*)$ query whose result is $\tau^*$. If there is none or more than one, output $SK := \bot$ to $\env$. (This matches Game 2.)
         \item {\color{blue}Compute $K := \Decap(sk,c)$. ($sk$ is the KEM secret key generated in step 1.)} \quad \textcolor[gray]{0.5}{// No need to query a plaintext-checking oracle since $pk$ on the $P$ side and $pk'$ on the $P'$ side are independent of each other, so the reduction can sample $sk$ on its own} \\
-            If {\color{blue}$K = K^*$}, output $SK := \Hkey(\pw,pk,c^*,K)$ to $\env$. \\
+            If {\color{blue}$K = K^*$}, output $SK := \Hkey(K)$ to $\env$. \\
             If {\color{blue}$K \neq K^*$}, output $SK := \bot$ to $\env$.
       \end{enumerate}
-  \item On $\adv$'s $i$-th $\Hkey$ or $\Htag$ query, if it is in the form of $\Hkey(\pw',pk',c,(K')^*)$ or $\Htag(\pw',pk',c,(K')^*)$ for some $(K')^*$, output $(K')^*$; otherwise abort.
+  \item On $\adv$'s $i$-th $\Hkey$ or $\Htag$ query, if it is in the form of $\Hkey((K')^*)$ or $\Htag(\pw',pk',c,(K')^*)$ for some $(K')^*$, output $(K')^*$; otherwise abort.
 \end{enumerate}
 
 Assuming $\Query_2$ happens and $\red_\text{OW1}$'s guess of index $j$ is correct, the only difference between Game 5/6 and $\red_\text{OW1}$'s simulation (until $\Query_2$ happens) is that $\red_\text{OW1}$ uses its input $pk'$ to program $H_1(\pw',r')$, and then uses its input $c \gets \Encap(pk')$ as the $P'$-to-$P$ message. Since $c$ is also computed as $\Encap(pk')$ in Game 5/6, $\red_\text{OW1}$ simulates Game 5/6 perfectly. Furthermore, if $\red_\text{OW1}$'s guess of index $i$ is correct then it wins the OW game. We have
@@ -388,7 +388,7 @@ On input $(pk',c)$,
       \begin{enumerate}
         \item Find $\adv$'s $\Htag(\pw,pk,c^*,K^*)$ query whose result is $\tau^*$. If there is none or more than one, output $SK := \bot$ to $\env$. (This matches Game 2.)
         \item Compute $K := \Decap(sk,c)$. ($sk$ is the KEM secret key generated in step 1.) \quad \textcolor[gray]{0.5}{// No need to query a plaintext-checking oracle since $pk$ on the $P$ side and $pk'$ on the $P'$ side are independent of each other, so the reduction can sample $sk$ on its own} \\
-            If $K = K^*$, output $SK := \Hkey(\pw,pk,c^*,K)$ to $\env$. \\
+            If $K = K^*$, output $SK := \Hkey(K)$ to $\env$. \\
             If $K \neq K^*$, output $SK := \bot$ to $\env$.
       \end{enumerate}
   \item {\color{blue}When $\env$ outputs bit $b^*$, copy $\env$'s output.}
@@ -479,7 +479,7 @@ s \gets \{0,1\}^{3n}; T \gets \group \< \< \< \< \\
 \< \< \< \< \t R' := H_1(\pw',r') \\
 \< \< \< \< \t pk' := T^*/R' \\
 \< \< \< \< \t (c,K') \gets \Encap(pk') \\
-\< \< \< \< \t SK' := \Hkey(\pw',pk',c,K') \\
+\< \< \< \< \t SK' := \Hkey(K') \\
 \< \< \< \< \t \tau' := \Htag(\pw',pk',c,K') \\
 \< \sendmessageleft*[1.5cm]{c^*,\tau^*} \< \< \sendmessageleft*[1.5cm]{c,\tau'} \< \\
 \text{if }\pw = \pw' \land (s^*,T^*) = (s,T) \land c^* = c \< \< \< \< \\
@@ -500,7 +500,7 @@ s \gets \{0,1\}^{3n}; T \gets \group \< \< \< \< \\
 \t \t {\color{brown}H_1(\pw,r) := R} \< \< \< \< \\
 \t K := \Decap(sk,c^*) \< \< \< \< \\
 \t \text{if }K^* = K \< \< \< \< \\
-\t \t SK := \Hkey(\pw,pk,c^*,K) \< \< \< \< \\
+\t \t SK := \Hkey(K) \< \< \< \< \\
 \t \text{otherwise } \< \< \< \< \\
 \t \t SK := \bot \< \< \< \< \\
 \text{output }SK \< \< \< \< \text{output }SK' \\
@@ -617,7 +617,11 @@ The condition in this game specifies that $\pw^* = \pw'$, and type (2) in Game 1
 
 \medskip\noindent\emph{Game 15:} Again in the case where $(s^*,T^*) \neq (s,T)$, if $\pw^* \neq \pw'$ or no $\pw^*$ is defined, sample $SK',\tau' \gets \{0,1\}^n$. ($c$ is still computed as before.)
 
-Let $\Query_3$ be the event that $\adv$ queries \emph{either} $\Hkey(\pw',pk',c,K')$ \emph{or} $\Htag(\pw',\allowbreak pk',c,K')$. Clearly Game 14 and Game 15 are identical unless $\Query_3$ happens.
+Let $\Query_3$ be the event that $\adv$ queries \emph{either} $\Hkey(K')$ \emph{or} $\Htag(\pw',\allowbreak pk',c,K')$. Clearly Game 14 and Game 15 are identical unless $\Query_3$ happens.
+
+\section{Security Analysis of Other Versions}
+
+\subsection{What Goes Wrong If You Don't Hash Everything?}
 
 \bibliographystyle{alpha}
 \bibliography{bib.bib}
