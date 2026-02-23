@@ -559,13 +559,13 @@ We conclude that
 \Dist_\env^{12,13} \leq \frac{\qtag(\qtag-1)}{2^{2n+1}}.
 \]
 
-\emph{{\color{red}The game above is also missing in \cite{EPRINT:ArrBarJar25}. The $\Htag$ collision case was ruled out in game $\mathsf{G}_2$ in \cite{EPRINT:ArrBarJar25} (as aborting condition [A1])\footnote{In our game hops, we ruled out $\Htag$ collisions for different $K^*$ values in Game 2, and then additionally rule out $\Htag$ collisions for different $(\pw^*,K^*)$ pairs in Game 13. We could have done both in Game 2 and avoided the additional loss here; however, we believe the current approach is clearer.}; however, conceptually speaking there still needs to be such a bridge game, to make sure that the game hops match the ideal world at the end. \\
+\emph{{\color{red}The game above is also missing in \cite{EPRINT:ArrBarJar25}. The $\Htag$ collision case was ruled out in game $\mathsf{G}_2$ in \cite{EPRINT:ArrBarJar25} (as aborting condition [A1])\footnote{In our game hops, we ruled out $\Htag$ collisions for different $K^*$ values in Game 2, and then additionally rule out $\Htag$ collisions for different $(\pw^*,pk^*,K^*)$ pairs in Game 13. We could have done both in Game 2 and avoided the additional loss here; however, we believe the current approach is clearer.}; however, conceptually speaking there still needs to be such a bridge game, to make sure that the game hops match the ideal world at the end. \\
 \indent\ul{The definition of this game, together with its argument, critically rely on $\pw$ being included in $\Htag$ inputs.}
 }}
 
 \medskip\noindent\emph{Game 14:} In the case where $\pw \neq \pw' \land (s^*,T^*) = (s,T) \land (c^*,\tau^*) = (c,\tau')$, set $SK := \bot$.
 
-In this case $\tau^* = \tau'$ is uniformly random, so the probability that $\adv$ makes an $\Htag$ query resulting in $\tau^*$ is at most $\qtag/2^{2n}$. If $\adv$ does not make such a query, then both Game 13 and Game 14 set $SK := \bot$. We have
+In this case $\tau^* = \tau'$ is uniformly random and independent of the rest of the game, so the probability that $\adv$ makes an $\Htag$ query resulting in $\tau^*$ is at most $\qtag/2^{2n}$. If $\adv$ does not make such a query, then both Game 13 and Game 14 set $SK := \bot$. We have
 \[
 \Dist_\env^{13,14} \leq \frac{\qtag}{2^{2n}}.
 \]
