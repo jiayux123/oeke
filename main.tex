@@ -295,7 +295,7 @@ r^* := s \oplus t^*, \quad R^* := T/pk^*.
 
 Furthermore, in the case where $\pw \neq \pw' \land (s^*,T^*) = (s,T)$, when $P'$ queries $H_2(\pw',T)$, use the method described above to generate $pk',r',R'$ and program $H_1$. (Note that the case where $\pw = \pw' \land (s^*,T^*) = (s,T)$ has already been addressed in Game 3 and Game 4, and $P'$ does not need to make an $H_2$ query there.)\footnote{A slightly confusing case is when $s^* \neq s \land T^* = T$, causing $P'$ to query $t' := H_2(\pw',T)$; and $\adv$ also queries $H_2(\pw',T)$. In this case $P'$'s $r' = s^* \oplus t'$ and $\adv$'s $r^* = s \oplus t'$ are different, causing $P'$'s values $R',pk'$ and $\adv$'s values $R^*,pk^*$ to be independent of each other. Therefore, the game should run $P'$'s algorithm as usual when $P'$ queries $H_2(\pw',T)$ (which generates $R',pk'$), and use the new method described in Game 5 when $\adv$ makes the same query (which generates $R^*,pk^*$).}
 
-In the analysis below, we combine $\adv$'s $H_2(\pw^*,T)$ queries and $P'$'s (possible) $H_2(\pw',T)$ query, and call all of them ``$H_2(\pw^*,T)$''. We first upper-bound the aborting probability. For every fresh $H_2(\pw^*,T)$ query, an independent $t^* \gets \{0,1\}^{3n}$ value is sampled, which results in an independent $r^* \gets \{0,1\}^{3n}$ (regardless of the distribution of $s$). As such, there are up to $q_2+1$ independent and uniformly random $r^*$ values. The probability that one of $\adv$'s $q_1$ $H_1(\pw^*,r^*)$ query inputs happens to be any of them is upper-bounded by $q_1(q_2+1)/2^{3n}$.
+In the analysis below, we combine $\adv$'s $H_2(\pw^*,T)$ queries and $P'$'s (possible) $H_2(\pw',T)$ query, and call all of them ``$H_2(\pw^*,T)$''. We first upper-bound the aborting probability. For every fresh $H_2(\pw^*,T)$ query, an independent $t^* \gets \{0,1\}^{3n}$ value is sampled, which results in an independent $r^* \gets \{0,1\}^{3n}$ (regardless of the distribution of $s$). As such, there are up to $q_2+1$ independent and uniformly random $r^*$ values. The probability that one of $\adv$'s $q_1$ $H_1(\pw^*,r^*)$ query inputs happens \emph{before} the $H_2(\pw^*,T)$ query (when $r^*$ is generated) is upper-bounded by $q_1(q_2+1)/2^{3n}$.
 
 Now suppose the aborting condition does not happen. The difference between Game 4 and Game 5 is that Game 4 samples $H_1(\pw^*,r^*)$ uniformly at random, whereas Game 5 defines it as $T/pk^*$. Note that $pk^*$ is not used anywhere else in the game, so the distinguishing advantage between Game 4 and Game 5 can be reduced to the PR-PK property of KEM. We only sketch the reduction $\red_\text{PR-PK}$ here: $\red_\text{PR-PK}$, on input $pk^*$ (which is either an honestly generated public key or a uniformly random value), samples $i \gets [q_2+1]$, and answers the (either $\adv$'s or an honest parties') first $i-1$ $H_2$ queries as in Game 4 and the last $q_2-i+1$ $H_2$ queries as in Game 5; for the $i$-th $H_2$ query, $\red_\text{PR-PK}$ computes
 \[
@@ -636,9 +636,21 @@ The condition in this game specifies that $\pw^* = \pw'$, and type (2) in Game 1
 \paragraph{Incorrect password guess for $P'$.}
 \mbox{}
 
-\medskip\noindent\emph{Game 17:} Again in the case where $(s^*,T^*) \neq (s,T)$, if $\pw^* \neq \pw'$ or no $\pw^*$ is defined, sample $SK',\tau' \gets \{0,1\}^n$. ($c$ is still computed as before.)
+\medskip\noindent\emph{Game 17:} Again in the case where $(s^*,T^*) \neq (s,T)$, if $\pw^* \neq \pw'$ or no $\pw^*$ is defined, generate $pk',r',R'$ as follows: query $t' := H_2(\pw',T^*)$, generate $(pk',\star) \gets \Gen$, and compute
+\[
+r' := s^* \oplus t', \quad R' := T^*/pk'.
+\]
+If $H_1(\pw',r')$ has already been defined and it is not $R'$, abort. Otherwise program $H_1(\pw',r') := R'$. (This is the same as how $pk',r',R'$ are generated in Game 5, except that Game 5 runs the above procedure in the case where $\pw \neq \pw' \land (s^*,T^*) = (s,T)$.)
 
-Let $\Query_4$ be the event that $\adv$ queries \emph{either} $\Hkey(K')$ \emph{or} $\Htag(\pw',\allowbreak pk',c,K')$. Clearly Game 16 and Game 17 are identical unless $\Query_4$ happens.
+We first upper-bound the aborting probability. There are two cases that may cause $H_1(\pw',r')$ to be defined before $\adv$ sends $(s^*,T^*)$ to $P'$:
+\begin{itemize}
+  \item $\adv$ queries $H_1(\pw',r')$:
+  \item $\adv$ queries $H_2(\pw',T)$, which triggers an $H_1(\pw',r')$ programming:
+\end{itemize}
+
+\medskip\noindent\emph{Game 18:} Again in the case where $(s^*,T^*) \neq (s,T)$, if $\pw^* \neq \pw'$ or no $\pw^*$ is defined, sample $SK',\tau' \gets \{0,1\}^n$. ($c$ is still computed as before.)
+
+Let $\Query_4$ be the event that $\adv$ queries \emph{either} $\Hkey(K')$ \emph{or} $\Htag(\pw',\allowbreak pk',c,K')$. Clearly Game 17 and Game 18 are identical unless $\Query_4$ happens.
 
 \section{Security Analysis of Other Versions}
 
