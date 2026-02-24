@@ -297,15 +297,15 @@ Furthermore, in the case where $\pw \neq \pw' \land (s^*,T^*) = (s,T)$, when $P'
 
 In the analysis below, we combine $\adv$'s $H_2(\pw^*,T)$ queries and $P'$'s (possible) $H_2(\pw',T)$ query, and call all of them ``$H_2(\pw^*,T)$''. We first upper-bound the aborting probability. For every fresh $H_2(\pw^*,T)$ query, an independent $t^* \gets \{0,1\}^{3n}$ value is sampled, which results in an independent $r^* \gets \{0,1\}^{3n}$ (regardless of the distribution of $s$). As such, there are up to $q_2+1$ independent and uniformly random $r^*$ values. The probability that one of $\adv$'s $q_1$ $H_1(\pw^*,r^*)$ query inputs happens \emph{before} the $H_2(\pw^*,T)$ query (when $r^*$ is generated) is upper-bounded by $q_1(q_2+1)/2^{3n}$.
 
-Now suppose the aborting condition does not happen. The difference between Game 4 and Game 5 is that Game 4 samples $H_1(\pw^*,r^*)$ uniformly at random, whereas Game 5 defines it as $T/pk^*$. Note that $pk^*$ is not used anywhere else in the game, so the distinguishing advantage between Game 4 and Game 5 can be reduced to the PR-PK property of KEM. We only sketch the reduction $\red_\text{PR-PK}$ here: $\red_\text{PR-PK}$, on input $pk^*$ (which is either an honestly generated public key or a uniformly random value), samples $i \gets [q_2+1]$, and answers the (either $\adv$'s or an honest parties') first $i-1$ $H_2$ queries as in Game 4 and the last $q_2-i+1$ $H_2$ queries as in Game 5; for the $i$-th $H_2$ query, $\red_\text{PR-PK}$ computes
+Now suppose the aborting condition does not happen. The difference between Game 4 and Game 5 is that Game 4 samples $H_1(\pw^*,r^*)$ uniformly at random, whereas Game 5 defines it as $T/pk^*$. Note that $pk^*$ is not used anywhere else in the game, so the distinguishing advantage between Game 4 and Game 5 can be reduced to the UNI-PK property of KEM. We only sketch the reduction $\red_\text{UNI-PK1}$ here: $\red_\text{UNI-PK1}$, on input $pk^*$ (which is either an honestly generated public key or a uniformly random value), samples $i \gets [q_2+1]$, and answers the (either $\adv$'s or an honest parties') first $i-1$ $H_2$ queries as in Game 4 and the last $q_2-i+1$ $H_2$ queries as in Game 5; for the $i$-th $H_2$ query, $\red_\text{UNI-PK1}$ computes
 \[
 r^* := s \oplus t^*, \quad R^* := T/pk^*
 \]
-and programs $H_1(\pw^*,r^*) := R^*$. (Note that the $\left<\pw^*,pk^*,sk^*\right>$ record is not actually used in Game 5, so $\red_\text{PR-PK}$ does not need to store it.) $\red_\text{PR-PK}$ simulates other parts of Game 4/5 honestly. Finally, $\red_\text{PR-PK}$ copies $\env$'s output bit.
+and programs $H_1(\pw^*,r^*) := R^*$. (Note that the $\left<\pw^*,pk^*,sk^*\right>$ record is not actually used in Game 5, so $\red_\text{UNI-PK1}$ does not need to store it.) $\red_\text{UNI-PK1}$ simulates other parts of Game 4/5 honestly. Finally, $\red_\text{UNI-PK1}$ copies $\env$'s output bit.
 
-A standard hybrid argument shows that (assuming the aborting condition does not happen) $\env$'s distinguishing advantage between Game 4 and Game 5 is upper-bounded by $(q_2+1)\Adv_{\red_\text{PR-PK}}^\text{PR-PK}$.\footnote{Note that here we cannot make $q_2+1$ separate reductions to the PR-PK property, and must reduce to PR-PK ``in one blow''. Furthermore, the calculation of the reduction's advantage is more complicated than the normal case where the reduction wins as long as its guess is correct. This is similar to, say, why composing a PRG polynomial times yields another PRG; see, e.g., \cite[Section~3.4.3]{book:BonSho23} for details.} Overall, we have
+A standard hybrid argument shows that (assuming the aborting condition does not happen) $\env$'s distinguishing advantage between Game 4 and Game 5 is upper-bounded by $(q_2+1)\Adv_{\red_\text{UNI-PK1}}^\text{UNI-PK}$.\footnote{Note that here we cannot make $q_2+1$ separate reductions to the PR-PK property, and must reduce to PR-PK ``in one blow''. Furthermore, the calculation of the reduction's advantage is more complicated than the normal case where the reduction wins as long as its guess is correct. This is similar to, say, why composing a PRG polynomial times yields another PRG; see, e.g., \cite[Section~3.4.3]{book:BonSho23} for details.} Overall, we have
 \[
-\Dist_\env^{4,5} \leq (q_2+1)\Adv_{\red_\text{PR-PK}}^\text{PR-PK} + \frac{q_1(q_2+1)}{2^{3n}}.
+\Dist_\env^{4,5} \leq (q_2+1)\Adv_{\red_\text{UNI-PK1}}^\text{UNI-PK} + \frac{q_1(q_2+1)}{2^{3n}}.
 \]
 
 \emph{{\color{red}This game corresponds to game $\mathsf{G}_{10}$ in \cite{EPRINT:ArrBarJar25}. However, there are two differences:
@@ -507,8 +507,8 @@ s \gets \{0,1\}^{3n}; T \gets \group \< \< \< \< \\
 \t \text{otherwise } \< \< \< \< \\
 \t \t SK := \bot \< \< \< \< \\
 \text{output }SK \< \< \< \< \text{output }SK' \\
-\text{on }\adv\text{'s fresh }H_2(\pw^*,T)=:t^*\text{ query:} \< \< \< \< \\
-{\color{brown}\text{if }P\text{ has not made this query}} \\
+\text{on }\adv\text{'s }H_2(\pw^*,T)=:t^*\text{ query:} \< \< \< \< \\
+{\color{brown}\text{if there is no }\left<\pw^*,\star,\star\right>\text{ record}} \\
 \t (pk^*,sk^*) \gets \Gen \< \< \< \< \\
 \t r^* := s \oplus t^* \< \< \< \< \\
 \t R^* := T/pk^* \< \< \< \< \\
@@ -580,7 +580,7 @@ In this case $\tau^* = \tau'$ is uniformly random and independent of the rest of
   \item $\adv$ queried $H_1(\pw^*,r^*)$ \emph{before} the $H_2(\pw^*,T^*)$ query, where $r^* = s^* \oplus t^*$.
   \item $\adv$ also queried $H_2(\pw^*,T)$, and
       \[
-      s \oplus s^* = H_2(\pw^*,T) \oplus t^*.\footnote{Note that in this case $T^* \neq T$ since otherwise $T^* = T \Rightarrow H_2(\pw^*,T) = t^* \Rightarrow s^* = s \oplus H_2(\pw^*,T) \oplus t^* = s$, so $(s^*,T^*) = (s,T)$ which violates the condition in this game. (A very similar argument was made in the proof of \Cref{clm:htag} in Game 2.)}
+      s \oplus s^* = H_2(\pw^*,T) \oplus t^*.\footnote{Note that in this case $T^* \neq T$ since otherwise $T^* = T \Rightarrow H_2(\pw^*,T) = t^* \Rightarrow s^* = s \oplus H_2(\pw^*,T) \oplus t^* = s$, so $(s^*,T^*) = (s,T)$ which violates the condition of this game. (A very similar argument was made in the proof of \Cref{clm:htag} in Game 2.)}
       \]
 \end{enumerate}
 (This $H_2(\pw^*,T^*)$ query is what's called the ``anchor query'' in \cite{EC:JanRoyXu25}.) If there is more than one such query, abort.
@@ -626,7 +626,7 @@ but also (in the creation of the record $\left<\pw^*,pk^*,\star\right>$)
 \[
 pk^* = \frac{T}{R^*} = \frac{T}{H_1(\pw^*,r^*)} = \frac{T}{H_1(\pw^*,s \oplus t^*)} = \frac{T}{H_1(\pw^*,s \oplus H_2(\pw^*,T))}.
 \]
-The condition in this game specifies that $\pw^* = \pw'$, and type (2) in Game 15 specifies that $s \oplus H_2(\pw^*,T) = s \oplus H_2(\pw^*,T^*)$. This means that the denominators in the expressions of $pk'$ and $pk^*$ are equal, and thus $pk' = pk^* \cdot (T^*/T)$ --- exactly as in Game 15. We have
+The condition of this game specifies that $\pw^* = \pw'$, and type (2) in Game 15 specifies that $s \oplus H_2(\pw^*,T) = s \oplus H_2(\pw^*,T^*)$. This means that the denominators in the expressions of $pk'$ and $pk^*$ are equal, and thus $pk' = pk^* \cdot (T^*/T)$ --- exactly as in Game 15. We have
 \[
 \Dist_\env^{15,16} = 0.
 \]
@@ -644,9 +644,19 @@ If $H_1(\pw',r')$ has already been defined and it is not $R'$, abort. Otherwise 
 
 We first upper-bound the aborting probability. There are two cases that may cause $H_1(\pw',r')$ to be defined before $\adv$ sends $(s^*,T^*)$ to $P'$:
 \begin{itemize}
-  \item $\adv$ queries $H_1(\pw',r')$:
-  \item $\adv$ queries $H_2(\pw',T)$, which triggers an $H_1(\pw',r')$ programming:
+  \item $\adv$ queries $H_1(\pw',r')$: This query must happen before $\adv$'s $H_2(\pw',T^*)$ query, since otherwise $\pw^*$ is set to $\pw'$ as per case (1) in Game 15, which violates the condition of this game. But then $t' = H_2(\pw',T^*)$ is uniformly random in $\{0,1\}^{3n}$ independent of $\adv$'s view, which results in an independent $r' \gets \{0,1\}^{3n}$ (regardless of the distribution of $s$). So, the probability that $\adv$ queries $H_1(\pw',r')$ is upper-bounded by $q_1/2^{3n}$.
+  \item $\adv$ queries $H_2(\pw',T)$, which triggers the programming of $H_1(\pw',r')$: When $\adv$ queries $H_2(\pw',T)$, the $H_1$ instance that is programmed on is $(\pw, s \oplus H_2(\pw',T))$. Thus,
+      \[
+      s \oplus H_2(\pw',T) = r' = s^* \oplus H_2(\pw',T^*),
+      \]
+      which causes $\pw^* = \pw'$ as per case (1) in Game 15, which violates the condition of this game.
 \end{itemize}
+Overall, the aborting probability is upper-bounded by $q_1/2^{3n}$.
+
+Now suppose the aborting condition does not happen. The difference between Game 16 and Game 17 is that Game 16 samples $H_1(\pw',r')$ uniformly at random, whereas Game 17 defines it as $T^*/pk'$. Note that $sk'$ is not used anywhere in the game, so the distinguishing advantage between Game 16 and Game 17 can be reduced to the UNI-PK property of KEM. The reduction $\red_\text{UNI-PK2}$ is very similar to the one in Game 5 (except that here we don't need to make a guess over all $H_2$ queries, and we don't need a hybrid argument) and is omitted. We have
+\[
+\Dist_\env^{16,17} \leq \Adv_{\red_\text{UNI-PK2}}^\text{UNI-PK} + \frac{q_1}{2^{3n}}.
+\]
 
 \medskip\noindent\emph{Game 18:} Again in the case where $(s^*,T^*) \neq (s,T)$, if $\pw^* \neq \pw'$ or no $\pw^*$ is defined, sample $SK',\tau' \gets \{0,1\}^n$. ($c$ is still computed as before.)
 
@@ -678,4 +688,4 @@ Concretely, Games 2, 11 and 13 in \Cref{sec:games} need stronger KEM security pr
 
 \bibliographystyle{alpha}
 \bibliography{bib.bib}
-\end{document}
+\end{document} 
