@@ -287,15 +287,15 @@ $\red_\text{ANO-1PCA}$ uses its input $pk$ on the $P$ side and $c$ on the $P'$ s
 \paragraph{$P$ and $P'$'s passwords do not match, and $\adv$ forwards the $P$-to-$P'$ message.}
 \mbox{}
 
-\medskip\noindent\emph{Game 5:} When $\adv$ makes a fresh query $H_2(\pw^*,T)$ (let the result be $t^*$), generate $(pk^*,sk^*) \gets \Gen$, and compute
+\medskip\noindent\emph{Game 5:} After $P$ sends $(s,T)$ aimed at $P'$, when $\adv$ makes a fresh query $H_2(\pw^*,T)$ for $\pw^* \neq \pw$ (let the result be $t^*$), generate $(pk^*,sk^*) \gets \Gen$, and compute
 \[
 r^* := s \oplus t^*, \quad R^* := T/pk^*.
 \]
-($(s,T)$ are the honest $P$-to-$P'$ message.) If $H_1(\pw^*,r^*)$ has already been defined and it is not $R^*$, abort. Otherwise program $H_1(\pw^*,r^*) := R^*$, and store $\left<\pw^*,pk^*,sk^*\right>$.
+If $H_1(\pw^*,r^*)$ has already been defined and it is not $R^*$, abort. Otherwise program $H_1(\pw^*,r^*) := R^*$, and store $\left<\pw^*,pk^*,sk^*\right>$.
 
 Furthermore, in the case where $\pw \neq \pw' \land (s^*,T^*) = (s,T)$, when $P'$ queries $H_2(\pw',T)$, use the method described above to generate $pk',r',R'$ and program $H_1$. (Note that the case where $\pw = \pw' \land (s^*,T^*) = (s,T)$ has already been addressed in Game 3 and Game 4, and $P'$ does not need to make an $H_2$ query there.)\footnote{A slightly confusing case is when $s^* \neq s \land T^* = T$, causing $P'$ to query $t' := H_2(\pw',T)$; and $\adv$ also queries $H_2(\pw',T)$. In this case $P'$'s $r' = s^* \oplus t'$ and $\adv$'s $r^* = s \oplus t'$ are different, causing $P'$'s values $R',pk'$ and $\adv$'s values $R^*,pk^*$ to be independent of each other. Therefore, the game should run $P'$'s algorithm as usual when $P'$ queries $H_2(\pw',T)$ (which generates $R',pk'$), and use the new method described in Game 5 when $\adv$ makes the same query (which generates $R^*,pk^*$).}
 
-In the analysis below, we combine $\adv$'s $H_2(\pw^*,T)$ queries and $P'$'s (possible) $H_2(\pw',T)$ query, and call all of them ``$H_2(\pw^*,T)$''. We first upper-bound the aborting probability. For every fresh $H_2(\pw^*,T)$ query, an independent $t^* \gets \{0,1\}^{3n}$ value is sampled, which results in an independent $r^* \gets \{0,1\}^{3n}$ (regardless of the distribution of $s$). As such, there are up to $q_2+1$ independent and uniformly random $r^*$ values. The probability that one of $\adv$'s $q_1$ $H_1(\pw^*,r^*)$ query inputs happens \emph{before} the $H_2(\pw^*,T)$ query (when $r^*$ is generated) is upper-bounded by $q_1(q_2+1)/2^{3n}$.
+In the analysis below, we combine $\adv$'s $H_2(\pw^*,T)$ queries and $P'$'s (possible) $H_2(\pw',T)$ query, and call all of them ``$H_2(\pw^*,T)$''. We first upper-bound the aborting probability. For every fresh $H_2(\pw^*,T)$ query, an independent $t^* \gets \{0,1\}^{3n}$ value is sampled, which results in an independent $r^* \gets \{0,1\}^{3n}$ (regardless of the distribution of $s$). As such, there are up to $q_2+1$ independent and uniformly random $r^*$ values. The probability that one of $\adv$'s $q_1$ $H_1(\pw^*,r^*)$ query happens \emph{before} the $H_2(\pw^*,T)$ query (when $r^*$ is generated) is upper-bounded by $q_1(q_2+1)/2^{3n}$.\footnote{$P$ also makes an $H_1$ query, but it is on $(\pw,r)$ which is guaranteed to be different from $(\pw^*,r^*)$ (in the case where $\adv$ queries $H_2(\pw^*,T)$) and $(\pw',r')$ (in the case where $P'$ queries $H_2(\pw',T)$).}
 
 Now suppose the aborting condition does not happen. The difference between Game 4 and Game 5 is that Game 4 samples $H_1(\pw^*,r^*)$ uniformly at random, whereas Game 5 defines it as $T/pk^*$. Note that
 \begin{itemize}
