@@ -24,6 +24,19 @@
 \Crefname{claim}{Claim}{Claims}
 \usepackage{makecell} % force line break within a table cell
 
+\newcommand{\codebox}[1]{
+    \begin{varwidth}{\linewidth}
+    \upshape%   no slant in definition/theorem statement!
+    \begin{tabbing}
+        \quad\=\quad\=\quad\=\quad\=\kill
+        #1
+    \end{tabbing}
+    \end{varwidth}
+}
+\newcommand{\fcodebox}[1]{
+    \framebox{\codebox{#1}}
+}
+
 \newcommand{\group}{\mathbb{G}}
 \newcommand{\Z}{\mathbb{Z}}
 
@@ -82,6 +95,30 @@
 
 \section{Preliminaries}
 \label{sec:prelim}
+\begin{definition}
+\label{def:uni-ano-ro}
+A KEM scheme is \textbf{anonymous with $q$ uniform public keys and random oracles ($q$-UNI-ANO-RO)} if the following two distributions are indistinguishable:
+\[
+    \fcodebox{
+    $pk_1, \dots, pk_q \gets \group$ \\
+    $i \gets \adv(pk_1, \dots, pk_q)$ \\
+    $(c,K) \gets \Encap(pk_i)$ \\
+    $h_1 := H_1(K); h_2 := H_2(K)$ \\
+    $b \gets \adv(c,h_1,h_2)$
+    }
+    \quad
+    \fcodebox{
+    $pk' \gets \group$ \\
+    \\
+    $(c,\star) \gets \Encap(pk')$ \\
+    $h_1 \gets \{0,1\}^n; h_2 \gets \{0,1\}^{2n}$ \\
+    $b \gets \adv(c,h_1,h_2)$
+    }
+    \]
+Here, $H_1$ and $H_2$ are ROs with range $\{0,1\}^n$ and $\{0,1\}^{2n}$, respectively.
+\end{definition}
+
+This property emerges when the OEKE adversary $\adv$ sends $(s^*,T^*)$ to $P'$ which contains a wrong password guess. In the real world, $(s^*,T^*)$ decrypt to a uniformly random public key, which is then used to compute $c,SK,\tau$ (the left game). In simulation, we want to remove the decryption process and outright use a freshly sampled public key to compute $c,SK,\tau$ (the right game). ($h_1,h_2$ in \Cref{def:uni-ano-ro} correspond to $SK,\tau$ in the protocol, respectively.) The complication lies in the fact that $\adv$ can decrypt a large number of $(s^*,T^*)$ pairs \emph{under both correct and incorrect passwords}, resulting in a large number of $pk^*$ values, \emph{before} sending $(s^*,T^*)$ to $P'$ (or even before initiating $P'$'s session); at this time the reduction does not know which $(s^*,T^*)$ will be used by $\adv$, or which password is correct, yet it has to program the public key (the ``right'' one that will be used in $P'$'s algorithm) into the decryption process. As such, we need to give the reduction polynomially many public keys.
 
 \section{Security Analysis of the ``Hash Everything'' Version}
 \label{sec:basic}
@@ -643,7 +680,7 @@ The condition of this game specifies that $\pw^* = \pw'$, and type (2) in Game 1
 
 \medskip\noindent\emph{Game 17:} Again in the case where $(s^*,T^*) \neq (s,T)$, if $\pw^* \neq \pw'$ or no $\pw^*$ is defined, sample $pk' \gets \group$, compute $(c,\star) \gets \Encap(pk')$, and sample $SK',\tau' \gets \{0,1\}^n$.
 
-We construct a reduction $\red_\text{UNI-ANO-RO}$ to the UNI-ANO-RO$_{(q_1+1)(q_2+1)}$ property of KEM:
+We construct a reduction $\red_\text{UNI-ANO-RO}$ to the $(q_1+1)(q_2+1)$-UNI-ANO-RO property of KEM:
 
 \medskip\noindent\textbf{\underline{Reduction $\red_\mathrm{UNI\text{-}ANO\text{-}RO}$}:}
 
@@ -679,7 +716,7 @@ On inputs $(pk_{1,1},\dots,pk_{q_1+1,q_2+1})$,
 
 We first argue that the $\pw^*$ as in record $\left<\mathsf{PasswordGuess},\pw^*,s^*,T^*\right>$ is exactly the same as the $\pw^*$ extracted from $(s^*,T^*)$ in Game 15:
 \begin{itemize}
-  \item If $\adv$ queried $H_1(\pw^*,r^*)$ before the $H_2(\pw^*,T^*)$ query, that is exactly type (1) in Game 15.
+  \item If $\adv$ queried $H_1(\pw^*,r^*)$ before the $H_2(\pw^*,T^*)$ query, this is exactly type (1) in Game 15.
   \item If $\adv$ queried $H_2(\pw^*,T)$, which triggered the programming of $H_1(\pw^*,r^*)$ before the $H_2(\pw^*,T^*)$ query, note that the $H_1$ instance that is programmed on is $(\pw^*, s \oplus H_2(\pw^*,T))$. Thus,
       \[
       s \oplus H_2(\pw^*,T) = r^* = s^* \oplus H_2(\pw^*,T^*),
@@ -699,7 +736,7 @@ Next, we argue that $\red_\text{UNI-ANO-RO}$ simulates Game 16/17 correctly:
 \end{itemize}
 We have
 \[
-\Dist_\env^{16,17} \leq \Adv_{\red_\text{UNI-ANO-RO}}^{\text{UNI-ANO-RO}_{(q_1+1)(q_2+1)}}.
+\Dist_\env^{16,17} \leq \Adv_{\red_\text{UNI-ANO-RO}}^{(q_1+1)(q_2+1)\text{-UNI-ANO-RO}}.
 \]
 
 \section{Security Analysis of Other Versions}
