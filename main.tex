@@ -748,6 +748,65 @@ We have
 We believe it is much cleaner to define a tailored KEM property that allows a \emph{single} reduction to go through, which is UNI-ANO-RO. In this way, we can separate out the multiple reductions to basic KEM properties, as well as the hybrid argument, on the level of KEM; this makes our OEKE security argument easier to understand.\footnote{In principle, we could also combine Game 3 and Game 4, as well as Game 6 and Game 7, via a single reduction to some ``integrated'' KEM properties. We choose not to do it as having many new, tailored KEM properties could be confusing.}
 }}
 
+\paragraph{Summary.}
+
+\begin{figure}
+\pseudocodeblock[codesize=\scriptsize]{
+P(\pw) \< \< \adv \< \< P'(\pw') \\ 
+s \gets \{0,1\}^{3n}; T \gets \group \< \< \< \< \\
+\< \sendmessageright*[1.5cm]{s,T} \< \< \sendmessageright*[1.5cm]{s^*,T^*} \< \\
+\< \< \< \< \text{if }(s^*,T^*) = (s,T) \\
+\< \< \< \< \t SK',\tau' \gets \{0,1\}^n \\
+\< \< \< \< \t (pk',\star) \gets \Gen \\
+\< \< \< \< \t (c,\star) \gets \Encap(pk') \\
+\< \< \< \< \text{otherwise} \\
+\< \< \< \< \t \text{extract }(\pw')^*\text{ (see Game 15)} \\
+\< \< \< \< \t \text{if none or }(\pw')^* \neq \pw' \\
+\< \< \< \< \t \t SK',\tau' \gets \{0,1\}^n \\
+\< \< \< \< \t \t pk' \gets \group \\
+\< \< \< \< \t \t (c,\star) \gets \Encap(pk') \\
+\< \< \< \< \t \text{if }(\pw')^* = \pw' \\
+\< \< \< \< \t \t \text{if type (1) in Game 15} \\
+\< \< \< \< \t \t \t t' := H_2(\pw',T^*) \\
+\< \< \< \< \t \t \t r' := s^* \oplus t' \\
+\< \< \< \< \t \t \t R' := H_1(\pw',r') \\
+\< \< \< \< \t \t \t pk' := T^*/R' \\
+\< \< \< \< \t \t \text{if type (2) in Game 15} \\
+\< \< \< \< \t \t \t pk' := pk \cdot (T^*/T) \\
+\< \< \< \< \t \t (c,K') \gets \Encap(pk') \\
+\< \< \< \< \t \t SK' := \Hkey(K') \\
+\< \< \< \< \t \t \tau' := \Htag(\pw',pk',c,K') \\
+\< \sendmessageleft*[1.5cm]{c^*,\tau^*} \< \< \sendmessageleft*[1.5cm]{c,\tau'} \< \\
+\text{if }\pw = \pw' \land (s^*,T^*) = (s,T) \land (c^*,\tau^*) = (c,\tau') \< \< \< \< \\
+\t SK := SK' \< \< \< \< \\
+\text{if }\pw \neq \pw' \land (s^*,T^*) = (s,T) \land (c^*,\tau^*) = (c,\tau') \< \< \< \< \\
+\t SK := \bot \< \< \< \< \\
+\text{otherwise } \< \< \< \< \\
+\t \text{find }\adv\text{'s }\Htag(\pw^*,pk^*,c^*,K^*) = \tau^*\text{ query} \< \< \< \< \\
+\t \text{if none or more than one} \< \< \< \< \\
+\t \t SK := \bot \\
+\t \text{if }\pw^* \neq \pw \< \< \< \< \\
+\t \t SK := \bot \\
+\t \text{retrieve }\left<\pw^*,pk^*,sk^*\right>\text{ record} \< \< \< \< \\
+\t \text{if none} \< \< \< \< \\
+\t \t SK := \bot \< \< \< \< \\
+\t K := \Decap(sk^*,c^*) \< \< \< \< \\
+\t \text{if }K^* = K \< \< \< \< \\
+\t \t SK := \Hkey(K) \< \< \< \< \\
+\t \text{otherwise } \< \< \< \< \\
+\t \t SK := \bot \< \< \< \< \\
+\text{output }SK \< \< \< \< \text{output }SK' \\
+\text{on }\adv\text{'s }H_2(\pw^*,T)=:t^*\text{ query:} \< \< \< \< \\
+\t (pk^*,sk^*) \gets \Gen \< \< \< \< \\
+\t r^* := s \oplus t^* \< \< \< \< \\
+\t R^* := T/pk^* \< \< \< \< \\
+\t H_1(\pw^*,r^*) := R^* \< \< \< \< \\
+\t \text{store }\left<\pw^*,pk^*,sk^*\right> \< \< \< \<
+}
+\caption{Game 17 (with various aborting conditions omitted), identical to the ideal world}
+\label{fig:ideal-game}
+\end{figure}
+
 \section{Security Analysis of Other Versions}
 
 \subsection{What Will Go Wrong If You Don't Hash Everything?}
