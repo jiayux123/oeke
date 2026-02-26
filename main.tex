@@ -339,15 +339,15 @@ Now suppose the aborting condition does not happen. The difference between Game 
   \item For $H_2(\pw^*,T)$ queries where $\pw^* \neq \pw'$, $sk^*$ (or even $pk^*$) is not used anywhere in the game;
   \item For the $H_2(\pw',T)$ query, we cannot say the above anymore, since $pk'$ is used while computing $c$ and $K'$. However, since $\pw \neq \pw'$, we know that $pk = T/H_1(\pw,r)$ is independent of $pk' = T/H_1(\pw',r')$, so $sk'$ is still not used anywhere else in the game.
 \end{itemize}
-So, the distinguishing advantage between Game 4 and Game 5 can be reduced to the UNI-PK property of KEM. We only sketch the reduction $\red_\text{UNI-PK1}$ here: $\red_\text{UNI-PK1}$, on input $pk^*$ (which is either an honestly generated public key or a uniformly random value), samples $i \gets [q_2+1]$, and answers the (either $\adv$'s or $P'$'s) first $i-1$ $H_2$ queries as in Game 4 and the last $q_2-i+1$ $H_2$ queries as in Game 5; for the $i$-th $H_2$ query, $\red_\text{UNI-PK1}$ computes
+So, the distinguishing advantage between Game 4 and Game 5 can be reduced to the UNI-PK property of KEM. We only sketch the reduction $\red_\text{UNI-PK}$ here: $\red_\text{UNI-PK}$, on input $pk^*$ (which is either an honestly generated public key or a uniformly random value), samples $i \gets [q_2+1]$, and answers the (either $\adv$'s or $P'$'s) first $i-1$ $H_2$ queries as in Game 4 and the last $q_2-i+1$ $H_2$ queries as in Game 5; for the $i$-th $H_2$ query, $\red_\text{UNI-PK}$ computes
 \[
 r^* := s \oplus t^*, \quad R^* := T/pk^*
 \]
-and programs $H_1(\pw^*,r^*) := R^*$. If this $H_2$ query is on $(\pw',T)$, $\red_\text{UNI-PK1}$ also uses its input $pk^*$ to compute $c$ and $K'$. (Note that the $\left<\pw^*,pk^*,sk^*\right>$ record is not actually used in Game 5, so $\red_\text{UNI-PK1}$ does not need to store it.) $\red_\text{UNI-PK1}$ simulates other parts of Game 4/5 honestly. Finally, $\red_\text{UNI-PK1}$ copies $\env$'s output bit.
+and programs $H_1(\pw^*,r^*) := R^*$. If this $H_2$ query is on $(\pw',T)$, $\red_\text{UNI-PK}$ also uses its input $pk^*$ to compute $c$ and $K'$. (Note that the $\left<\pw^*,pk^*,sk^*\right>$ record is not actually used in Game 5, so $\red_\text{UNI-PK}$ does not need to store it.) $\red_\text{UNI-PK}$ simulates other parts of Game 4/5 honestly. Finally, $\red_\text{UNI-PK}$ copies $\env$'s output bit.
 
-A standard hybrid argument shows that (assuming the aborting condition does not happen) $\env$'s distinguishing advantage between Game 4 and Game 5 is upper-bounded by $(q_2+1)\Adv_{\red_\text{UNI-PK1}}^\text{UNI-PK}$.\footnote{Note that here we cannot make $q_2+1$ separate reductions to the PR-PK property, and must reduce to PR-PK ``in one blow''. Furthermore, the calculation of the reduction's advantage is more complicated than the normal case where the reduction wins as long as its guess is correct. This is similar to, say, why composing a PRG polynomial times yields another PRG; see, e.g., \cite[Section~3.4.3]{book:BonSho23} for details.} Overall, we have
+A standard hybrid argument shows that (assuming the aborting condition does not happen) $\env$'s distinguishing advantage between Game 4 and Game 5 is upper-bounded by $(q_2+1)\Adv_{\red_\text{UNI-PK}}^\text{UNI-PK}$.\footnote{Note that here we cannot make $q_2+1$ separate reductions to the PR-PK property, and must reduce to PR-PK ``in one blow''. Furthermore, the calculation of the reduction's advantage is more complicated than the normal case where the reduction wins as long as its guess is correct. This is similar to, say, why composing a PRG polynomial times yields another PRG; see, e.g., \cite[Section~3.4.3]{book:BonSho23} for details.} Overall, we have
 \[
-\Dist_\env^{4,5} \leq (q_2+1)\Adv_{\red_\text{UNI-PK1}}^\text{UNI-PK} + \frac{q_1(q_2+1)}{2^{3n}}.
+\Dist_\env^{4,5} \leq (q_2+1)\Adv_{\red_\text{UNI-PK}}^\text{UNI-PK} + \frac{q_1(q_2+1)}{2^{3n}}.
 \]
 
 \emph{{\color{red}This game corresponds to game $\mathsf{G}_{10}$ in \cite{EPRINT:ArrBarJar25}. However, there are two differences:
@@ -359,7 +359,7 @@ A standard hybrid argument shows that (assuming the aborting condition does not 
 
 \medskip\noindent\emph{Game 6:} In the case where $\pw \neq \pw' \land (s^*,T^*) = (s,T)$, sample $SK',\tau' \gets \{0,1\}^n$. ($c$ is still computed as before.)
 
-Let $\Query_2$ be the event that $\adv$ queries \emph{either} $\Hkey(K')$ \emph{or} $\Htag(\pw',\allowbreak pk',c,K')$. Clearly Game 5 and Game 6 are identical unless $\Query_2$ happens. We upper-bound $\Pr[\Query_2]$ via a reduction $\red_\text{OW1}$ to the OW property of KEM. This is somewhat similar to the reduction $\red_\text{OW-1PCA1}$ to the OW-1PCA property in Game 3, and we highlight the differences in {\color{blue}blue}:
+Let $\Query_2$ be the event that $\adv$ queries \emph{either} $\Hkey(K')$ \emph{or} $\Htag(\pw',\allowbreak pk',c,K')$. Clearly Game 5 and Game 6 are identical unless $\Query_2$ happens. We upper-bound $\Pr[\Query_2]$ via a reduction $\red_\text{OW1}$ to the OW property of KEM. This is somewhat similar to the reduction $\red_\text{OW-1PCA}$ to the OW-1PCA property in Game 3, and we highlight the differences in {\color{blue}blue}:
 
 \medskip\noindent\textbf{\underline{Reduction $\red_\mathrm{OW1}$}:}
 
@@ -414,20 +414,20 @@ The difference between Game 6 and Game 7 is that in Game 6 $c$ is generated by
 \[
 pk' = \frac{T}{H_1(\pw',s \oplus H_2(\pw',T))}
 \]
-which $\adv$ can compute, whereas in Game 7 $c$ is generated by an independent $pk''$. We construct a reduction $\red_\text{ANO1}$ to the ANO property of KEM. This reduction, in fact, is identical to the reduction $\red_\text{OW1}$ to the OW property in Game 6 except the last step; for completeness, we still present the full reduction and highlight the difference in {\color{blue}blue}:
+which $\adv$ can compute, whereas in Game 7 $c$ is generated by an independent $pk''$. We construct a reduction $\red_\text{ANO}$ to the ANO property of KEM. This reduction, in fact, is identical to the reduction $\red_\text{OW1}$ to the OW property in Game 6 except the last step; for completeness, we still present the full reduction and highlight the difference in {\color{blue}blue}:
 
-\medskip\noindent\textbf{\underline{Reduction $\red_\mathrm{ANO1}$}:}
+\medskip\noindent\textbf{\underline{Reduction $\red_\mathrm{ANO}$}:}
 
 \medskip\noindent
 Sample $j \gets [q_2+1]$ as a guess that the $j$-th $H_2$ query (by either $\adv$ or $P'$) is $H_2(\pw',T)$. \\
 On input $(pk',c)$,
 \begin{enumerate}
   \item Invoke $\env$. On $(\NewSession, sid, P, P', \pw, \text{``initiator''})$ from $\env$, run $P$'s algorithm to compute $(s,T)$. Send $(s,T)$ to $\adv$.
-  \item Whenever there is an $H_2(\star,T)$ query (by either $\adv$ or $\red_\mathrm{ANO1}$ itself on behalf of $P'$ --- see step 3 below), do what's described in Game 5. However, if this is the $j$-th query, use $\red_\mathrm{ANO1}$'s input $pk'$ instead of generating $pk^*$ freshly.
+  \item Whenever there is an $H_2(\star,T)$ query (by either $\adv$ or $\red_\mathrm{ANO1}$ itself on behalf of $P'$ --- see step 3 below), do what's described in Game 5. However, if this is the $j$-th query, use $\red_\mathrm{ANO}$'s input $pk'$ instead of generating $pk^*$ freshly.
   \item On $(\NewSession, sid, P', P, \pw', \text{``respondent''})$ from $\env$ and $(s^*,T^*)$ from $\adv$, if $\neg(\pw \neq \pw' \land (s^*,T^*) = (s,T))$, abort. Otherwise
       \begin{enumerate}
         \item If $\adv$ has not queried $H_2(\pw',T)$, make this query on behalf of $P'$.
-        \item Sample $SK',\tau' \gets \{0,1\}^n$, output $SK'$ to $\env$, and send $(c,\tau')$ to $\adv$. ($c$ is part of $\red_\text{ANO1}$'s inputs.)
+        \item Sample $SK',\tau' \gets \{0,1\}^n$, output $SK'$ to $\env$, and send $(c,\tau')$ to $\adv$. ($c$ is part of $\red_\text{ANO}$'s inputs.)
       \end{enumerate}
   \item On $(c^*,\tau^*)$ from $\adv$,
       \begin{enumerate}
@@ -439,9 +439,9 @@ On input $(pk',c)$,
   \item {\color{blue}When $\env$ outputs bit $b^*$, copy $\env$'s output.}
 \end{enumerate}
 
-Assume $\red_\text{ANO1}$'s guess of index $j$ is correct. If $b = 0$ then $c \gets \Encap(pk')$, i.e., the computation of $R'$ and $c$ use the same $pk'$, so $\red_\text{ANO-1PCA}$ simulates Game 6; if $b = 1$ then $c \gets \Encap(pk'')$, i.e., the computation of $c$ uses an independently generated $pk''$, so $\red_\text{ANO-1PCA}$ simulates Game 7. We have
+Assume $\red_\text{ANO}$'s guess of index $j$ is correct. If $b = 0$ then $c \gets \Encap(pk')$, i.e., the computation of $R'$ and $c$ use the same $pk'$, so $\red_\text{ANO}$ simulates Game 6; if $b = 1$ then $c \gets \Encap(pk'')$, i.e., the computation of $c$ uses an independently generated $pk''$, so $\red_\text{ANO}$ simulates Game 7. We have
 \[
-\Dist_\env^{6,7} \leq (q_2+1)\Adv_{\red_\text{ANO-1PCA}}^\text{ANO-1PCA}.
+\Dist_\env^{6,7} \leq (q_2+1)\Adv_{\red_\text{ANO}}^\text{ANO}.
 \]
 
 \medskip\noindent\emph{Game 8:} Again in the case where $\pw \neq \pw' \land (s^*,T^*) = (s,T)$, we outright skip the computation of $t',r',R'$ and the programming of $H_1$ (the {\color{brown}brown} text in Game 7). (Since $pk'$ is not generated anymore, we can rename $pk''$ --- the KEM public key from which $c$ is computed --- to $pk'$.)
