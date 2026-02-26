@@ -395,7 +395,7 @@ On input $(pk',c)$,
   \item On $(c^*,\tau^*)$ from $\adv$,
       \begin{enumerate}
         \item Find $\adv$'s $\Htag(\pw,pk,c^*,K^*)$ query whose result is $\tau^*$. If there is none or more than one, output $SK := \bot$ to $\env$. (This matches Game 2.)
-        \item Compute $K := \Decap(sk,c)$. ($sk$ is the KEM secret key generated in step 1.) \quad \textcolor[gray]{0.5}{// No need to query a plaintext-checking oracle since $pk$ on the $P$ side and $pk'$ on the $P'$ side are independent of each other, so the reduction can sample $sk$ on its own} \\
+        \item Compute $K := \Decap(sk,c^*)$. ($sk$ is the KEM secret key generated in step 1.) \quad \textcolor[gray]{0.5}{// No need to query a plaintext-checking oracle since $pk$ on the $P$ side and $pk'$ on the $P'$ side are independent of each other, so the reduction can sample $sk$ on its own} \\
             If $K = K^*$, output $SK := \Hkey(K)$ to $\env$. \\
             If $K \neq K^*$, output $SK := \bot$ to $\env$.
       \end{enumerate}
@@ -407,7 +407,7 @@ Assume $\red_\text{ANO1}$'s guess of index $j$ is correct. If $b = 0$ then $c \g
 \Dist_\env^{6,7} \leq (q_2+1)\Adv_{\red_\text{ANO-1PCA}}^\text{ANO-1PCA}.
 \]
 
-\medskip\noindent\emph{Game 8:} Again in the case where $\pw \neq \pw' \land (s^*,T^*) = (s,T)$, we outright skip the computation of $t',r',R'$ and the programming of $H_1$ (the {\color{brown}brown} text in Game 6). (Since $pk'$ is not generated anymore, we can rename $pk''$ --- the KEM public key from which $c$ is computed --- to $pk'$.)
+\medskip\noindent\emph{Game 8:} Again in the case where $\pw \neq \pw' \land (s^*,T^*) = (s,T)$, we outright skip the computation of $t',r',R'$ and the programming of $H_1$ (the {\color{brown}brown} text in Game 7). (Since $pk'$ is not generated anymore, we can rename $pk''$ --- the KEM public key from which $c$ is computed --- to $pk'$.)
 
 Note that the aborting condition, which was originally introduced in Game 5, is removed (for the specific $H_2(\pw',T)$ query by $P'$). By an analysis similar to that in Game 5, the aborting probability in Game 7 is upper-bounded by $q_1/2^{3n}$. If the aborting condition does not happen, the {\color{brown}brown} text is independent of the rest of the game, so removing it does not affect the distribution of $\env$'s output. We have
 \[
@@ -496,7 +496,7 @@ s \gets \{0,1\}^{3n}; T \gets \group \< \< \< \< \\
 \t \text{otherwise} \< \< \< \< \\
 \t \t SK := \bot \< \< \< \< \\
 \text{otherwise } \< \< \< \< \\
-\t \text{fetch }\left<\pw,pk,sk\right>\text{ record} \< \< \< \< \\
+\t \text{retrieve }\left<\pw,pk,sk\right>\text{ record} \< \< \< \< \\
 \t \text{if none} \< \< \< \< \\
 \t \t {\color{brown}t := H_2(\pw,T)} \< \< \< \< \\
 \t \t {\color{brown}(pk,sk) \gets \Gen} \< \< \< \< \\
@@ -540,7 +540,7 @@ Game 10 and Game 11 differ only if $\adv$ does not make an $H_2(\pw,T)$ query, b
 
 \medskip\noindent\emph{Game 12:} In the case where $\pw = \pw' \land (s^*,T^*) = (s,T) \land c^* = c \land \tau^* \neq \tau'$, do what's in the $\neg(\pw = \pw' \land (s^*,T^*) = (s,T) \land c^* = c)$ case.
 
-In Game 11 $SK$ is outright set to $\bot$, whereas here it is treated the same as the ``normal'' case. Let $\mathsf{Query}_3$ be the event that $\adv$ queries $\Htag(\pw,pk,c,K)$, where $pk$ is the KEM public key generated on $\adv$'s $H_2(\pw,T)$ query; Game 11 and Game 12 are identical unless $\mathsf{Query}_3$ happens. To trigger $\mathsf{Query}_3$, $\adv$ must know $K$, which suggests a reduction $\red_\text{OW2}$ to the OW property of KEM. This reduction is simple, so we only provide a sketch: $\red_\text{OW2}$, on input $(pk,c)$, invokes $\env$ and simulates $(s,T)$ and the $P'$ side honestly. (Note that $P'$ uses a freshly generated $pk'$ independent of the $P$ side.) When $\adv$ queries $H_2(\pw,T)$, $\red_\text{OW2}$ uses its input $pk$ in lieu of $(pk,\star) \gets \Gen$. Along the way, as long as $\red_\text{OW2}$ detects that $\pw = \pw' \land (s^*,T^*) = (s,T) \land c^* = c \land \tau^* \neq \tau'$ does not happen, it aborts. Finally, $\red_\text{OW2}$ finds the (unique) $\adv$'s $\Htag(\pw,pk,c,K^*)$ query resulting in $\tau^*$, and outputs $K^*$. We have
+In Game 11 $SK$ is outright set to $\bot$, whereas here it is treated the same as the ``normal'' case. Let $\mathsf{Query}_3$ be the event that $\adv$ queries $\Htag(\pw,pk,c,K)$, where $pk$ is the KEM public key generated on $\adv$'s $H_2(\pw,T)$ query; Game 11 and Game 12 are identical unless $\mathsf{Query}_3$ happens. To trigger $\mathsf{Query}_3$, $\adv$ must know $K$, which suggests a reduction $\red_\text{OW2}$ to the OW property of KEM. This reduction is simple, so we only provide a sketch: $\red_\text{OW2}$, on inputs $(pk,c)$, invokes $\env$ and simulates $(s,T)$ and the $P'$ side honestly. (Note that $P'$ uses a freshly generated $pk'$ independent of the $P$ side.) When $\adv$ queries $H_2(\pw,T)$, $\red_\text{OW2}$ uses its input $pk$ in lieu of $(pk,\star) \gets \Gen$. Along the way, as long as $\red_\text{OW2}$ detects that $\pw = \pw' \land (s^*,T^*) = (s,T) \land c^* = c \land \tau^* \neq \tau'$ does not happen, it aborts. Finally, $\red_\text{OW2}$ finds the (unique) $\adv$'s $\Htag(\pw,pk,c,K^*)$ query resulting in $\tau^*$, and outputs $K^*$. We have
 \[
 \Dist_\env^{11,12} \leq \Pr[\Query_3] \leq \Adv_{\red_\text{OW2}}^\text{OW}.
 \]
@@ -641,31 +641,66 @@ The condition of this game specifies that $\pw^* = \pw'$, and type (2) in Game 1
 \paragraph{Incorrect password guess for $P'$.}
 \mbox{}
 
-\medskip\noindent\emph{Game 17:} Again in the case where $(s^*,T^*) \neq (s,T)$, if $\pw^* \neq \pw'$ or no $\pw^*$ is defined, generate $pk',r',R'$ as follows: query $t' := H_2(\pw',T^*)$, generate $(pk',\star) \gets \Gen$, and compute
-\[
-r' := s^* \oplus t', \quad R' := T^*/pk'.
-\]
-If $H_1(\pw',r')$ has already been defined and it is not $R'$, abort. Otherwise program $H_1(\pw',r') := R'$. (This is the same as how $pk',r',R'$ are generated in Game 5, except that Game 5 runs the above procedure in the case where $\pw \neq \pw' \land (s^*,T^*) = (s,T)$.)
+\medskip\noindent\emph{Game 17:} Again in the case where $(s^*,T^*) \neq (s,T)$, if $\pw^* \neq \pw'$ or no $\pw^*$ is defined, sample $pk' \gets \group$, compute $(c,\star) \gets \Encap(pk')$, and sample $SK',\tau' \gets \{0,1\}^n$.
 
-We first upper-bound the aborting probability. There are two cases that may cause $H_1(\pw',r')$ to be defined before $\adv$ sends $(s^*,T^*)$ to $P'$:
-\begin{itemize}
-  \item $\adv$ queries $H_1(\pw',r')$: This query must happen before $\adv$'s $H_2(\pw',T^*)$ query, since otherwise $\pw^*$ is set to $\pw'$ as per case (1) in Game 15, which violates the condition of this game. But then $t' = H_2(\pw',T^*)$ is uniformly random in $\{0,1\}^{3n}$ independent of $\adv$'s view, which results in an independent $r' \gets \{0,1\}^{3n}$ (regardless of the distribution of $s$). So, the probability that $\adv$ queries $H_1(\pw',r')$ is upper-bounded by $q_1/2^{3n}$.
-  \item $\adv$ queries $H_2(\pw',T)$, which triggers the programming of $H_1(\pw',r')$: When $\adv$ queries $H_2(\pw',T)$, the $H_1$ instance that is programmed on is $(\pw, s \oplus H_2(\pw',T))$. Thus,
+We construct a reduction $\red_\text{UNI-ANO-RO}$ to the UNI-ANO-RO$_{(q_1+1)(q_2+1)}$ property of KEM:
+
+\medskip\noindent\textbf{\underline{Reduction $\red_\mathrm{UNI\text{-}ANO\text{-}RO}$}:}
+
+\medskip\noindent
+On inputs $(pk_{1,1},\dots,pk_{q_1+1,q_2+1})$,
+\begin{enumerate}
+  \item Invoke $\env$. On $(\NewSession, sid, P, P', \pw, \text{``initiator''})$ from $\env$, sample $s \gets \{0,1\}^{3n}, T \gets \group$. Send $(s,T)$ to $\adv$.
+  \item Whenever there is an $H_2(\star,T)$ query by $\adv$, do what's described in Game 5. Furthermore, for the $j$-th query to $H_2$ (by $\adv$ or $\red_\text{UNI-ANO-RO}$ itself on behalf of $P'$ --- see step 3 below), say it is $H_2(\pw^*,T^*) =: t^*$, and the $i$-th $H_1$ query in the form of $H_1(\pw^*,r^*)$, compute
       \[
-      s \oplus H_2(\pw',T) = r' = s^* \oplus H_2(\pw',T^*),
+      s^* := r^* \oplus t^*, \quad R^* := T^*/pk_{i,j}.
       \]
-      which causes $\pw^* = \pw'$ as per case (1) in Game 15, which violates the condition of this game.
+      \begin{enumerate}
+        \item If $H_1(\pw^*,r^*)$ has been defined when the $H_2(\pw^*,T^*)$ query happens (either because it was queried \emph{before} the $H_2(\pw^*,T^*) =: t^*$ query or because it has been programmed by $\red_\text{UNI-ANO-RO}$ while answering $\adv$'s $H_2(\pw^*,T)$ query), store $\left<\mathsf{PasswordGuess},\pw^*,s^*,T^*\right>$. \quad // \textcolor[gray]{0.5}{Anchor query, i.e., $\pw^*$ is the password guess corresponding to $(s^*,T^*)$} \\
+            At any time, if there is more than one $\left<\star,s^*,T^*\right>$ record with the same $s^*,T^*$, abort.
+        \item Otherwise program $H_1(\pw^*,r^*) := R^*$.
+      \end{enumerate}
+  \item On $(\NewSession, sid, P', P, \pw', \text{``respondent''})$ from $\env$ and $(s^*,T^*)$ from $\adv$, if $(s^*,T^*) = (s,T)$, output 1. If there is a record $\left<\mathsf{PasswordGuess},\pw',s^*,T^*\right>$, also output 1. Otherwise \quad // \textcolor[gray]{0.5}{Wrong or no password guess (the case that matters in this game hop)}
+      \begin{enumerate}
+        \item If $\adv$ has not queried $H_2(\pw',T^*)$ or $H_1(\pw',r')$ (where $r' = s^* \oplus H_2(\pw',T^*)$), make these queries on behalf of $P'$.
+        \item Say $H_2(\pw',T^*)$ is the $j^*$-th query to $H_2$ and $H_1(\pw',r')$ is the $i^*$-th query to $H_1$ in the form of $H_1(\pw',\star)$. Output $(i^*,j^*)$ to the challenger and receive $(c,SK',\tau')$.
+        \item Output $SK'$ to $\env$, and send $(c,\tau')$ to $\adv$.
+      \end{enumerate}
+  \item On $(c^*,\tau^*)$ from $\adv$,
+      \begin{enumerate}
+        \item Retrieve record $\left<\pw,pk,sk\right>$. If there is no such record, output $SK := \bot$ to $\env$.
+        \item Find $\adv$'s $\Htag(\pw,pk,c^*,K^*)$ query whose result is $\tau^*$. If there is none or more than one, output $SK := \bot$ to $\env$.
+        \item Compute $K := \Decap(sk,c^*)$. ($sk$ is the KEM secret key generated in step 1.) \quad \textcolor[gray]{0.5}{// No need to query a plaintext-checking oracle since $pk$ on the $P$ side and $pk'$ on the $P'$ side are independent of each other, so the reduction can sample $sk$ on its own} \\
+            If $K = K^*$, output $SK := \Hkey(K)$ to $\env$. \\
+            If $K \neq K^*$, output $SK := \bot$ to $\env$.
+      \end{enumerate}
+  \item When $\env$ copies a bit $b^*$, copy $\env$'s output.
+\end{enumerate}
+
+We first argue that the $\pw^*$ as in record $\left<\mathsf{PasswordGuess},\pw^*,s^*,T^*\right>$ is exactly the same as the $\pw^*$ extracted from $(s^*,T^*)$ in Game 15:
+\begin{itemize}
+  \item If $\adv$ queried $H_1(\pw^*,r^*)$ before the $H_2(\pw^*,T^*)$ query, that is exactly type (1) in Game 15.
+  \item If $\adv$ queried $H_2(\pw^*,T)$, which triggered the programming of $H_1(\pw^*,r^*)$ before the $H_2(\pw^*,T^*)$ query, note that the $H_1$ instance that is programmed on is $(\pw^*, s \oplus H_2(\pw^*,T))$. Thus,
+      \[
+      s \oplus H_2(\pw^*,T) = r^* = s^* \oplus H_2(\pw^*,T^*),
+      \]
+      which is exactly type (2) in Game 15.
 \end{itemize}
-Overall, the aborting probability is upper-bounded by $q_1/2^{3n}$.
 
-Now suppose the aborting condition does not happen. The difference between Game 16 and Game 17 is that Game 16 samples $H_1(\pw',r')$ uniformly at random, whereas Game 17 defines it as $T^*/pk'$. Note that $sk'$ is not used anywhere in the game, so the distinguishing advantage between Game 16 and Game 17 can be reduced to the UNI-PK property of KEM. The reduction $\red_\text{UNI-PK2}$ is very similar to the one in Game 5 (except that here we don't need to make a guess over all $H_2$ queries, and we don't need a hybrid argument) and is omitted. We have
+Next, we argue that $\red_\text{UNI-ANO-RO}$ simulates Game 16/17 correctly:
+\begin{itemize}
+  \item Suppose $\red_\text{UNI-ANO-RO}$ is in the ``real'' game where $(c,K') \gets \Encap(pk_{i^*,j^*})$ and $SK' = \Hkey(K'), \tau' = \Htag(\dots,K')$. For the ``special'' $H_2(\pw',T^*)$ query and $H_1(\pw',r')$ query, in both Game 16 and $\red_\text{UNI-ANO-RO}$'s simulation,
+      \[
+      s^* = r' \oplus H_2(\pw',T^*), \quad t^* = pk' \cdot H_1(\pw',r');
+      \]
+      if we sample $H_1(\pw',r') \gets \group$ then we get Game 16, whereas if we sample $pk' \gets \group$ (as $pk_{i^*,j^*}$) then we get $\red_\text{UNI-ANO-RO}$'s simulation. Later, $pk'$ is used to compute $c,K'$ in both Game 16 and $\red_\text{UNI-ANO-RO}$'s simulation. \\
+      Regarding other $H_2(\pw^*,T^*)$ and $H_1(\pw^*,r^*)$ queries, the $pk_{i,j}$ that $\red_\text{UNI-ANO-RO}$ uses while programming $H_1(\pw^*,r^*)$ is uniformly random and independent of the rest of the game, so $H_1(\pw^*,r^*)$ is programmed to a uniformly random value --- again the same as Game 16.
+  \item Suppose $\red_\text{UNI-ANO-RO}$ is in the ``random'' game where $(c,K') \gets \Encap(pk')$ and $SK' = \Hkey(K'), \tau' = \Htag(\dots,K')$ for a freshly sampled $pk'$. \emph{All} $pk_{i,j}$ values that $\red_\text{UNI-ANO-RO}$ uses while programming $H_1$ are uniformly random and independent of the rest of the game, so $H_1$ is always programmed to a uniformly random value --- the same as Game 17. Later, a freshly sampled $pk'$ is used to compute $c,K'$ in both Game 17 and $\red_\text{UNI-ANO-RO}$'s simulation.
+\end{itemize}
+We have
 \[
-\Dist_\env^{16,17} \leq \Adv_{\red_\text{UNI-PK2}}^\text{UNI-PK} + \frac{q_1}{2^{3n}}.
+\Dist_\env^{16,17} \leq \Adv_{\red_\text{UNI-ANO-RO}}^{\text{UNI-ANO-RO}_{(q_1+1)(q_2+1)}}.
 \]
-
-\medskip\noindent\emph{Game 18:} Again in the case where $(s^*,T^*) \neq (s,T)$, if $\pw^* \neq \pw'$ or no $\pw^*$ is defined, sample $SK',\tau' \gets \{0,1\}^n$. ($c$ is still computed as before.)
-
-Let $\Query_4$ be the event that $\adv$ queries \emph{either} $\Hkey(K')$ \emph{or} $\Htag(\pw',\allowbreak pk',c,K')$. Clearly Game 17 and Game 18 are identical unless $\Query_4$ happens.
 
 \section{Security Analysis of Other Versions}
 
