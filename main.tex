@@ -47,7 +47,7 @@
 \renewcommand{\sim}{\mathcal{S}}
 \newcommand{\red}{\mathcal{R}}
 \newcommand{\func}{\mathcal{F}}
-\newcommand{\Fpake}{\func_\mathrm{PAKE}}
+\newcommand{\Fpake}{\func_\mathrm{PAKE\text{-}1EA}}
 
 \newcommand{\Adv}{\mathbf{Adv}}
 \newcommand{\Dist}{\mathbf{Dist}}
@@ -171,6 +171,8 @@ $\sim$ should find the $\Htag$ query whose result is $\tau^*$, which contains $(
 \subsubsection{Formal Description of the Simulator}
 \label{sec:sim}
 
+Below we use $\func$ as a shorthand for $\Fpake$. Please see \Cref{fig:oeke-sim1,fig:oeke-sim2} for the simulator $\sim$.
+
 \begin{figure}[H]
 \begin{framed}
 \begin{small}
@@ -234,7 +236,7 @@ On $(c^*,\tau^*)$ from $\func$, simulate $P$'s output as follows:
               \item If $\func$ replies with ``wrong guess'', send $(\NewKey, sid, P', 0^n)$ to $\func$.
               \item If $\func$ replies with ``correct guess'', retrieve record $\left<\pw^*,pk^*,sk^*\right>$. \quad \textcolor[gray]{0.5}{// $pk^*$ must match what's in $\adv$'s $\Htag$ query} \\
                   If there is no such record, send $(\NewKey, sid, P', 0^n)$ to $\func$. \\
-                  Otherwise compute $K := \Decap(sl^*,c^*)$. If $K^* = K$, compute $SK := \Hkey(K)$ and send $(\NewKey, sid, P', SK)$ to $\func$. \\
+                  Otherwise compute $K := \Decap(sk^*,c^*)$. If $K^* = K$, compute $SK := \Hkey(K)$ and send $(\NewKey, sid, P', SK)$ to $\func$. \\
                   If $K^* \neq K$, send $(\NewKey, sid, P', 0^n)$ to $\func$.
             \end{enumerate}
       \end{enumerate}
@@ -254,6 +256,8 @@ If $H_1(\pw^*,r^*)$ has already been defined and it is not $R^*$, abort. Otherwi
 \caption{UC simulator $\sim$ for OEKE (part 2)}
 \label{fig:oeke-sim2}
 \end{figure}
+
+For readers who would like to read both our paper and \cite{EPRINT:ArrBarJar25}, we include a comparison in \Cref{app:comparison}.
 
 \subsection{Hybrid Argument}
 \label{sec:games}
@@ -939,4 +943,37 @@ Concretely, Games 2, 11 and 13 in \Cref{sec:games} need stronger KEM security pr
 
 \bibliographystyle{alpha}
 \bibliography{bib.bib}
+\appendix
+\section{Comparison Between Our Simulator and the One in \cite{EPRINT:ArrBarJar25}}
+\label{app:comparison}
+Our simulator in \Cref{sec:sim} is, by and large, the same as the one in \cite[Fig.5~and~6]{EPRINT:ArrBarJar25}, although we completely rewrite it to improve readability. We summarize some of the notational differences in \Cref{tab:sim-notations}.
+\begin{table}[H]\centering
+\begin{tabular}{ |c|c|c|c| }
+\hline
+ & \makecell{our \\ notation} & \makecell{notation in \\ \cite{EPRINT:ArrBarJar25}} & comment \\
+\hline
+honest parties & $P$, $P'$ & $\mathsf{A}$, $\mathsf{B}$ & \makecell{easy to confuse \\ with adversary $\adv$} \\
+\hline
+simulated $P$-to-$P'$ message & $(s,T)$ & $(\overline{s},\overline{T})$ & \\
+\hline
+adversarial $P$-to-$P'$ message & $(s^*,T^*)$ & $(s,T)$ & \\
+\hline
+$\adv$'s guess of $P'$'s password & $(\pw')^*$ & $\pw^*$ & \\
+\hline
+\makecell{KEM public key corresponding to \\ correct password guess on $P'$} & $pk'$ & $\mathsf{pk}^*$ & \\
+\hline
+simulated $P'$-to-$P$ message & $(c,\tau')$ & $(c,\mathsf{tag})$ & \\
+\hline
+adversarial $P'$-to-$P$ message & $(c^*,\tau^*)$ & $(c,\mathsf{tag})$ & \makecell{same $(c,\mathsf{tag})$ \\ for different things} \\
+\hline
+$\adv$'s guess of $P$'s password & $\pw^*$ & $\pw^*$ & \makecell{same $\pw^*$ \\ for different things} \\
+\hline
+\end{tabular}
+\caption{Comparison of notations between our simulator and the one in \cite{EPRINT:ArrBarJar25}}
+\label{tab:sim-notations}
+\end{table}
+
+The simulator in \cite{EPRINT:ArrBarJar25} has more bookkeeping and aborts more frequently. In particular, we completely remove their record $\mathsf{forwS}$, and when detecting whether an adversarial $P$-to-$P'$ message contains more than one password guess (causing the simulator to abort), we only check the relevant $H_2$ queries, whereas they check \emph{all} $H_2$ queries --- including those that are completely unrelated to the attack in the $P$-to-$P'$ direction. For a more detailed explanation, see the comment after Game 15 in \Cref{sec:games}.
+
+The only (more or less) essential difference lies in the {\color{red}red} text in \Cref{fig:oeke-sim1}: in the case where the adversary makes an incorrect password guess on $P'$, we compute $c$ from a uniformly random KEM public key $pk'$, whereas they compute $c$ from an honestly generated $pk'$. While both methods work, our method simplifies the reduction; this is further explained in the comment after Game 18, item (2).
 \end{document} 
