@@ -185,7 +185,7 @@ On $(\NewSession, sid, P, P')$ from $\func$, sample $s \gets \{0,1\}^{3n}, T \ge
 \medskip
 On $(\NewSession, sid, P', P)$ from $\func$ and $(s^*,T^*)$ from $\adv$ to $P'$, simulate $P'$'s output and the $P'$-to-$P$ message as follows:
 \begin{enumerate}
-  \item If $(s^*,T^*) = (s,T)$, send $(\NewKey, sid, P', {\color{red}0^n})$ to $\func$; generate $(pk',\star) \gets \Gen$, compute $(c,\star) \gets \Encap(pk')$, sample $\tau' \gets \{0,1\}^{2n}$, and send $(c',\tau')$ from $P'$ to $P$.
+  \item If $(s^*,T^*) = (s,T)$, send $(\NewKey, sid, P', 0^n)$ to $\func$; generate $(pk',\star) \gets \Gen$, compute $(c,\star) \gets \Encap(pk')$, sample $\tau' \gets \{0,1\}^{2n}$, and send $(c',\tau')$ from $P'$ to $P$.
   \item Otherwise find $\adv$'s $H_2((\pw')^*,T^*)$ query (let the result be $t^*$) that satisfies \emph{either} of the following:
       \begin{itemize}
         \item \emph{Type (1):} $\adv$ queried $H_1((\pw')^*,r^*)$ \emph{before} the $H_2((\pw')^*,T^*)$ query, where $r^* = s^* \oplus t^*$.
@@ -198,16 +198,16 @@ On $(\NewSession, sid, P', P)$ from $\func$ and $(s^*,T^*)$ from $\adv$ to $P'$,
         \item If there is more than one such $(\pw')^*$, abort.
         \item If there is exactly one such $(\pw')^*$, send $(\TestPwd, sid, P', (\pw')^*)$ to $\func$; if there is no such $(\pw')^*$, send $(\TestPwd, sid, P', \bot)$ to $\func$.
             \begin{enumerate}
-              \item If $\func$ replies with ``wrong guess'', send $(\NewKey, sid, P', {\color{red}0^n})$ to $\func$; {\color{red}sample $pk' \gets \group$}, compute $(c,\star) \gets \Encap(pk')$, sample $\tau' \gets \{0,1\}^{2n}$, and send $(c,\tau')$ from $P'$ to $P$.
+              \item If $\func$ replies with ``wrong guess'', send $(\NewKey, sid, P', 0^n)$ to $\func$; {\color{red}sample $pk' \gets \group$}, compute $(c,\star) \gets \Encap(pk')$, sample $\tau' \gets \{0,1\}^{2n}$, and send $(c,\tau')$ from $P'$ to $P$.
               \item If $\func$ replies with ``correct guess'', and $(\pw')^*$ is defined in type (1) above, then $r^*$ is already defined. Compute
                   \[
                   R' := H_1((\pw')^*,r^*), \quad pk' := T^*/R'.
                   \]
-                  If $\func$ replies with ``correct guess'', and $(\pw')^*$ is defined in type (2) above, then $\adv$ has queried $H_2((\pw')^*,T)$, and a record $\left<(\pw')^*,pk^*,\star\right>$ must have been stored at that time (see step 4 below). Compute
+                  If $\func$ replies with ``correct guess'', and $(\pw')^*$ is defined in type (2) above, then $\adv$ has queried $H_2((\pw')^*,T)$, and a record $\left<(\pw')^*,(pk')^*,\star\right>$ must have been stored at that time (see step 4 below). Compute
                   \[
-                  pk' := pk^* \cdot (T^*/T).
+                  pk' := (pk')^* \cdot (T^*/T).
                   \]
-                  Either way, generate $(pk',\star) \gets \Gen$, compute $(c,K') \gets \Encap(pk')$, $SK' := \Hkey(K')$, $\tau' := \Htag((\pw')^*,pk',c,K')$, and send $(c,\tau')$ from $P'$ to $P$.
+                  Either way, compute $(c,K') \gets \Encap(pk')$, $SK' := \Hkey(K')$, $\tau' := \Htag((\pw')^*,pk',c,K')$, and send $(c,\tau')$ from $P'$ to $P$.
             \end{enumerate}
       \end{enumerate}
 \end{enumerate}
@@ -215,6 +215,44 @@ On $(\NewSession, sid, P', P)$ from $\func$ and $(s^*,T^*)$ from $\adv$ to $P'$,
 \end{framed}
 \caption{UC simulator $\sim$ for OEKE (part 1). {\color{red}Red} text denotes difference from the simulator in \cite{EPRINT:ArrBarJar25}}
 \label{fig:oeke-sim1}
+\end{figure}
+
+\begin{figure}[H]
+\begin{framed}
+\begin{small}
+\underline{$P$'s session key}
+
+\medskip
+On $(c^*,\tau^*)$ from $\func$, simulate $P$'s output as follows:
+\begin{enumerate}
+  \item If $(s^*,T^*) = (s,T) \land (c^*,\tau^*) = (c,\tau')$, send $(\NewKey, sid, P', 0^n)$ to $\func$. \textcolor[gray]{0.5}{// $\adv$ is passive}
+  \item Otherwise find $\adv$'s $\Htag(\pw^*,pk^*,c^*,K^*)$ query resulting in $\tau^*$.
+      \begin{enumerate}
+        \item If there is no such query or more than one such query, send $(\TestPwd, sid, P', \bot)$ and then $(\NewKey, sid, P', 0^n)$ to $\func$.
+        \item If there is exactly one such query, send $(\TestPwd, sid, P', \pw^*)$ to $\func$.
+            \begin{enumerate}
+              \item If $\func$ replies with ``wrong guess'', send $(\NewKey, sid, P', 0^n)$ to $\func$.
+              \item If $\func$ replies with ``correct guess'', retrieve record $\left<\pw^*,pk^*,sk^*\right>$. \quad \textcolor[gray]{0.5}{// $pk^*$ must match what's in $\adv$'s $\Htag$ query} \\
+                  If there is no such record, send $(\NewKey, sid, P', 0^n)$ to $\func$. \\
+                  Otherwise compute $K := \Decap(sl^*,c^*)$. If $K^* = K$, compute $SK := \Hkey(K)$ and send $(\NewKey, sid, P', SK)$ to $\func$. \\
+                  If $K^* \neq K$, send $(\NewKey, sid, P', 0^n)$ to $\func$.
+            \end{enumerate}
+      \end{enumerate}
+\end{enumerate}
+\underline{RO queries}
+
+\medskip
+Answer all of $\adv$'s RO queries via lazy sampling, except for the following: \\
+When $T$ is sampled (see step 1), if $\adv$ has already queried $H_2(\star,T)$, abort. \\
+On $\adv$'s $H_2(\pw^*,T)$ query (let the result be $t^*$), generate $(pk^*,sk^*) \gets \Gen$ and compute
+\[
+r^* := s \oplus t^*, \quad R^* := T/pk^*.
+\]
+If $H_1(\pw^*,r^*)$ has already been defined and it is not $R^*$, abort. Otherwise program $H_1(\pw^*,r^*) := R^*$, and store $\left<\pw^*,pk^*,sk^*\right>$.
+\end{small}
+\end{framed}
+\caption{UC simulator $\sim$ for OEKE (part 2)}
+\label{fig:oeke-sim2}
 \end{figure}
 
 \subsection{Hybrid Argument}
@@ -663,7 +701,7 @@ In this case $\tau^* = \tau'$ is uniformly random and independent of the rest of
 \paragraph{Password extraction from $P$-to-$P'$ message.}
 \mbox{}
 
-\medskip\noindent\emph{Game 15:} In the case where $(s^*,T^*) \neq (s,T)$, find $\adv$'s $H_2(\pw^*,T^*)$ query\footnote{The notations are slightly messed up, since the $\pw^*$ here has nothing to do with what's called $\pw^*$ in Game 13. Essentially, the $\pw^*$ here is $\adv$'s guess of $P'$'s password (which is called $(\pw')^*$ in the simulator), whereas the $\pw^*$ in Game 13 is $\adv$'s guess of $P$'s password. The good news is that the $\pw^*$ in Game 13 is never reused once Game 13 is done, so there is no potential confusion.} (let the result be $t^*$) that satisfies \emph{either} of the following:
+\medskip\noindent\emph{Game 15:} In the case where $(s^*,T^*) \neq (s,T)$, find $\adv$'s $H_2(\pw^*,T^*)$ query\footnote{\label{footnote:notations}The notations are slightly messed up, since the $\pw^*$ here has nothing to do with what's called $\pw^*$ in Game 13. Essentially, the $\pw^*$ here is $\adv$'s guess of $P'$'s password (which is called $(\pw')^*$ in the simulator), whereas the $\pw^*$ in Game 13 is $\adv$'s guess of $P$'s password. The good news is that the $\pw^*$ in Game 13 is never reused once Game 13 is done, so there is no potential confusion.} (let the result be $t^*$) that satisfies \emph{either} of the following:
 \begin{enumerate}
   \item $\adv$ queried $H_1(\pw^*,r^*)$ \emph{before} the $H_2(\pw^*,T^*)$ query, where $r^* = s^* \oplus t^*$.
   \item $\adv$ also queried $H_2(\pw^*,T)$, and
@@ -704,7 +742,7 @@ Summing up, we have
 \paragraph{Correct password guess for $P'$.}
 \mbox{}
 
-\medskip\noindent\emph{Game 16:} Again in the case where $(s^*,T^*) \neq (s,T)$, if $\pw^*$ is defined in type (2) in Game 15 and $\pw^* = \pw'$, retrieve record $\left<\pw^*,pk^*,\star\right>$ (there must be one since such a record is created when $\adv$ queries $H_2(\pw^*,T)$, as per Game 5) and set $pk' := pk^* \cdot (T^*/T)$.
+\medskip\noindent\emph{Game 16:} Again in the case where $(s^*,T^*) \neq (s,T)$, if $\pw^*$ is defined in type (2) in Game 15 and $\pw^* = \pw'$, retrieve record $\left<\pw^*,pk^*,\star\right>$ (there must be one since such a record is created when $\adv$ queries $H_2(\pw^*,T)$, as per Game 5) and set $pk' := pk^* \cdot (T^*/T)$.\footnote{What's called $pk^*$ here is $(pk')^*$ in the simulator, as there is another $pk^*$ on the $P$ side as defined in Game 13 (cf. \Cref{footnote:notations}).}
 
 In Game 15, we have (in $P'$'s algorithm)
 \[
@@ -811,14 +849,14 @@ We summarize the changes since Game 11 (i.e., after \Cref{fig:intermediate-game}
               \item $\adv$'s $\Htag(\pw^*,pk^*,c^*,K^*)$ query whose result is $\tau^*$. If there is none or more than one, or if there is a unique such query with $\pw^* \neq \pw$, Game 17 sets $SK := \bot$.
               \item $\left<\pw^*,pk^*,sk^*\right>$ record stored when $\adv$ queries $H_2(\pw^*,T)$. If there is none, Game 17 sets $SK := \bot$.
             \end{itemize}
-            (Note that $\pw^*$ in these two records has to match each other.) After that, Game 17 checks if $K^* = \Decap(sk^*,c^*)$, and computes $SK$ using $K^*$ or sets $SK := \bot$ accordingly. [changed in Games 11, 12, 13]
+            (Note that $\pw^*$ and $pk^*$ in these two records has to match each other.) After that, Game 17 checks if $K^* = \Decap(sk^*,c^*)$, and computes $SK$ using $K^*$ or sets $SK := \bot$ accordingly. [changed in Games 11, 12, 13]
        \end{enumerate}
 \end{enumerate}
 
 See \Cref{fig:final-game} for a summary of Game 10.
 
 \begin{figure}
-\pseudocodeblock[codesize=\scriptsize]{
+\pseudocodeblock[codesize=\scriptsize,linenumbering]{
 P(\pw) \< \< \adv \< \< P'(\pw') \\ 
 s \gets \{0,1\}^{3n}; T \gets \group \< \< \< \< \\
 \< \sendmessageright*[1.5cm]{s,T} \< \< \sendmessageright*[1.5cm]{s^*,T^*} \< \\
@@ -839,8 +877,8 @@ s \gets \{0,1\}^{3n}; T \gets \group \< \< \< \< \\
 \< \< \< \< \t \t \t R' := H_1(\pw',r') \\
 \< \< \< \< \t \t \t pk' := T^*/R' \\
 \< \< \< \< \t \t \text{if type (2) in Game 15} \\
-\< \< \< \< \t \t \text{retrieve }\left<\pw',pk^*,\star\right>\text{ record} \\
-\< \< \< \< \t \t \t pk' := pk^* \cdot (T^*/T) \\
+\< \< \< \< \t \t \t \text{retrieve }\left<\pw',(pk')^*,\star\right>\text{ record} \\
+\< \< \< \< \t \t \t pk' := (pk')^* \cdot (T^*/T) \\
 \< \< \< \< \t \t (c,K') \gets \Encap(pk') \\
 \< \< \< \< \t \t SK' := \Hkey(K') \\
 \< \< \< \< \t \t \tau' := \Htag(\pw',pk',c,K') \\
