@@ -257,7 +257,7 @@ If $H_1(\pw^*,r^*)$ has already been defined and it is not $R^*$, abort. Otherwi
 \label{fig:oeke-sim2}
 \end{figure}
 
-For readers who would like to read both our paper and \cite{EPRINT:ArrBarJar25}, we include a comparison in \Cref{app:comparison}.
+Our simulator is, by and large, the same as the one in \cite[Fig.5~and~6]{EPRINT:ArrBarJar25}, although we completely rewrite it to improve readability. For those who would like to go over both our simulator and the one in \cite{EPRINT:ArrBarJar25}, we include a comparison in \Cref{app:comparison}.
 
 \subsection{Hybrid Argument}
 \label{sec:games}
@@ -946,7 +946,7 @@ Concretely, Games 2, 11 and 13 in \Cref{sec:games} need stronger KEM security pr
 \appendix
 \section{Comparison Between Our Simulator and the One in \cite{EPRINT:ArrBarJar25}}
 \label{app:comparison}
-Our simulator in \Cref{sec:sim} is, by and large, the same as the one in \cite[Fig.5~and~6]{EPRINT:ArrBarJar25}, although we completely rewrite it to improve readability. We summarize some of the notational differences in \Cref{tab:sim-notations}.
+Our simulator in \Cref{sec:sim} is, by and large, the same as the one in \cite[Fig.5~and~6]{EPRINT:ArrBarJar25}, although we completely rewrite it to improve readability. We first summarize some of the notational differences in \Cref{tab:sim-notations}.
 \begin{table}[H]\centering
 \begin{tabular}{ |c|c|c|c| }
 \hline
@@ -975,5 +975,5 @@ $\adv$'s guess of $P$'s password & $\pw^*$ & $\pw^*$ & \makecell{same $\pw^*$ \\
 
 The simulator in \cite{EPRINT:ArrBarJar25} has more bookkeeping and aborts more frequently. In particular, we completely remove their record $\mathsf{forwS}$, and when detecting whether an adversarial $P$-to-$P'$ message contains more than one password guess (causing the simulator to abort), we only check the relevant $H_2$ queries, whereas they check \emph{all} $H_2$ queries --- including those that are completely unrelated to the attack in the $P$-to-$P'$ direction. For a more detailed explanation, see the comment after Game 15 in \Cref{sec:games}.
 
-The only (more or less) essential difference lies in the {\color{red}red} text in \Cref{fig:oeke-sim1}: in the case where the adversary makes an incorrect password guess on $P'$, we compute $c$ from a uniformly random KEM public key $pk'$, whereas they compute $c$ from an honestly generated $pk'$. While both methods work, our method simplifies the reduction; this is further explained in the comment after Game 18, item (2).
+The only (more or less) essential difference lies in the {\color{red}red} text in \Cref{fig:oeke-sim1}: in the case where the adversary makes an incorrect password guess on $P'$, we compute $c$ from a uniformly random KEM public key $pk'$, whereas they compute $c$ from an honestly generated $pk'$. While both methods work, our method simplifies the reduction; this is further explained in the comment after Game 18 in \Cref{sec:games}, item (2).
 \end{document} 
