@@ -493,8 +493,8 @@ The only difference between Game 9 and Game 10 lies in the fact that when we mov
 Let's pause a bit and review the changes we have made so far:
 \begin{enumerate}
   \item \emph{$P$-to-$P'$ message:} Game 10 outright samples $(s,T)$ at random. [changed in Game 9]
-  \item \emph{$P'$'s session key and $P'$-to-$P$ message:} On $(s^*,T^*)$ from $\adv$ to $P'$, if $(s^*,T^*) = (s,T)$, Game 10 outright samples $SK',\tau'$ at random. Regarding $c$, Game 10 generates $(pk',\star) \gets \Gen$ and computes $c \gets \Encap(pk')$. (If $(s^*,T^*) \neq (s,T)$ then there is no change from the real world.) [changed in Games 3, 4, 6, 7, 8]
-  \item \emph{$P$'s session key:} On $(c^*,\tau^*)$ from $\adv$ to $P$, we have made two changes:
+  \item \emph{$P'$'s session key and $P'$-to-$P$ message:} On $(s^*,T^*)$ from $\adv$ to $P'$, if $(s^*,T^*) = (s,T)$, Game 10 outright samples $SK',\tau'$ at random. Regarding $c$, Game 10 generates $(pk',\star) \gets \Gen$ and computes $(c,\star) \gets \Encap(pk')$. (If $(s^*,T^*) \neq (s,T)$ then there is no change from the real world.) [changed in Games 3, 4, 6, 7, 8]
+  \item \emph{$P$'s session key:} On $(c^*,\tau^*)$ from $\adv$ to $P$, we have made the following changes:
       \begin{enumerate}
         \item If $\pw = \pw' \land (s^*,T^*) = (s,T) \land c^* = c$, Game 10 outright sets $SK := SK'$ if $\tau^* = \tau'$ and $SK := \bot$ otherwise. [changed in Game 1]
         \item Otherwise if $\adv$ makes no $\Htag(\pw,pk,c^*,K^*)$ resulting in $\tau^*$, or more than one such query, Game 10 outright sets $SK := \bot$. [changed in Game 2]
@@ -750,6 +750,26 @@ We believe it is much cleaner to define a tailored KEM property that allows a \e
 }}
 
 \paragraph{Summary.}
+We summarize the changes since Game 11 (i.e., after \Cref{fig:intermediate-game}):
+\begin{enumerate}
+  \item \emph{$P'$'s session key and $P'$-to-$P$ message:} On $(s^*,T^*)$ from $\adv$ to $P'$, if $(s^*,T^*) \neq (s,T)$, Game 17 extracts $(\pw')^*$ from $(s^*,T^*)$ using the method in Game 15. Then
+      \begin{enumerate}[(a)]
+        \item If $(\pw')^* \neq \pw'$, then Game 17 outright samples $SK',\tau'$ at random. Regarding $c$, Game 10 samples $pk' \gets \group$ and computes $(c,\star) \gets \Encap(pk')$. [changed in Game 17]
+        \item If $(\pw')^* = \pw'$, Game 15 specifies two types of extraction of $(\pw')^*$. There is no change from the real world for type (1). For type (2), Game 17 computes $pk' := pk^* \cdot (T^*/T)$ (and uses $pk'$ to compute $c',SK',\tau'$). [changed in Game 16]
+      \end{enumerate}
+  \item \emph{$P$'s session key:} On $(c^*,\tau^*)$ from $\adv$ to $P$, we have made the following changes:
+      \begin{enumerate}[(a)]
+        \item If $\pw \neq \pw' \land (s^*,T^*) = (s,T) \land (c^*,\tau^*) = (c,\tau')$, Game 17 outright sets $SK := \bot$. [changed in Game 14]
+        \item If $\neg((s^*,T^*) = (s,T) \land (c^*,\tau^*) = (c,\tau'))$, Game 17 retrieves two records:
+            \begin{itemize}
+              \item $\adv$'s $\Htag(\pw^*,pk^*,c^*,K^*)$ query whose result is $\tau^*$. If there is none or more than one, or if there is a unique such query with $\pw^* \neq \pw$, Game 17 sets $SK := \bot$.
+              \item $\left<\pw^*,pk^*,sk^*\right>$ record stored when $\adv$ queries $H_2(\pw^*,T)$. If there is none, Game 17 sets $SK := \bot$.
+            \end{itemize}
+            (Note that $\pw^*$ in these two records has to match each other.) After that, Game 17 checks if $K^* = \Decap(sk^*,c^*)$, and computes $SK$ using $K^*$ or sets $SK := \bot$ accordingly. [changed in Games 11, 12, 13]
+       \end{enumerate}
+\end{enumerate}
+
+See \Cref{fig:final-game} for a summary of Game 10.
 
 \begin{figure}
 \pseudocodeblock[codesize=\scriptsize]{
@@ -805,7 +825,7 @@ s \gets \{0,1\}^{3n}; T \gets \group \< \< \< \< \\
 \t \text{store }\left<\pw^*,pk^*,sk^*\right> \< \< \< \<
 }
 \caption{Game 17 (with various aborting conditions omitted), identical to the ideal world}
-\label{fig:ideal-game}
+\label{fig:final-game}
 \end{figure}
 
 \section{Security Analysis of Other Versions}
