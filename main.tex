@@ -171,6 +171,52 @@ $\sim$ should find the $\Htag$ query whose result is $\tau^*$, which contains $(
 \subsubsection{Formal Description of the Simulator}
 \label{sec:sim}
 
+\begin{figure}[H]
+\begin{framed}
+\begin{small}
+\underline{$P$-to-$P'$ message}
+
+\medskip
+On $(\NewSession, sid, P, P')$ from $\func$, sample $s \gets \{0,1\}^{3n}, T \gets \group$ and send $(s,T)$ from $P$ to $P'$.
+
+\medskip
+\underline{$P'$'s session key and $P'$-to-$P$ message}
+
+\medskip
+On $(\NewSession, sid, P', P)$ from $\func$ and $(s^*,T^*)$ from $\adv$ to $P'$, simulate $P'$'s output and the $P'$-to-$P$ message as follows:
+\begin{enumerate}
+  \item If $(s^*,T^*) = (s,T)$, send $(\NewKey, sid, P', {\color{red}0^n})$ to $\func$; generate $(pk',\star) \gets \Gen$, compute $(c,\star) \gets \Encap(pk')$, sample $\tau' \gets \{0,1\}^{2n}$, and send $(c',\tau')$ from $P'$ to $P$.
+  \item Otherwise find $\adv$'s $H_2((\pw')^*,T^*)$ query (let the result be $t^*$) that satisfies \emph{either} of the following:
+      \begin{itemize}
+        \item \emph{Type (1):} $\adv$ queried $H_1((\pw')^*,r^*)$ \emph{before} the $H_2((\pw')^*,T^*)$ query, where $r^* = s^* \oplus t^*$.
+        \item \emph{Type (2):} $\adv$ also queried $H_2((\pw')^*,T)$, and
+            \[
+            s \oplus s^* = H_2((\pw')^*,T) \oplus t^*.
+            \]
+      \end{itemize}
+      \begin{enumerate}
+        \item If there is more than one such $(\pw')^*$, abort.
+        \item If there is exactly one such $(\pw')^*$, send $(\TestPwd, sid, P', (\pw')^*)$ to $\func$; if there is no such $(\pw')^*$, send $(\TestPwd, sid, P', \bot)$ to $\func$.
+            \begin{enumerate}
+              \item If $\func$ replies with ``wrong guess'', send $(\NewKey, sid, P', {\color{red}0^n})$ to $\func$; {\color{red}sample $pk' \gets \group$}, compute $(c,\star) \gets \Encap(pk')$, sample $\tau' \gets \{0,1\}^{2n}$, and send $(c,\tau')$ from $P'$ to $P$.
+              \item If $\func$ replies with ``correct guess'', and $(\pw')^*$ is defined in type (1) above, then $r^*$ is already defined. Compute
+                  \[
+                  R' := H_1((\pw')^*,r^*), \quad pk' := T^*/R'.
+                  \]
+                  If $\func$ replies with ``correct guess'', and $(\pw')^*$ is defined in type (2) above, then $\adv$ has queried $H_2((\pw')^*,T)$, and a record $\left<(\pw')^*,pk^*,\star\right>$ must have been stored at that time (see step 4 below). Compute
+                  \[
+                  pk' := pk^* \cdot (T^*/T).
+                  \]
+                  Either way, generate $(pk',\star) \gets \Gen$, compute $(c,K') \gets \Encap(pk')$, $SK' := \Hkey(K')$, $\tau' := \Htag((\pw')^*,pk',c,K')$, and send $(c,\tau')$ from $P'$ to $P$.
+            \end{enumerate}
+      \end{enumerate}
+\end{enumerate}
+\end{small}
+\end{framed}
+\caption{UC simulator $\sim$ for OEKE (part 1). {\color{red}Red} text denotes difference from the simulator in \cite{EPRINT:ArrBarJar25}}
+\label{fig:oeke-sim1}
+\end{figure}
+
 \subsection{Hybrid Argument}
 \label{sec:games}
 We now prove that for any PPT environment $\env$, the simulator $\sim$ in \Cref{sec:sim} generates an ideal-world view indistinguishable from $\env$'s real-world view. The sequence of games start from the real world (Game 0) and ends at the ideal world.
@@ -515,7 +561,7 @@ P(\pw) \< \< \adv \< \< P'(\pw') \\
 s \gets \{0,1\}^{3n}; T \gets \group \< \< \< \< \\
 \< \sendmessageright*[1.5cm]{s,T} \< \< \sendmessageright*[1.5cm]{s^*,T^*} \< \\
 \< \< \< \< \text{if }(s^*,T^*) = (s,T) \\
-\< \< \< \< \t SK',\tau' \gets \{0,1\}^n \\
+\< \< \< \< \t SK' \gets \{0,1\}^n, \tau' \gets \{0,1\}^{2n} \\
 \< \< \< \< \t (pk',\star) \gets \Gen \\
 \< \< \< \< \t (c,\star) \gets \Encap(pk') \\
 \< \< \< \< \text{otherwise} \\
@@ -777,13 +823,13 @@ P(\pw) \< \< \adv \< \< P'(\pw') \\
 s \gets \{0,1\}^{3n}; T \gets \group \< \< \< \< \\
 \< \sendmessageright*[1.5cm]{s,T} \< \< \sendmessageright*[1.5cm]{s^*,T^*} \< \\
 \< \< \< \< \text{if }(s^*,T^*) = (s,T) \\
-\< \< \< \< \t SK',\tau' \gets \{0,1\}^n \\
+\< \< \< \< \t SK' \gets \{0,1\}^n, \tau' \gets \{0,1\}^{2n} \\
 \< \< \< \< \t (pk',\star) \gets \Gen \\
 \< \< \< \< \t (c,\star) \gets \Encap(pk') \\
 \< \< \< \< \text{otherwise} \\
 \< \< \< \< \t \text{extract }(\pw')^*\text{ (see Game 15)} \\
 \< \< \< \< \t \text{if none or }(\pw')^* \neq \pw' \\
-\< \< \< \< \t \t SK',\tau' \gets \{0,1\}^n \\
+\< \< \< \< \t \t SK' \gets \{0,1\}^n, \tau' \gets \{0,1\}^{2n} \\
 \< \< \< \< \t \t pk' \gets \group \\
 \< \< \< \< \t \t (c,\star) \gets \Encap(pk') \\
 \< \< \< \< \t \text{if }(\pw')^* = \pw' \\
@@ -793,7 +839,8 @@ s \gets \{0,1\}^{3n}; T \gets \group \< \< \< \< \\
 \< \< \< \< \t \t \t R' := H_1(\pw',r') \\
 \< \< \< \< \t \t \t pk' := T^*/R' \\
 \< \< \< \< \t \t \text{if type (2) in Game 15} \\
-\< \< \< \< \t \t \t pk' := pk \cdot (T^*/T) \\
+\< \< \< \< \t \t \text{retrieve }\left<\pw',pk^*,\star\right>\text{ record} \\
+\< \< \< \< \t \t \t pk' := pk^* \cdot (T^*/T) \\
 \< \< \< \< \t \t (c,K') \gets \Encap(pk') \\
 \< \< \< \< \t \t SK' := \Hkey(K') \\
 \< \< \< \< \t \t \tau' := \Htag(\pw',pk',c,K') \\
@@ -824,7 +871,7 @@ s \gets \{0,1\}^{3n}; T \gets \group \< \< \< \< \\
 \t H_1(\pw^*,r^*) := R^* \< \< \< \< \\
 \t \text{store }\left<\pw^*,pk^*,sk^*\right> \< \< \< \<
 }
-\caption{Game 17 (with various aborting conditions omitted), identical to the ideal world}
+\caption{Game 17 (with various aborting conditions omitted)}
 \label{fig:final-game}
 \end{figure}
 
