@@ -23,6 +23,7 @@
 \usepackage[capitalise]{cleveref}
 \Crefname{claim}{Claim}{Claims}
 \usepackage{makecell} % force line break within a table cell
+\usepackage{multirow} % merge cells in a table
 
 \newcommand{\codebox}[1]{
     \begin{varwidth}{\linewidth}
@@ -231,13 +232,12 @@ On $(c^*,\tau^*)$ from $\func$, simulate $P$'s output as follows:
   \item Otherwise find $\adv$'s $\Htag(\pw^*,pk^*,c^*,K^*)$ query resulting in $\tau^*$.
       \begin{enumerate}
         \item If there is no such query or more than one such query, send $(\TestPwd, sid, P', \bot)$ and then $(\NewKey, sid, P', 0^n)$ to $\func$.
-        \item If there is exactly one such query, send $(\TestPwd, sid, P', \pw^*)$ to $\func$.
+        \item If there is exactly one such query, retrieve record $\left<\pw^*,pk^*,sk^*\right>$. If there is no such record, send $(\TestPwd, sid, P', \bot)$ and then $(\NewKey, sid, P', 0^n)$ to $\func$.
+        \item Compute $K := \Decap(sk^*,c^*)$. If $K^* \neq K$, send $(\TestPwd, sid, P', \bot)$ and then $(\NewKey, sid, P', 0^n)$ to $\func$.
+        \item Send $(\TestPwd, sid, P', \pw^*)$ to $\func$.
             \begin{enumerate}
               \item If $\func$ replies with ``wrong guess'', send $(\NewKey, sid, P', 0^n)$ to $\func$.
-              \item If $\func$ replies with ``correct guess'', retrieve record $\left<\pw^*,pk^*,sk^*\right>$. \quad \textcolor[gray]{0.5}{// $pk^*$ must match what's in $\adv$'s $\Htag$ query} \\
-                  If there is no such record, send $(\NewKey, sid, P', 0^n)$ to $\func$. \\
-                  Otherwise compute $K := \Decap(sk^*,c^*)$. If $K^* = K$, compute $SK := \Hkey(K)$ and send $(\NewKey, sid, P', SK)$ to $\func$. \\
-                  If $K^* \neq K$, send $(\NewKey, sid, P', 0^n)$ to $\func$.
+              \item If $\func$ replies with ``correct guess'', compute $SK := \Hkey(K)$ and send $(\NewKey, sid, P', SK)$ to $\func$.
             \end{enumerate}
       \end{enumerate}
 \end{enumerate}
@@ -857,7 +857,7 @@ We summarize the changes since Game 11 (i.e., after \Cref{fig:intermediate-game}
        \end{enumerate}
 \end{enumerate}
 
-See \Cref{fig:final-game} for a summary of Game 10.
+See \Cref{fig:final-game} for a summary of Game 17.
 
 \begin{figure}
 \pseudocodeblock[codesize=\scriptsize,linenumbering]{
@@ -917,6 +917,41 @@ s \gets \{0,1\}^{3n}; T \gets \group \< \< \< \< \\
 \label{fig:final-game}
 \end{figure}
 
+\paragraph{Comparison with the ideal world.}
+We now claim that Game 17 is identical to the ideal world, except that the game challenger in Game 17 is split into the $\Fpake$ functionality and the simulator $\sim$ in the ideal world (which, of course, does not make a difference in $\env$'s view).
+\begin{table}[H]\centering
+\begin{tabular}{ |c|c|c|c| }
+\hline
+item to be simulated & case & \makecell{Game 17 \\ (\Cref{fig:final-game})} & \makecell{simulator \\ (\Cref{fig:oeke-sim1,fig:oeke-sim2})} \\
+\hline
+$P$-to-$P'$ message & & line 2 & the only step \\
+\hline
+\multirow{3}*{\makecell{$P'$'s session key \\ and $P'$-to-$P$ message}} & $(s^*,T^*) = (s,T)$ & line 4--7 & step 1 \\
+\cline{2-4}
+ & no $(\pw')^*$, or $(\pw')^* \neq \pw'$ & line 10--13 & step 2(b)(i) \\
+\cline{2-4}
+ & $(\pw')^* = \pw'$ & line 14--25 & step 2(b)(ii) \\
+\hline
+\multirow{6}*{$P$'s session key} & $(s^*,T^*) = (s,T) \land (c^*,\tau^*) = (c,\tau')$ & line 27--30 & step 1 \\
+\cline{2-4}
+ & no $\pw^*$, or more than one $\pw^*$ & line 33--34 & step 2(a) \\
+\cline{2-4}
+ & no $\left<\pw^*,pk^*,sk^*\right>$ record & line 38--39 & step 2(b) \\
+\cline{2-4}
+ & $K^* \neq K$ & line 43--44 & step 2(c) \\
+\cline{2-4}
+ & $\pw^* \neq \pw$ & line 35--36 & step 2(d)(i) \\
+\cline{2-4}
+ & $\pw^* = \pw \land K ^* = K$ & line 41--42 & step 2(d)(ii) \\
+\hline
+$\adv$'s $H_2(\star,T)$ queries & & line 46--51 & the only step \\
+\hline
+\end{tabular}
+\caption{Comparison between Game 17 and the ideal world. The ``step'' in simulator refers to the step in \Cref{fig:oeke-sim1,fig:oeke-sim2} under the corresponding title}
+\label{tab:ideal-world-comparison}
+\end{table}
+
+From \Cref{tab:ideal-world-comparison} (and after going through some simple but tedious checks), we can see that Game 17 and the ideal world are exactly identical. (Various aborting conditions are omitted.) This completes the proof.
 \section{Security Analysis of Other Versions}
 
 \subsection{What Will Go Wrong If You Don't Hash Everything?}
