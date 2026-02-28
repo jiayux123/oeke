@@ -1057,12 +1057,7 @@ The description of $\red_\text{WNM}$ ensures that $\Decap(sk,c) = K'$. If $\adv$
 \[
 \Pr[\Decap(sk,c^*) = K'] \leq \Adv_{\red_\text{WNM}}^\text{WNM}.
 \]
-
-Overall,
-\[
-\Pr[P'\text{ queries }\Htag(\pw,pk,K)] \leq \Adv_{\red_\text{WNM}}^\text{WNM} + \frac{q_1+1}{|\group|},
-\]
-which is negligible.
+If $\Decap(sk,c) \neq K'$, i.e., $K \neq K'$, then of course $P'$'s query is not $\Htag(\pw,pk,K)$. This yields the claim.
 
 \bibliographystyle{alpha}
 \bibliography{bib.bib}
