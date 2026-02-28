@@ -261,7 +261,9 @@ Our simulator is, by and large, the same as the one in \cite[Fig.5~and~6]{EPRINT
 
 \subsection{Hybrid Argument}
 \label{sec:games}
-We now prove that for any PPT environment $\env$, the simulator $\sim$ in \Cref{sec:sim} generates an ideal-world view indistinguishable from $\env$'s real-world view. The sequence of games start from the real world (Game 0) and ends at the ideal world.
+We now prove that for any PPT environment $\env$, the simulator $\sim$ in \Cref{sec:sim} generates an ideal-world view indistinguishable from $\env$'s real-world view. The sequence of games start from the real world (Game 0) and ends in the ideal world (Game 17).
+
+A game-by-game comparison with the proof in \cite[Section~5]{EPRINT:ArrBarJar25} is shown in \emph{{\color{red}red}}, with the parts that critically rely on certain items being included as inputs to $\Htag$ \emph{{\color{red}\ul{underlined}}}.
 
 \medskip\noindent\emph{Game 0:} This is the real world. Recall that the passwords of $P$ and $P'$ are $\pw$ and $\pw'$, respectively; the flow of events is:
 \begin{itemize}
@@ -353,7 +355,7 @@ Going back to the game hop, Game 1 and Game 2 are identical unless of the follow
   \item $\adv$ makes an $\Htag(\pw,pk,c^*,K^*)$ query resulting in $\tau^*$, and $P$'s $\Htag(\pw,pk,\allowbreak c^*,K)$ query also results in $\tau^*$.
 \end{enumerate}
 
-In the first event, by the claim $P'$ does not query $\Htag(\pw,pk,c^*,K)$ except with probability up to $(q_1+1)/|\group|$. $\adv$ itself also does not query $\Htag(\pw,pk,c^*,K)$ (otherwise the result is $\tau^*$). So $\Htag(\pw,pk,c^*,K)$ is independent of $\adv$'s view, and the probability that $\adv$ sends $\tau^* = \Htag(\pw,pk,c^*,K)$ is $1/2^{2n}$. The second and third events are collision in $\Htag$, whose (combined) probability is upper-bounded by $\qtag(\qtag+1)/2^{2n+1}$. Overall,
+In the first event, by \Cref{clm:htag} $P'$ does not query $\Htag(\pw,pk,c^*,K)$ except with probability up to $(q_1+1)/|\group|$. $\adv$ itself also does not query $\Htag(\pw,pk,c^*,K)$ (otherwise the result is $\tau^*$). So $\Htag(\pw,pk,c^*,K)$ is independent of $\adv$'s view, and the probability that $\adv$ sends $\tau^* = \Htag(\pw,pk,c^*,K)$ is $1/2^{2n}$. The second and third events are collision in $\Htag$, whose (combined) probability is upper-bounded by $\qtag(\qtag+1)/2^{2n+1}$. Overall,
 \[
 \Dist_\env^{1,2} \leq \frac{\qtag(\qtag+1)+2}{2^{2n+1}} + \frac{q_1+1}{|\group|}.
 \]
@@ -984,7 +986,7 @@ From \Cref{tab:ideal-world-comparison} (and after going through some simple but 
 \section{Security Analysis of Other Versions}
 
 \subsection{What Will Go Wrong If You Don't Hash Everything?}
-One might fear that every new variant of OEKE --- where some inputs are removed from $\Htag$ --- needs a new security analysis from scratch, causing this paper to be hundreds of pages long. Fortunately, most of the simulator and the game hops from the proof in \Cref{sec:basic} can be reused. This, in fact, should be expected: only the definition of the $P'$-to-$P$ authenticator $\tau'$ changes in these variants, so the only parts of the proof that are affected are $P$'s behavior --- in particular, how to extract the password guess and when to output $\bot$ --- on the $P'$-to-$P$ message.
+One might fear that every new variant of OEKE --- with some inputs removed from $\Htag$ --- needs a new security analysis from scratch, causing this paper to be hundreds of pages long. Fortunately, most of the simulator and the game hops from the proof in \Cref{sec:basic} can be reused. This, in fact, should be expected: only the definition of the $P'$-to-$P$ authenticator $\tau'$ changes in these variants, so the only parts of the proof that are affected are $P$'s behavior --- in particular, how to extract the password guess and when to output $\bot$ --- on the $P'$-to-$P$ message.
 
 Concretely, Games 2, 11 and 13 in \Cref{sec:games} need stronger KEM security properties to go through. We explained in \emph{{\color{red}\ul{underlined}}} comments in each of them why the current arguments critically require $\pw$, $pk$ and/or $c$ as part of the $\Htag$ inputs, which we summarize in \Cref{tab:game-summary}:
 % has to use tabular since \makecell does not work with table
@@ -1004,6 +1006,25 @@ Concretely, Games 2, 11 and 13 in \Cref{sec:games} need stronger KEM security pr
 \caption{Summary of games in \Cref{sec:games} that require $\pw$, $pk$ and/or $c$ as part of $\Htag$ inputs}
 \label{tab:game-summary}
 \end{table}
+
+\subsection{The ``Hash $\pw$ and $pk$'' Version}
+We start from the version where $\tau$ is defined as $\Htag(\pw,pk,K)$, i.e., $c$ is removed from the hash. From \Cref{tab:game-summary}, this is the easiest one to deal with: it only affects Game 2, and the simulator and all other games can be reused in the proof.
+
+Looking closer, only \Cref{clm:htag} in Game 2 needs a new proof: the argument after this claim also does not change if we remove $c$ from $\Htag$. Below we state and prove the new claim.
+\begin{claim}
+\label{clm:htag2}
+In the case where $\neg(\pw = \pw' \land (s^*,T^*) = (s,T) \land c^* = c)$, the probability that $P'$ queries $\Htag(\pw,pk,K)$ is negligible.
+\end{claim}
+$P'$ makes a single $\Htag$ query, on $(\pw',pk',K')$.
+\begin{itemize}
+  \item If $\pw \neq \pw'$, then of course $P'$'s query is not $\Htag(\pw,pk,K)$.
+  \item If $\pw = \pw' \land (s^*,T^*) \neq (s,T)$, then the argument in the proof of \Cref{clm:htag} still goes through, so $\Pr[pk' = pk] \leq (q_1+1)/|\group|$.
+\end{itemize}
+The only remaining case is $\pw = \pw' \land (s^*,T^*) = (s,T)$, which we now focus on. This implies that $pk = pk'$ by the definitions of $pk$ and $pk'$, and $c^* \neq c$ by the condition of this game. Overall, we have
+\[
+\pw = \pw' \land (s^*,T^*) = (s,T) \land c^* \neq c \land pk = pk'.
+\]
+We now upper-bound $\Pr[K = K']$ via a reduction to the WNM property of KEM.
 
 \bibliographystyle{alpha}
 \bibliography{bib.bib}
