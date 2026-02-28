@@ -124,7 +124,15 @@ This property emerges when the OEKE adversary $\adv$ sends $(s^*,T^*)$ to $P'$ w
 \section{Security Analysis of the ``Hash Everything'' Version}
 \label{sec:basic}
 
+The main theorem in this section is:
+\begin{theorem}
+\label{thm:basic}
+Suppose the UNI-PK, OW-PCA and ANO-PCA properties hold for the KEM scheme. Then the OEKE protocol as described in \Cref{fig:protocol-uc} UC-realizes $\Fpake$, in the random oracle model for $H_1$, $H_2$, $\Hkey$ and $\Htag$.
+\end{theorem}
+The rest of this section is dedicated to the proof of \Cref{thm:basic}. In \Cref{sec:simulator} we describe the simulator, and in \Cref{sec:games} we argue why the simulator generates a view indistinguishable from the real-world view.
+
 \subsection{The Simulator}
+\label{sec:simulator}
 \subsubsection{Simulation Strategy}
 A large portion of the simulator is routine; below we explain the idea behind the non-trivial parts.
 \paragraph{Simulating honest $P$-to-$P'$ message.}
@@ -259,7 +267,7 @@ If $H_1(\pw^*,r^*)$ has already been defined and it is not $R^*$, abort. Otherwi
 
 Our simulator is, by and large, the same as the one in \cite[Fig.5~and~6]{EPRINT:ArrBarJar25}, although we completely rewrite it to improve readability. For those who would like to go over both our simulator and the one in \cite{EPRINT:ArrBarJar25}, we include a comparison in \Cref{app:comparison}.
 
-\subsection{Hybrid Argument}
+\subsection{Game-Hop Argument}
 \label{sec:games}
 We now prove that for any PPT environment $\env$, the simulator $\sim$ in \Cref{sec:sim} generates an ideal-world view indistinguishable from $\env$'s real-world view. The sequence of games start from the real world (Game 0) and ends in the ideal world (Game 17).
 
