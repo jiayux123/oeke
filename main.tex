@@ -271,7 +271,36 @@ We now prove that for any PPT environment $\env$, the simulator $\sim$ in \Cref{
   \item It is again intercepted by $\adv$, who sends $(c^*,\tau^*)$ to $P$;
   \item $P$ computes $\tau$. If $\tau^* = \tau$ then $P$ outputs $SK$, otherwise $P$ outputs $\bot$.
 \end{itemize}
-(Note that there are three $\tau$ values: $\tau'$ computed and sent by $P'$, $\tau^*$ sent by $\adv$, and $\tau$ computed by $P$ used in $P$'s check.)
+(Note that there are three $\tau$ values: $\tau'$ computed and sent by $P'$, $\tau^*$ sent by $\adv$, and $\tau$ computed by $P$ used in $P$'s check.) An illustration is shown in \Cref{fig:real-world}.
+\begin{figure}
+\pseudocodeblock[codesize=\scriptsize]{
+P(\pw) \< \< \adv \< \< P'(\pw') \\ 
+(pk,sk) \gets \Gen \< \< \< \< \\
+r \gets \{0,1\}^{3n} \< \< \< \< \\
+R := H_1(\pw,r) \< \< \< \< \\
+T := pk \cdot R \< \< \< \< \\
+t := H_2(\pw,T) \< \< \< \< \\
+s := r \oplus t \< \< \< \< \\
+\< \sendmessageright*[1.5cm]{s,T} \< \< \sendmessageright*[1.5cm]{s^*,T^*} \< \\
+\< \< \< \< t' := H_2(\pw',T^*) \\
+\< \< \< \< r' := s^* \oplus t' \\
+\< \< \< \< R' := H_1(\pw',r') \\
+\< \< \< \< pk' := T^*/R' \\
+\< \< \< \< (c,K') \gets \Encap(pk') \\
+\< \< \< \< SK' := \Hkey(K') \\
+\< \< \< \< \tau' := \Htag(\pw',pk',c,K') \\
+\< \sendmessageleft*[1.5cm]{c^*,\tau^*} \< \< \sendmessageleft*[1.5cm]{c,\tau'} \< \\
+K := \Decap(sk,c^*) \< \< \< \< \\
+\tau := \Htag(\pw,pk,c^*,K) \< \< \< \< \\
+\text{if }\tau \neq \tau^* \< \< \< \< \\
+\t SK := \bot \< \< \< \< \\
+\text{otherwise} \< \< \< \< \\
+\t SK := \Hkey(K) \< \< \< \< \\
+\text{output }SK \< \< \< \< \text{output }SK' \\
+}
+\caption{Game 0 (the real world)}
+\label{fig:real-world}
+\end{figure}
 \paragraph{Passwords match and $\adv$ is passive, except maybe modifying the tag.}
 \mbox{}
 
