@@ -94,8 +94,9 @@
 
 \section{Introduction}
 
-\section{Preliminaries}
+\section{Preliminaries and Technical Overview}
 \label{sec:prelim}
+\subsection{KEM Properties Used in the ``Hash Everything'' Version}
 \begin{definition}
 \label{def:uni-ano-ro}
 A KEM scheme is \textbf{anonymous with $q$ uniform public keys and random oracles ($q$-UNI-ANO-RO)} if the following two distributions are indistinguishable:
@@ -120,6 +121,20 @@ Here, $H_1$ and $H_2$ are ROs with range $\{0,1\}^n$ and $\{0,1\}^{2n}$, respect
 \end{definition}
 
 This property emerges when the OEKE adversary $\adv$ sends $(s^*,T^*)$ to $P'$ which contains a wrong password guess. In the real world, $(s^*,T^*)$ decrypt to a uniformly random KEM public key, which is then used to compute $c,SK,\tau$ (the left game). In simulation, we want to remove the decryption process and outright use a freshly sampled public key to compute $c,SK,\tau$ (the right game). ($h_1,h_2$ in \Cref{def:uni-ano-ro} correspond to $SK,\tau$ in the protocol, respectively.) What complicates things is that $\adv$ can decrypt a large number of $(s^*,T^*)$ pairs \emph{under both correct and incorrect passwords}, resulting in a large number of $pk^*$ values, \emph{before} sending $(s^*,T^*)$ to $P'$ (or even before initiating $P'$'s session); at this time the reduction does not know which $(s^*,T^*)$ will be used by $\adv$, or which password is correct, yet it has to program the public key (the ``right'' one that will be used in $P'$'s algorithm) into the decryption process. As such, we need to give the reduction polynomially many public keys.
+
+\subsection{Additional KEM Properties Used in Other Versions}
+\begin{definition}
+A KEM scheme is \textbf{weakly non-malleable (WNM)} if for any PPT adversary $\adv$, the probability that $\adv$ wins the following game is negligible:
+\[
+    \fcodebox{
+    $(pk,sk) \gets \Gen$ \\
+    $(c,K) \gets \Encap(pk)$ \\
+    $c^* \gets \adv(pk,c)$ \\
+    abort if $c^* = c$ \\
+    $\adv$ wins if $\Decap(sk,c^*) = K$
+    }
+    \]
+\end{definition}
 
 \section{Security Analysis of the ``Hash Everything'' Version}
 \label{sec:basic}
@@ -1021,18 +1036,35 @@ We start from the version where $\tau$ is defined as $\Htag(\pw,pk,K)$, i.e., $c
 Looking closer, only \Cref{clm:htag} in Game 2 needs a new proof: the argument after this claim also does not change if we remove $c$ from $\Htag$. Below we state and prove the new claim.
 \begin{claim}
 \label{clm:htag2}
-In the case where $\neg(\pw = \pw' \land (s^*,T^*) = (s,T) \land c^* = c)$, the probability that $P'$ queries $\Htag(\pw,pk,K)$ is negligible.
+Suppose the WNM property holds for the KEM scheme. In the case where $\neg(\pw = \pw' \land (s^*,T^*) = (s,T) \land c^* = c)$, the probability that $P'$ queries $\Htag(\pw,pk,K)$ is negligible.
 \end{claim}
 $P'$ makes a single $\Htag$ query, on $(\pw',pk',K')$.
 \begin{itemize}
   \item If $\pw \neq \pw'$, then of course $P'$'s query is not $\Htag(\pw,pk,K)$.
   \item If $\pw = \pw' \land (s^*,T^*) \neq (s,T)$, then the argument in the proof of \Cref{clm:htag} still goes through, so $\Pr[pk' = pk] \leq (q_1+1)/|\group|$.
 \end{itemize}
-The only remaining case is $\pw = \pw' \land (s^*,T^*) = (s,T)$, which we now focus on. This implies that $pk = pk'$ by the definitions of $pk$ and $pk'$, and $c^* \neq c$ by the condition of this game. Overall, we have
+The only remaining case is $\pw = \pw' \land (s^*,T^*) = (s,T)$, which we now focus on. This implies that $pk = pk'$ by the definitions of $pk$ and $pk'$, and $c^* \neq c$ by the condition of this game. We now upper-bound $\Pr[K = K']$. Recall that $K$ is defined as $\Decap(sk,c^*)$, so $\Pr[K = K'] = \Pr[\Decap(sk,c^*) = K']$. We upper-bound this probability via a reduction $\red_\text{WNM}$ to the WNM property of KEM:
+
+\medskip\noindent\textbf{\underline{Reduction $\red_\mathrm{WNM}$}:}
+
+\medskip\noindent
+On input $(pk,c)$,
+\begin{enumerate}
+  \item Invoke $\env$. On $(\NewSession, sid, P, P', \pw, \text{``initiator''})$ from $\env$, run $P$'s algorithm to compute $(s,T)$, except that $\red_\mathrm{WNM}$ uses its input $pk$ rather than $(pk,\star) \gets \Gen$. Send $(s,T)$ to $\adv$.
+  \item On $(\NewSession, sid, P', P, \pw', \text{``respondent''})$ from $\env$ and $(s^*,T^*)$ from $\adv$, if $\neg(\pw = \pw' \land (s^*,T^*) = (s,T))$, abort. Otherwise generate $(c,K') \gets \Encap(pk)$, and compute $SK := \Hkey(K')$ and $\tau := \Htag(\pw,pk,c,K')$. Output $SK'$ to $\env$, and send $(c,\tau')$ to $\adv$.
+  \item On $(c^*,\tau^*)$ from $\adv$, if $c^* = c$, abort. Otherwise output $c^*$.
+\end{enumerate}
+
+The description of $\red_\text{WNM}$ ensures that $\Decap(sk,c) = K'$. If $\adv$ sends $c^*$ such that $ \Decap(sk,c^*) = K'$, then $\red_\text{WNM}$ wins the WNM game. Thus,
 \[
-\pw = \pw' \land (s^*,T^*) = (s,T) \land c^* \neq c \land pk = pk'.
+\Pr[\Decap(sk,c^*) = K'] \leq \Adv_{\red_\text{WNM}}^\text{WNM}.
 \]
-We now upper-bound $\Pr[K = K']$ via a reduction to the WNM property of KEM.
+
+Overall,
+\[
+\Pr[P'\text{ queries }\Htag(\pw,pk,K)] \leq \Adv_{\red_\text{WNM}}^\text{WNM} + \frac{q_1+1}{|\group|},
+\]
+which is negligible.
 
 \bibliographystyle{alpha}
 \bibliography{bib.bib}
