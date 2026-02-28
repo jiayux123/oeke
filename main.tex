@@ -1012,8 +1012,6 @@ From \Cref{tab:ideal-world-comparison} (and after going through some simple but 
 One might fear that every new variant of OEKE --- with some inputs removed from $\Htag$ --- needs a new security analysis from scratch, causing this paper to be hundreds of pages long. Fortunately, most of the simulator and the game hops from the proof in \Cref{sec:basic} can be reused. This, in fact, should be expected: only the definition of the $P'$-to-$P$ authenticator $\tau'$ changes in these variants, so the only parts of the proof that are affected are $P$'s behavior --- in particular, how to extract the password guess and when to output $\bot$ --- on the $P'$-to-$P$ message.
 
 Concretely, Games 2, 11 and 13 in \Cref{sec:games} need stronger KEM security properties to go through. We explained in \emph{{\color{red}\ul{underlined}}} comments in each of them why the current arguments critically require $\pw$, $pk$ and/or $c$ as part of the $\Htag$ inputs, which we summarize in \Cref{tab:game-summary}:
-% has to use tabular since \makecell does not work with table
-% has to wrap tabular inside table since otherwise cannot have caption
 \begin{table}[H]\centering
 \begin{tabular}{ |c|c|c| }
 \hline
