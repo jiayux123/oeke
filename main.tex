@@ -149,6 +149,7 @@ The rest of this section is dedicated to the proof of \Cref{thm:basic}. In \Cref
 \subsection{The Simulator}
 \label{sec:simulator}
 \subsubsection{Simulation Strategy}
+\label{sec:sim-intuition}
 A large portion of the simulator is routine; below we explain the idea behind the non-trivial parts.
 \paragraph{Simulating honest $P$-to-$P'$ message.}
 When $P$'s session begins, $\sim$ must simulate its message $(s,T)$ to $P'$. This can be easily done: just sample $(s,T)$ at random. However, every time $\adv$ queries $H_2(\pw^*,T)$ (let the result be $t^*$), $\sim$ needs to generate a KEM key pair $(pk^*,sk^*)$ for later use (see the ``Extracting password guess from malicious $P'$'' paragraph below) and make sure that $(pk^*,sk^*)$ is consistent with the RO queries. This can be done as follows: $\sim$ computes
@@ -364,11 +365,11 @@ pk' = \frac{T^*}{R'} = \frac{T^*}{H_1(\pw,r')} = \frac{T^*}{H_1(\pw,s^* \oplus t
 \end{gather*}
 There are two cases:
 \begin{itemize}
-  \item $s \oplus H_2(\pw,T) = s^* \oplus H_2(\pw,T^*)$. In this case $T^* \neq T$ (otherwise $T^* = T \Rightarrow H_2(\pw,T^*) = H_2(\pw,T) \Rightarrow s^* = s$, so $(s^*,T^*) = (s,T)$, which is impossible). But then it is impossible that $pk' = pk$.
-  \item $s \oplus H_2(\pw,T) \neq s^* \oplus H_2(\pw,T^*)$. In this case $H_1(\pw,s^* \oplus H_2(\pw,T^*))$ is uniformly random in $\group$ and independent of both $pk$ and $T^*$, so the probability that $pk' = pk$, i.e., $H_1(\pw,s^* \oplus H_2(\pw,T^*))$ happens to be equal to $T^*/pk$, is $1/|\group|$ for a single $H_1$ query.
+  \item $s \oplus H_2(\pw,T) = s^* \oplus H_2(\pw,T^*)$. In this case $T^* \neq T$ (otherwise $T^* = T \Rightarrow H_2(\pw,T^*) = H_2(\pw,T) \Rightarrow s^* = s$, so $(s^*,T^*) = (s,T)$, which is impossible). But then it is impossible that $pk = pk'$.
+  \item $s \oplus H_2(\pw,T) \neq s^* \oplus H_2(\pw,T^*)$. In this case $H_1(\pw,s^* \oplus H_2(\pw,T^*))$ is uniformly random in $\group$ and independent of both $pk$ and $T^*$, so the probability that $pk = pk'$, i.e., $H_1(\pw,s^* \oplus H_2(\pw,T^*))$ happens to be equal to $T^*/pk$, is $1/|\group|$ for a single $H_1$ query.
 \end{itemize}
 
-Since there are $q_1+1$ $H_1$ queries ($q_1$ by $\adv$ and one by $P'$), the probability that $pk' = pk$ is upper-bounded by $(q_1+1)/|\group|$. If $pk' \neq pk$ then of course $P'$'s query is not $\Htag(\pw,pk,c^*,K)$. This yields the claim.
+Since there are $q_1+1$ $H_1$ queries ($q_1$ by $\adv$ and one by $P'$), the probability that $pk = pk'$ is upper-bounded by $(q_1+1)/|\group|$. If $pk \neq pk'$ then of course $P'$'s query is not $\Htag(\pw,pk,c^*,K)$. This yields the claim.
 
 \medskip
 Going back to the game hop, Game 1 and Game 2 are identical unless of the following happens:
@@ -1011,7 +1012,7 @@ From \Cref{tab:ideal-world-comparison} (and after going through some simple but 
 \subsection{What Will Go Wrong If You Don't Hash Everything?}
 One might fear that every new variant of OEKE --- with some inputs removed from $\Htag$ --- needs a new security analysis from scratch, causing this paper to be hundreds of pages long. Fortunately, most of the simulator and the game hops from the proof in \Cref{sec:basic} can be reused. This, in fact, should be expected: only the definition of the $P'$-to-$P$ authenticator $\tau'$ changes in these variants, so the only parts of the proof that are affected are $P$'s behavior --- in particular, how to extract the password guess and when to output $\bot$ --- on the $P'$-to-$P$ message.
 
-Concretely, Games 2, 11 and 13 in \Cref{sec:games} need stronger KEM security properties to go through. We explained in \emph{{\color{red}\ul{underlined}}} comments in each of them why the current arguments critically require $\pw$, $pk$ and/or $c$ as part of the $\Htag$ inputs, which we summarize in \Cref{tab:game-summary}:
+Concretely, Games 2, 11 and 13 in \Cref{sec:games} need stronger KEM security properties, or at least a new analysis, to go through. We explained in \emph{{\color{red}\ul{underlined}}} comments in each of them why the current arguments critically require $\pw$, $pk$ and/or $c$ as part of the $\Htag$ inputs, which we summarize in \Cref{tab:game-summary}:
 \begin{table}[H]\centering
 \begin{tabular}{ |c|c|c| }
 \hline
@@ -1029,6 +1030,7 @@ Concretely, Games 2, 11 and 13 in \Cref{sec:games} need stronger KEM security pr
 \end{table}
 
 \subsection{The ``Hash $\pw$ and $pk$'' Version}
+\label{sec:hash-pw-pk}
 We start from the version where $\tau$ is defined as $\Htag(\pw,pk,K)$, i.e., $c$ is removed from the hash. From \Cref{tab:game-summary}, this is the easiest one to deal with: it only affects Game 2, and the simulator and all other games can be reused in the proof.
 
 Looking closer, only \Cref{clm:htag} in Game 2 needs a new proof: the argument after this claim also does not change if we remove $c$ from $\Htag$. Below we state and prove the new claim.
@@ -1039,7 +1041,7 @@ Suppose the WNM property holds for the KEM scheme. In the case where $\neg(\pw =
 $P'$ makes a single $\Htag$ query, on $(\pw',pk',K')$.
 \begin{itemize}
   \item If $\pw \neq \pw'$, then of course $P'$'s query is not $\Htag(\pw,pk,K)$.
-  \item If $\pw = \pw' \land (s^*,T^*) \neq (s,T)$, then the argument in the proof of \Cref{clm:htag} still goes through, so $\Pr[pk' = pk] \leq (q_1+1)/|\group|$.
+  \item If $\pw = \pw' \land (s^*,T^*) \neq (s,T)$, then the argument in the proof of \Cref{clm:htag} still goes through, so $\Pr[pk = pk'] \leq (q_1+1)/|\group|$.
 \end{itemize}
 The only remaining case is $\pw = \pw' \land (s^*,T^*) = (s,T)$, which we now focus on. This implies that $pk = pk'$ by the definitions of $pk$ and $pk'$, and $c^* \neq c$ by the condition of this game. We now upper-bound $\Pr[K = K']$. Recall that $K$ is defined as $\Decap(sk,c^*)$, so $\Pr[K = K'] = \Pr[\Decap(sk,c^*) = K']$. We upper-bound this probability via a reduction $\red_\text{WNM}$ to the WNM property of KEM:
 
@@ -1058,6 +1060,67 @@ The description of $\red_\text{WNM}$ ensures that $\Decap(sk,c) = K'$. If $\adv$
 \Pr[\Decap(sk,c^*) = K'] \leq \Adv_{\red_\text{WNM}}^\text{WNM}.
 \]
 If $\Decap(sk,c) \neq K'$, i.e., $K \neq K'$, then of course $P'$'s query is not $\Htag(\pw,pk,K)$. This yields the claim.
+
+\subsection{The ``Hash $pk$'' Version}
+We now turn to the variant where $\pw$ is further removed from $\Htag$ inputs, i.e., $\tau$ is defined as $\Htag(pk,K)$. \Cref{tab:game-summary} suggests that Games 2 and 13 in \Cref{sec:games} need to (essentially) change. In fact the simulator also needs to change quite a bit, which we will start from.
+
+\paragraph{Changes to the simulator.}
+The only changes to the simulator $\sim$ appear when $\adv$ sends $(c^*,\tau^*)$ to $P$ and $\sim$ needs to extract a password guess $\pw^*$ from it. In the ``hash everything'' version (\Cref{sec:simulator}), $\tau^*$ is computed as $\Htag(\pw^*,pk^*,c^*,K^*)$, so $\sim$ can extract $\pw^*$ from $\adv$'s $\Htag$ queries and \emph{check its consistency with $pk^*,c^*,K^*$} (see the last paragraph of \Cref{sec:sim-intuition}). Here, $\tau^* = \Htag(pk^*,K^*)$, but the inclusion of $pk^*$ still allows $\sim$ to find the corresponding $\left<\pw^*,pk^*,sk^*\right>$ record and check for consistency.
+
+However, a more sinister issue emerges when we remove $\pw^*$ from $\Htag$: $\adv$ can, in fact, make a password guess by forwarding $(c,\tau')$ from $P'$ without making \emph{any} $\Htag$ query! We show this attack in \Cref{fig:attack-no-pw}.
+
+\begin{figure}[H]
+\pseudocodeblock{
+P(\pw) \< \< \adv \< \< P'(\pw') \\ 
+\< \sendmessageright*[1.5cm]{s,T} \< \< \< \\
+\< \< pk := \mathsf{2Feistel}^{\text{-}1}(\pw,(s,T)) \< \< \\
+\< \< (s^*,T^*) := \mathsf{2Feistel}(\pw',pk) \< \< \\
+\< \< \<\sendmessageright*[1.5cm]{s^*,T^*} \< \\
+\< \sendmessageleft*[1.5cm]{c,\tau'} \< \< \sendmessageleft*[1.5cm]{c,\tau'} \< \< \\
+\text{output }SK' \< \< \< \< \text{output }SK'
+}
+\caption{New attack in the ``hash $pk$'' version}
+\label{fig:attack-no-pw}
+\end{figure}
+
+In this attack, the two honest parties' passwords $\pw$ and $\pw'$ are different. Assuming $\adv$ knows both, it can decrypt $P$'s message to recover $pk$, and then re-encrypt $pk$ under $\pw'$; this ensures that $P'$ will recover the same $pk$ as on the $P$ side, and use it to compute $c,K',\tau'$ (and eventually $SK'$). But then if $\adv$ forwards $(c,\tau')$ without any modification, $P$ will decapsulate $c$ to the same $K'$ (because it uses the same $pk$), and its output key will be the same as $SK'$ on the $P'$ side. (This is not an issue if $\pw$ is included in $\Htag$, since forwarding $\tau' = \Htag(\pw', \dots) \neq \Htag(\pw, \dots)$ to $P$ would make $P$'s check fail.)
+
+This is a new situation not covered by the previous simulator. It should be simulated as follows: When $\adv$ decrypts $(s,T)$ under $\pw$, $\sim$ records $\left<\pw,pk,sk\right>$ (although there might be a large number of such records, and $\sim$ does not know which is the ``right'' one at this point). Then when $\adv$ sends $(s^*,T^*)$ to $P'$, $\sim$ extracts $\pw'$, \emph{which also gives a $pk'$}. Later, when $\adv$ forwards $(c,\tau')$, $\sim$ knows that $\adv$ is performing the aforementioned attack, and checks which $\left<\pw,pk,sk\right>$ record matches $pk'$. In this way $\sim$ can extract the password guess $\pw$ on the $P$ side.
+
+We show the new simulator in \Cref{fig:oeke-sim-hash-pk}. (Only the steps after receiving $(c^*,\tau^*)$ are included.)
+
+\begin{figure}[H]
+\begin{framed}
+\begin{small}
+\underline{$P$'s session key}
+
+\medskip
+On $(c^*,\tau^*)$ from $\func$, simulate $P$'s output as follows:
+\begin{enumerate}
+  \item If $(s^*,T^*) = (s,T) \land (c^*,\tau^*) = (c,\tau')$, send $(\NewKey, sid, P', 0^n)$ to $\func$. \textcolor[gray]{0.5}{// $\adv$ is passive}
+  {\color{blue}\item If $(s^*,T^*) \neq (s,T) \land (c^*,\tau^*) = (c,\tau')$, and there has been a $(\TestPwd, sid, P', (\pw')^*)$ command to $\func$ resulting in ``correct guess'' (i.e., $\sim$ previously entered step 2(b)(ii) in \Cref{fig:oeke-sim2}), there must be a $pk'$ and an $SK'$ defined at that time. If there is more than one record in the form of $\left<\pw^*,pk',\star\right>$, abort. If there is a unique such record, send $(\TestPwd, sid, P, \pw^*)$ to $\func$.
+      \begin{enumerate}[(i)]
+        \item If $\func$ replies with ``wrong guess'', send $(\NewKey, sid, P, 0^n)$ to $\func$.
+        \item If $\func$ replies with ``correct guess'', send $(\NewKey, sid, P, SK')$ to $\func$.
+      \end{enumerate}
+  }
+  \item Otherwise find $\adv$'s {\color{blue}$\Htag(pk^*,K^*)$} query resulting in $\tau^*$.
+      \begin{enumerate}
+        \item If there is no such query or more than one such query, send $(\TestPwd, sid, P', \bot)$ and then $(\NewKey, sid, P', 0^n)$ to $\func$.
+        \item If there is exactly one such query, retrieve record $\left<\pw^*,pk^*,sk^*\right>$. {\color{blue}If there is more than one such record, abort.} If there is no such record, send $(\TestPwd, sid, P', \bot)$ and then $(\NewKey, sid, P', 0^n)$ to $\func$.
+        \item Compute $K := \Decap(sk^*,c^*)$. If $K^* \neq K$, send $(\TestPwd, sid, P', \bot)$ and then $(\NewKey, sid, P', 0^n)$ to $\func$.
+        \item Send $(\TestPwd, sid, P', \pw^*)$ to $\func$.
+            \begin{enumerate}
+              \item If $\func$ replies with ``wrong guess'', send $(\NewKey, sid, P', 0^n)$ to $\func$.
+              \item If $\func$ replies with ``correct guess'', compute $SK := \Hkey(K)$ and send $(\NewKey, sid, P', SK)$ to $\func$.
+            \end{enumerate}
+      \end{enumerate}
+\end{enumerate}
+\end{small}
+\end{framed}
+\caption{UC simulator $\sim$ for the ``hash $pk$'' variant of OEKE. Only the paragraph that needs significant change (shown in {\color{blue}blue}) is included}
+\label{fig:oeke-sim-hash-pk}
+\end{figure}
 
 \bibliographystyle{alpha}
 \bibliography{bib.bib}
