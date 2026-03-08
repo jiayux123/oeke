@@ -164,6 +164,18 @@ A KEM scheme is \emph{output key binding (KBIND)} if for any PPT adversary $\adv
 \]
 \end{definition}
 
+\begin{definition}
+A KEM scheme is \emph{robust (ROB)} if for any PPT adversary $\adv$, the probability that $\adv$ wins the following game is negligible:
+\[
+    \fcodebox{
+    $(pk,sk) \gets \Gen$ \\
+    $(pk',sk') \gets \Gen$ \\
+    $c^* \gets \adv(pk,pk')$ \\
+    $\adv$ wins if $\Decap(sk,c^*) = \Decap(sk',c^*)$
+    }
+\]
+\end{definition}
+
 \section{Security Analysis of the ``Hash Everything'' Version}
 \label{sec:basic}
 
@@ -258,7 +270,7 @@ On $(\NewSession, sid, P', P)$ from $\func$ and $(s^*,T^*)$ from $\adv$ to $P'$,
                   \[
                   R' := H_1((\pw')^*,r^*), \quad pk' := T^*/R'.
                   \]
-                  If $\func$ replies with ``correct guess'', and $(\pw')^*$ is defined in type (2) above, then $\adv$ has queried $H_2((\pw')^*,T)$, and a record $\left<(\pw')^*,(pk')^*,\star\right>$ must have been stored at that time (see step 4 below). Compute
+                  If $\func$ replies with ``correct guess'', and $(\pw')^*$ is defined in type (2) above, then $\adv$ has queried $H_2((\pw')^*,T)$, and a record $\langle(\pw')^*,(pk')^*,\star\rangle$ must have been stored at that time (see step 4 below). Compute
                   \[
                   pk' := (pk')^* \cdot (T^*/T).
                   \]
@@ -284,7 +296,7 @@ On $(c^*,\tau^*)$ from $\func$, simulate $P$'s output as follows:
   \item Otherwise find $\adv$'s $\Htag(\pw^*,pk^*,s,T,c^*,K^*)$ query resulting in $\tau^*$.
       \begin{enumerate}
         \item If there is no such query or more than one such query, send $(\TestPwd, sid, P', \bot)$ and then $(\NewKey, sid, P', 0^n)$ to $\func$.
-        \item If there is exactly one such query, retrieve record $\left<\pw^*,\star,sk^*\right>$. If there is no such record, send $(\TestPwd, sid, P', \bot)$ and then $(\NewKey, sid, P', 0^n)$ to $\func$.
+        \item If there is exactly one such query, retrieve record $\langle\pw^*,\star,sk^*\rangle$. If there is no such record, send $(\TestPwd, sid, P', \bot)$ and then $(\NewKey, sid, P', 0^n)$ to $\func$.
         \item Compute $K := \Decap(sk^*,c^*)$. If $K^* \neq K$, send $(\TestPwd, sid, P', \bot)$ and then $(\NewKey, sid, P', 0^n)$ to $\func$.
         \item Send $(\TestPwd, sid, P', \pw^*)$ to $\func$.
             \begin{enumerate}
@@ -302,7 +314,7 @@ On $\adv$'s $H_2(\pw^*,T)$ query (let the result be $t^*$), generate $(pk^*,sk^*
 \[
 r^* := s \oplus t^*, \quad R^* := T/pk^*.
 \]
-If $H_1(\pw^*,r^*)$ has already been defined and it is not $R^*$, abort. Otherwise program $H_1(\pw^*,r^*) := R^*$, and store $\left<\pw^*,pk^*,sk^*\right>$.
+If $H_1(\pw^*,r^*)$ has already been defined and it is not $R^*$, abort. Otherwise program $H_1(\pw^*,r^*) := R^*$, and store $\langle\pw^*,pk^*,sk^*\rangle$.
 \end{small}
 \end{framed}
 \caption{UC simulator $\sim$ for OEKE (part 2)}
@@ -480,7 +492,7 @@ $\red_\text{ANO-1PCA}$ uses its input $pk$ on the $P$ side and $c$ on the $P'$ s
 \[
 r^* := s \oplus t^*, \quad R^* := T/pk^*.
 \]
-If $H_1(\pw^*,r^*)$ has already been defined and it is not $R^*$, abort. Otherwise program $H_1(\pw^*,r^*) := R^*$, and store $\left<\pw^*,pk^*,sk^*\right>$.
+If $H_1(\pw^*,r^*)$ has already been defined and it is not $R^*$, abort. Otherwise program $H_1(\pw^*,r^*) := R^*$, and store $\langle\pw^*,pk^*,sk^*\rangle$.
 
 Furthermore, in the case where $\pw \neq \pw' \land (s^*,T^*) = (s,T)$, when $P'$ queries $H_2(\pw',T)$, use the method described above to generate $pk',r',R'$ and program $H_1$. (Note that the case where $\pw = \pw' \land (s^*,T^*) = (s,T)$ has already been addressed in Game 3 and Game 4, and $P'$ does not need to make an $H_2$ query there.)\footnote{A slightly confusing case is when $s^* \neq s \land T^* = T$, causing $P'$ to query $t' := H_2(\pw',T)$; and $\adv$ also queries $H_2(\pw',T)$. In this case $P'$'s $r' = s^* \oplus t'$ and $\adv$'s $r^* = s \oplus t'$ are different, causing $P'$'s values $R',pk'$ and $\adv$'s values $R^*,pk^*$ to be independent of each other. Therefore, the game should run $P'$'s algorithm as usual when $P'$ queries $H_2(\pw',T)$ (which generates $R',pk'$), and use the new method described in Game 5 when $\adv$ makes the same query (which generates $R^*,pk^*$).}
 
@@ -495,7 +507,7 @@ So, the distinguishing advantage between Game 4 and Game 5 can be reduced to the
 \[
 r^* := s \oplus t^*, \quad R^* := T/pk^*
 \]
-and programs $H_1(\pw^*,r^*) := R^*$. If this $H_2$ query is on $(\pw',T)$, $\red_\text{UNI-PK}$ also uses its input $pk^*$ to compute $c$ and $K'$. (Note that the $\left<\pw^*,pk^*,sk^*\right>$ record is not actually used in Game 5, so $\red_\text{UNI-PK}$ does not need to store it.) $\red_\text{UNI-PK}$ simulates other parts of Game 4/5 honestly. Finally, $\red_\text{UNI-PK}$ copies $\env$'s output bit.
+and programs $H_1(\pw^*,r^*) := R^*$. If this $H_2$ query is on $(\pw',T)$, $\red_\text{UNI-PK}$ also uses its input $pk^*$ to compute $c$ and $K'$. (Note that the $\langle\pw^*,pk^*,sk^*\rangle$ record is not actually used in Game 5, so $\red_\text{UNI-PK}$ does not need to store it.) $\red_\text{UNI-PK}$ simulates other parts of Game 4/5 honestly. Finally, $\red_\text{UNI-PK}$ copies $\env$'s output bit.
 
 A standard hybrid argument shows that (assuming the aborting condition does not happen) $\env$'s distinguishing advantage between Game 4 and Game 5 is upper-bounded by $(q_2+1)\Adv_{\red_\text{UNI-PK}}^\text{UNI-PK}$.\footnote{Note that here we cannot make $q_2+1$ separate reductions to the UNI-PK property, and must reduce to UNI-PK ``in one blow''. Furthermore, the calculation of the reduction's advantage is more complicated than the normal case where the reduction wins as long as its guess is correct. This is similar to, say, why composing a PRG polynomial times yields another PRG; see, e.g., \cite[Section~3.4.3]{book:BonSho23} for details.} Overall, we have
 \[
@@ -630,7 +642,7 @@ Here, $pk$ is generated by $\Gen$, and $H_2(\pw,T)$ is fixed by an $H_2$ query o
 
 \medskip\noindent\emph{Game 10:} When $P$'s session begins, halt after checking if $H_2(\star,T)$ has been defined (i.e., before the {\color{brown} brown} text in Game 9). Then when $P$ receives $(c^*,\tau^*)$, if $\pw = \pw' \land (s^*,T^*) = (s,T) \land c^* = c$, do what's described in Game 1. Otherwise,
 \begin{itemize}
-  \item If $H_2(\pw,T)$ has now been defined (via a query by $\adv$), there must be a corresponding record $\left<\pw,pk,sk\right>$ (see Game 5).
+  \item If $H_2(\pw,T)$ has now been defined (via a query by $\adv$), there must be a corresponding record $\langle\pw,pk,sk\rangle$ (see Game 5).
   \item If $H_2(\pw,T)$ is still undefined, run the {\color{brown} brown} text in Game 9.
 \end{itemize}
 Either way, $pk,sk$ are defined and the game can proceed as usual.
@@ -686,7 +698,7 @@ s \gets \{0,1\}^{3n}; T \gets \group \< \< \< \< \\
 \t \text{otherwise} \< \< \< \< \\
 \t \t SK := \bot \< \< \< \< \\
 \text{otherwise } \< \< \< \< \\
-\t \text{retrieve }\left<\pw,pk,sk\right>\text{ record} \< \< \< \< \\
+\t \text{retrieve }\langle\pw,pk,sk\rangle\text{ record} \< \< \< \< \\
 \t \text{if none} \< \< \< \< \\
 \t \t {\color{brown}t := H_2(\pw,T)} \< \< \< \< \\
 \t \t {\color{brown}(pk,sk) \gets \Gen} \< \< \< \< \\
@@ -703,12 +715,12 @@ s \gets \{0,1\}^{3n}; T \gets \group \< \< \< \< \\
 \t \t SK := \bot \< \< \< \< \\
 \text{output }SK \< \< \< \< \text{output }SK' \\
 \text{on }\adv\text{'s }H_2(\pw^*,T)=:t^*\text{ query:} \< \< \< \< \\
-{\color{brown}\text{if there is no }\left<\pw^*,\star,\star\right>\text{ record}} \\
+{\color{brown}\text{if there is no }\langle\pw^*,\star,\star\rangle\text{ record}} \\
 \t (pk^*,sk^*) \gets \Gen \< \< \< \< \\
 \t r^* := s \oplus t^* \< \< \< \< \\
 \t R^* := T/pk^* \< \< \< \< \\
 \t H_1(\pw^*,r^*) := R^* \< \< \< \< \\
-\t \text{store }\left<\pw^*,pk^*,sk^*\right> \< \< \< \<
+\t \text{store }\langle\pw^*,pk^*,sk^*\rangle \< \< \< \<
 }
 \caption{Game 10 (with various aborting conditions omitted)}
 \label{fig:intermediate-game}
@@ -717,7 +729,7 @@ s \gets \{0,1\}^{3n}; T \gets \group \< \< \< \< \\
 \paragraph{Password extraction from $P'$-to-$P$ message.}
 \mbox{}
 
-\medskip\noindent\emph{Game 11:} In the case where $\neg(\pw = \pw' \land (s^*,T^*) = (s,T) \land c^* = c)$, if there is no $\left<\pw,\star,\star\right>$ record, set $SK := \bot$ (i.e., replace the {\color{brown}brown} text in \Cref{fig:intermediate-game} with ``$SK := \bot$'').
+\medskip\noindent\emph{Game 11:} In the case where $\neg(\pw = \pw' \land (s^*,T^*) = (s,T) \land c^* = c)$, if there is no $\langle\pw,\star,\star\rangle$ record, set $SK := \bot$ (i.e., replace the {\color{brown}brown} text in \Cref{fig:intermediate-game} with ``$SK := \bot$'').
 
 Game 10 and Game 11 differ only if $\adv$ does not make an $H_2(\pw,T)$ query, but makes an $\Htag(\pw,pk,s,T,c^*,K^*)$ query resulting in $\tau^*$ (for $c^*,K^*,\tau^*$ of $\adv$'s choice). This in particular requires $\adv$ to know $pk$, which is freshly generated by $\Gen$. Therefore, the probability that (even a computationally unbounded) $\adv$ can predict $pk$ is upper-bounded by $H_\infty(pk : (pk,\star) \gets \Gen)$. We have
 \[
@@ -811,13 +823,13 @@ Summing up, we have
 \paragraph{Correct password guess for $P'$.}
 \mbox{}
 
-\medskip\noindent\emph{Game 16:} Again in the case where $(s^*,T^*) \neq (s,T)$, if $\pw^*$ is defined in type (2) in Game 15 and $\pw^* = \pw'$, retrieve record $\left<\pw^*,pk^*,\star\right>$ (there must be one since such a record is created when $\adv$ queries $H_2(\pw^*,T)$, as per Game 5) and set $pk' := pk^* \cdot (T^*/T)$.\footnote{What's called $pk^*$ here is $(pk')^*$ in the simulator, as there is another $pk^*$ on the $P$ side as defined in Game 13 (cf. \Cref{footnote:notations}).}
+\medskip\noindent\emph{Game 16:} Again in the case where $(s^*,T^*) \neq (s,T)$, if $\pw^*$ is defined in type (2) in Game 15 and $\pw^* = \pw'$, retrieve record $\langle\pw^*,pk^*,\star\rangle$ (there must be one since such a record is created when $\adv$ queries $H_2(\pw^*,T)$, as per Game 5) and set $pk' := pk^* \cdot (T^*/T)$.\footnote{What's called $pk^*$ here is $(pk')^*$ in the simulator, as there is another $pk^*$ on the $P$ side as defined in Game 13 (cf. \Cref{footnote:notations}).}
 
 In Game 15, we have (in $P'$'s algorithm)
 \[
 pk' = \frac{T^*}{R'} = \frac{T^*}{H_1(\pw',r')} = \frac{T^*}{H_1(\pw',s^* \oplus t')} = \frac{T^*}{H_1(\pw',s^* \oplus H_2(\pw',T^*))},
 \]
-but also (in the creation of the record $\left<\pw^*,pk^*,\star\right>$)
+but also (in the creation of the record $\langle\pw^*,pk^*,\star\rangle$)
 \[
 pk^* = \frac{T}{R^*} = \frac{T}{H_1(\pw^*,r^*)} = \frac{T}{H_1(\pw^*,s \oplus t^*)} = \frac{T}{H_1(\pw^*,s \oplus H_2(\pw^*,T))}.
 \]
@@ -846,11 +858,11 @@ On inputs $(pk_{1,1},\dots,pk_{q_1+1,q_2+1})$,
       s^* := r^* \oplus t^*, \quad R^* := T^*/pk_{i,j}.
       \]
       \begin{enumerate}
-        \item If $H_1(\pw^*,r^*)$ has been defined when the $H_2(\pw^*,T^*)$ query happens (either because it was queried \emph{before} the $H_2(\pw^*,T^*) =: t^*$ query or because it has been programmed by $\red_\text{UNI-ANO-RO}$ while answering $\adv$'s $H_2(\pw^*,T)$ query), store $\left<\mathsf{PasswordGuess},\pw^*,s^*,T^*\right>$. \quad // \textcolor[gray]{0.5}{Anchor query, i.e., $\pw^*$ is the password guess corresponding to $(s^*,T^*)$} \\
-            At any time, if there is more than one $\left<\star,s^*,T^*\right>$ record with the same $s^*,T^*$, abort.
+        \item If $H_1(\pw^*,r^*)$ has been defined when the $H_2(\pw^*,T^*)$ query happens (either because it was queried \emph{before} the $H_2(\pw^*,T^*) =: t^*$ query or because it has been programmed by $\red_\text{UNI-ANO-RO}$ while answering $\adv$'s $H_2(\pw^*,T)$ query), store $\langle\mathsf{PasswordGuess},\pw^*,s^*,T^*\rangle$. \quad // \textcolor[gray]{0.5}{Anchor query, i.e., $\pw^*$ is the password guess corresponding to $(s^*,T^*)$} \\
+            At any time, if there is more than one $\langle\star,s^*,T^*\rangle$ record with the same $s^*,T^*$, abort.
         \item Otherwise program $H_1(\pw^*,r^*) := R^*$.
       \end{enumerate}
-  \item On $(\NewSession, sid, P', P, \pw', \text{``respondent''})$ from $\env$ and $(s^*,T^*)$ from $\adv$, if $(s^*,T^*) = (s,T)$, output 1. If there is a record $\left<\mathsf{PasswordGuess},\pw',s^*,T^*\right>$, also output 1. Otherwise \quad // \textcolor[gray]{0.5}{Incorrect or no password guess (the case that matters in this game hop)}
+  \item On $(\NewSession, sid, P', P, \pw', \text{``respondent''})$ from $\env$ and $(s^*,T^*)$ from $\adv$, if $(s^*,T^*) = (s,T)$, output 1. If there is a record $\langle\mathsf{PasswordGuess},\pw',s^*,T^*\rangle$, also output 1. Otherwise \quad // \textcolor[gray]{0.5}{Incorrect or no password guess (the case that matters in this game hop)}
       \begin{enumerate}
         \item If $\adv$ has not queried $H_2(\pw',T^*)$ or $H_1(\pw',r')$ (where $r' = s^* \oplus H_2(\pw',T^*)$), make these queries on behalf of $P'$.
         \item Say $H_2(\pw',T^*)$ is the $j^*$-th query to $H_2$ and $H_1(\pw',r')$ is the $i^*$-th query to $H_1$ in the form of $H_1(\pw',\star)$. Output $(i^*,j^*)$ to the challenger and receive $(c,SK',\tau')$.
@@ -858,7 +870,7 @@ On inputs $(pk_{1,1},\dots,pk_{q_1+1,q_2+1})$,
       \end{enumerate}
   \item On $(c^*,\tau^*)$ from $\adv$,
       \begin{enumerate}
-        \item Retrieve record $\left<\pw,pk,sk\right>$. If there is no such record, output $SK := \bot$ to $\env$.
+        \item Retrieve record $\langle\pw,pk,sk\rangle$. If there is no such record, output $SK := \bot$ to $\env$.
         \item Find $\adv$'s $\Htag(\pw,pk,s,T,c^*,K^*)$ query resulting in $\tau^*$. If there is none or more than one, output $SK := \bot$ to $\env$.
         \item Compute $K := \Decap(sk,c^*)$. ($sk$ is the KEM secret key generated in step 1.) \quad \textcolor[gray]{0.5}{// No need to query a plaintext-checking oracle since $pk$ on the $P$ side and $pk'$ on the $P'$ side are independent of each other, so the reduction can sample $sk$ on its own} \\
             If $K = K^*$, output $SK := \Hkey(K)$ to $\env$. \\
@@ -867,7 +879,7 @@ On inputs $(pk_{1,1},\dots,pk_{q_1+1,q_2+1})$,
   \item When $\env$ copies a bit $b^*$, copy $\env$'s output.
 \end{enumerate}
 
-We first argue that the $\pw^*$ as in record $\left<\mathsf{PasswordGuess},\pw^*,s^*,T^*\right>$ is exactly the same as the $\pw^*$ extracted from $(s^*,T^*)$ in Game 15:
+We first argue that the $\pw^*$ as in record $\langle\mathsf{PasswordGuess},\pw^*,s^*,T^*\rangle$ is exactly the same as the $\pw^*$ extracted from $(s^*,T^*)$ in Game 15:
 \begin{itemize}
   \item If $\adv$ queried $H_1(\pw^*,r^*)$ before the $H_2(\pw^*,T^*)$ query, this is exactly type (1) in Game 15.
   \item If $\adv$ queried $H_2(\pw^*,T)$, which triggered the programming of $H_1(\pw^*,r^*)$ before the $H_2(\pw^*,T^*)$ query, note that the $H_1$ instance that is programmed on is $(\pw^*, s \oplus H_2(\pw^*,T))$. Thus,
@@ -920,7 +932,7 @@ We summarize the changes since Game 11 (i.e., after \Cref{fig:intermediate-game}
         \item If $\neg((s^*,T^*) = (s,T) \land (c^*,\tau^*) = (c,\tau'))$, Game 17 retrieves two records:
             \begin{itemize}
               \item $\adv$'s $\Htag(\pw^*,pk^*,s,T,c^*,K^*)$ query resulting in $\tau^*$. If there is none or more than one, or if there is a unique such query with $\pw^* \neq \pw$, Game 17 sets $SK := \bot$.
-              \item $\left<\pw^*,pk^*,sk^*\right>$ record stored when $\adv$ queries $H_2(\pw^*,T)$. If there is none, Game 17 sets $SK := \bot$.
+              \item $\langle\pw^*,pk^*,sk^*\rangle$ record stored when $\adv$ queries $H_2(\pw^*,T)$. If there is none, Game 17 sets $SK := \bot$.
             \end{itemize}
             (Note that $\pw^*$ and $pk^*$ in these two records has to match each other.) After that, Game 17 checks if $K^* = \Decap(sk^*,c^*)$, and computes $SK$ using $K^*$ or sets $SK := \bot$ accordingly. [changed in Games 11, 12, 13]
        \end{enumerate}
@@ -950,7 +962,7 @@ s \gets \{0,1\}^{3n}; T \gets \group \< \< \< \< \\
 \< \< \< \< \t \t \t R' := H_1(\pw',r') \\
 \< \< \< \< \t \t \t pk' := T^*/R' \\
 \< \< \< \< \t \t \text{if type (2) in Game 15} \\
-\< \< \< \< \t \t \t \text{retrieve }\left<\pw',(pk')^*,\star\right>\text{ record} \\
+\< \< \< \< \t \t \t \text{retrieve }\langle\pw',(pk')^*,\star\rangle\text{ record} \\
 \< \< \< \< \t \t \t pk' := (pk')^* \cdot (T^*/T) \\
 \< \< \< \< \t \t (c,K') \gets \Encap(pk') \\
 \< \< \< \< \t \t SK' := \Hkey(K') \\
@@ -966,7 +978,7 @@ s \gets \{0,1\}^{3n}; T \gets \group \< \< \< \< \\
 \t \t SK := \bot \\
 \t \text{if }\pw^* \neq \pw \< \< \< \< \\
 \t \t SK := \bot \\
-\t \text{retrieve }\left<\pw^*,pk^*,sk^*\right>\text{ record} \< \< \< \< \\
+\t \text{retrieve }\langle\pw^*,pk^*,sk^*\rangle\text{ record} \< \< \< \< \\
 \t \text{if none} \< \< \< \< \\
 \t \t SK := \bot \< \< \< \< \\
 \t K := \Decap(sk^*,c^*) \< \< \< \< \\
@@ -980,7 +992,7 @@ s \gets \{0,1\}^{3n}; T \gets \group \< \< \< \< \\
 \t r^* := s \oplus t^* \< \< \< \< \\
 \t R^* := T/pk^* \< \< \< \< \\
 \t H_1(\pw^*,r^*) := R^* \< \< \< \< \\
-\t \text{store }\left<\pw^*,pk^*,sk^*\right> \< \< \< \<
+\t \text{store }\langle\pw^*,pk^*,sk^*\rangle \< \< \< \<
 }
 \caption{Game 17 (with various aborting conditions omitted)}
 \label{fig:final-game}
@@ -1005,7 +1017,7 @@ $P$-to-$P'$ message & & line 2 & the only step \\
 \cline{2-4}
  & no $\pw^*$, or more than one $\pw^*$ & line 33--34 & step 2(a) \\
 \cline{2-4}
- & no $\left<\pw^*,pk^*,sk^*\right>$ record & line 38--39 & step 2(b) \\
+ & no $\langle\pw^*,pk^*,sk^*\rangle$ record & line 38--39 & step 2(b) \\
 \cline{2-4}
  & $K^* \neq K$ & line 43--44 & step 2(c) \\
 \cline{2-4}
@@ -1077,7 +1089,7 @@ If $\Decap(sk,c) \neq K'$, i.e., $K \neq K'$, then of course $P'$'s query is not
 \label{sec:hash-pw-st}
 We now turn to the variant where $pk$ is further removed from $\Htag$ inputs, i.e., $\tau$ is defined as $\Htag(\pw,s,T,K)$. \Cref{tab:game-summary} suggests that the argument under Game 11 in \Cref{sec:games} need to (essentially) change. (Of course, since $c$ is also removed from $\Htag$, the change in \Cref{sec:hash-pw-pk-st} also needs to be made.) Below we repeat Game 11 and make the new argument.
 
-\medskip\noindent\emph{Game 11:} In the case where $\neg(\pw = \pw' \land (s^*,T^*) = (s,T) \land c^* = c)$, if there is no $\left<\pw,\star,\star\right>$ record, set $SK := \bot$ (i.e., replace the {\color{brown}brown} text in \Cref{fig:intermediate-game} with ``$SK := \bot$'').
+\medskip\noindent\emph{Game 11:} In the case where $\neg(\pw = \pw' \land (s^*,T^*) = (s,T) \land c^* = c)$, if there is no $\langle\pw,\star,\star\rangle$ record, set $SK := \bot$ (i.e., replace the {\color{brown}brown} text in \Cref{fig:intermediate-game} with ``$SK := \bot$'').
 
 Game 10 and Game 11 differ only if $\adv$ does not make an $H_2(\pw,T)$ query, but makes an $\Htag(\pw,s,T,K^*)$ query resulting in $\tau^*$, where $K^* = \Decap(sk,c^*)$ for a freshly generated $sk$. We upper-bound this probability via a reduction $\red_\text{UNPRE}$ to the UNPRE property of KEM:
 
@@ -1106,7 +1118,7 @@ Note that the change in Game 2 (which requires WNM) and the change in Game 11 (w
 We now consider the variant where $\pw$, but not $pk$, is further removed from $\Htag$ inputs, i.e., $\tau$ is defined as $\Htag(pk,s,T,K)$. \Cref{tab:game-summary} suggests that Games 2 and 13 in \Cref{sec:games} need to (essentially) change. In fact the simulator also needs to change a bit, which we start from.
 
 \subsubsection{Changes to the Simulator}
-The only changes to the simulator $\sim$ appear when $\adv$ sends $(c^*,\tau^*)$ to $P$ and $\sim$ needs to extract a password guess $\pw^*$ from it. In the ``hash everything'' version (\Cref{sec:simulator}), $\tau^*$ is computed as $\Htag(\pw^*,pk^*,s,T,c^*,K^*)$, so $\sim$ can extract $\pw^*$ directly from $\adv$'s $\Htag$ queries and \emph{check its consistency with $pk^*,c^*,K^*$} (see the last paragraph of \Cref{sec:sim-intuition}). Here, $\tau^* = \Htag(pk^*,s,T,K^*)$, which prevents $\sim$ from reading off $\pw^*$ from $\adv$'s $\Htag$ queries. However, the inclusion of $pk^*$ still allows $\sim$ to find the corresponding $\left<\pw^*,pk^*,sk^*\right>$ record, from which $\sim$ can recover $\pw^*$ and check for consistency. Still, there is a negligible chance that there are multiple $\left<\pw^*,pk^*,sk^*\right>$ records for the same $pk^*$, which we must rule out.
+The only changes to the simulator $\sim$ appear when $\adv$ sends $(c^*,\tau^*)$ to $P$ and $\sim$ needs to extract a password guess $\pw^*$ from it. In the ``hash everything'' version (\Cref{sec:simulator}), $\tau^*$ is computed as $\Htag(\pw^*,pk^*,s,T,c^*,K^*)$, so $\sim$ can extract $\pw^*$ directly from $\adv$'s $\Htag$ queries and \emph{check its consistency with $pk^*,c^*,K^*$} (see the last paragraph of \Cref{sec:sim-intuition}). Here, $\tau^* = \Htag(pk^*,s,T,K^*)$, which prevents $\sim$ from reading off $\pw^*$ from $\adv$'s $\Htag$ queries. However, the inclusion of $pk^*$ still allows $\sim$ to find the corresponding $\langle\pw^*,pk^*,sk^*\rangle$ record, from which $\sim$ can recover $\pw^*$ and check for consistency. Still, there is a negligible chance that there are multiple $\langle\pw^*,pk^*,sk^*\rangle$ records for the same $pk^*$, which we must rule out.
 
 We show the new simulator in \Cref{fig:oeke-sim-hash-pk-st}. (Only the steps after receiving $(c^*,\tau^*)$ are included.)
 
@@ -1122,7 +1134,7 @@ On $(c^*,\tau^*)$ from $\func$, simulate $P$'s output as follows:
   \item Otherwise find $\adv$'s {\color{blue}$\Htag(pk^*,s,T,K^*)$} query resulting in $\tau^*$.
       \begin{enumerate}
         \item If there is no such query or more than one such query, send $(\TestPwd, sid, P, \bot)$ and then $(\NewKey, sid, P, 0^n)$ to $\func$.
-        \item If there is exactly one such query, retrieve record $\left<\pw^*,pk^*,sk^*\right>$. {\color{blue}If there is more than one such record, abort.} If there is no such record, send $(\TestPwd, sid, P, \bot)$ and then $(\NewKey, sid, P, 0^n)$ to $\func$.
+        \item If there is exactly one such query, retrieve record $\langle\pw^*,pk^*,sk^*\rangle$. {\color{blue}If there is more than one such record, abort.} If there is no such record, send $(\TestPwd, sid, P, \bot)$ and then $(\NewKey, sid, P, 0^n)$ to $\func$.
         \item Compute $K := \Decap(sk^*,c^*)$. If $K^* \neq K$, send $(\TestPwd, sid, P', \bot)$ and then $(\NewKey, sid, P, 0^n)$ to $\func$.
         \item Send $(\TestPwd, sid, P, \pw^*)$ to $\func$.
             \begin{enumerate}
@@ -1162,35 +1174,37 @@ We first state the new Game 13, and then make the argument.
 
 \medskip\noindent\emph{Game 13:} In the case where $\neg(\pw = \pw' \land (s^*,T^*) = (s,T) \land (c^*,\tau^*) = (c,\tau'))$, find $\adv$'s $\Htag(pk^*,s,T,K^*)$ query resulting in $\tau^*$. If there is none or more than one, set $SK := \bot$. Otherwise there is a unique such $\Htag(pk^*,s,T,K^*)$ query, and
 \begin{itemize}
-  \item If there is more than one $\left<\pw^*,pk^*,sk^*\right>$ record, abort.
-  \item If there is no $\left<\pw^*,pk^*,sk^*\right>$ record, set $SK := \bot$.
-  \item If there is a unique $\left<\pw^*,pk^*,sk^*\right>$ record, but $\pw^* \neq \pw$, also set $SK := \bot$.
-  \item If there is a unique $\left<\pw^*,pk^*,sk^*\right>$ record, and $\pw^* = \pw$, compute $K := \Decap(sk^*,c^*)$. If $K^* = K$ then set $SK := \Hkey(K)$, otherwise set $SK := \bot$.
+  \item If there is more than one $\langle\pw^*,pk^*,sk^*\rangle$ record, abort.
+  \item If there is no $\langle\pw^*,pk^*,sk^*\rangle$ record, set $SK := \bot$.
+  \item If there is a unique $\langle\pw^*,pk^*,sk^*\rangle$ record, but $\pw^* \neq \pw$, also set $SK := \bot$.
+  \item If there is a unique $\langle\pw^*,pk^*,sk^*\rangle$ record, and $\pw^* = \pw$, compute $K := \Decap(sk^*,c^*)$. If $K^* = K$ then set $SK := \Hkey(K)$, otherwise set $SK := \bot$.
 \end{itemize}
 
 If $\adv$ makes no $\Htag(\star,s,T,\star)$ query resulting in $\tau^*$, then in particular $\adv$ makes no $\Htag(pk,s,T,\star)$ query resulting in $\tau^*$, so both Game 12 and Game 13 set $SK := \bot$. The probability that $\adv$ makes two different $\Htag(\star,s,T,\star)$ queries both resulting in $\tau^*$ is upper-bounded by $\qtag(\qtag-1)/2^{2n+1}$. (This part does not change from the argument under the old Game 13.) Below we assume that $\adv$ makes a unique $\Htag(pk^*,s,T,K^*)$ query resulting in $\tau^*$:
 \begin{itemize}
-  \item We first upper-bound the probability that there is more than one $\left<\pw^*,pk^*,sk^*\right>$ record for the same $pk^*$. Note that in each such record, $(pk^*,\star) \gets \Gen$ is freshly generated, so the probability that there is a collision in $pk^*$ is upper-bounded by ${q_2 \choose 2} \cdot H_\infty(pk : (pk,\star) \gets \Gen)$.
-  \item If there is no $\left<\pw^*,pk^*,sk^*\right>$ record, then both Game 12 and Game 13 set $SK := \bot$.
-  \item Next, suppose there is a unique $\left<\pw^*,pk^*,sk^*\right>$ record, but $\pw^* \neq \pw$. If there is no $\left<\pw,pk,sk\right>$ record, then both Game 12 and Game 13 set $SK := \bot$. If there is a $\left<\pw,pk,sk\right>$ record, then $(pk,\star) \gets \Gen$ is freshly generated, so $\Pr[pk = pk^*] \leq q_2 \cdot H_\infty(pk : (pk,\star) \gets \Gen)$; and if $pk \neq pk^*$, then $\adv$ does not make an $\Htag(\pw,s,T,pk)$ query resulting in $\tau^*$ (because there is only one $\Htag$ query resulting in $\tau^*$, and it is on $pk^*$), so again both Game 12 and Game 13 set $SK := \bot$.
-  \item Finally, if there is a unique $\left<\pw^*,pk^*,sk^*\right>$ record, and $\pw^* = \pw$, then Game 13 just runs $P$'s algorithm in Game 12, so these two games are identical.
+  \item We first upper-bound the probability that there is more than one $\langle\pw^*,pk^*,\allowbreak sk^*\rangle$ record for the same $pk^*$. Note that in each such record, $(pk^*,\star) \gets \Gen$ is freshly generated, so the probability that there is a collision in $pk^*$ is upper-bounded by ${q_2 \choose 2} \cdot H_\infty(pk : (pk,\star) \gets \Gen)$.
+  \item If there is no $\langle\pw^*,pk^*,sk^*\rangle$ record, then both Game 12 and Game 13 set $SK := \bot$.
+  \item Next, suppose there is a unique $\langle\pw^*,pk^*,sk^*\rangle$ record, but $\pw^* \neq \pw$. If there is no $\langle\pw,pk,sk\rangle$ record, then both Game 12 and Game 13 set $SK := \bot$. If there is a $\langle\pw,pk,sk\rangle$ record, then $(pk,\star) \gets \Gen$ is freshly generated, so $\Pr[pk = pk^*] \leq q_2 \cdot H_\infty(pk : (pk,\star) \gets \Gen)$; and if $pk \neq pk^*$, then $\adv$ does not make an $\Htag(\pw,s,T,pk)$ query resulting in $\tau^*$ (because there is only one $\Htag$ query resulting in $\tau^*$, and it is on $pk^*$), so again both Game 12 and Game 13 set $SK := \bot$.
+  \item Finally, if there is a unique $\langle\pw^*,pk^*,sk^*\rangle$ record, and $\pw^* = \pw$, then Game 13 just runs $P$'s algorithm in Game 12, so these two games are identical.
 \end{itemize}
 
-Overall, we have
+In sum, we have
 \[
 \Dist_\env^{12,13} \leq \frac{q_2(q_2+1)}{2}\cdot H_\infty(pk : (pk,\star) \gets \Gen) + \frac{\qtag(\qtag-1)}{2^{2n+1}}.
 \]
 
+Overall, we conclude that the ``hash $pk$ and $(s,T)$'' version is secure under the WNM property of KEM.
+
 \paragraph{The ``hash $pk$, $(s,T)$ and $c$'' version.}
 If we define $\tau$ as $\Htag(pk,s,T,c,K)$, then the second bullet of \Cref{clm:htag3} is not needed, and the protocol can be proven secure without the WNM property of KEM (i.e., under the same assumptions as in the ``hash everything'' version).
 
-\subsection{The ``Hash $(s,T)$'' Version}
+\subsection{The ``Only Hash $(s,T)$'' Version}
 \label{sec:hash-st}
 
 Finally, we consider the variant where both $\pw$ and $pk$ (as well as $c$) are removed from $\Htag$ inputs, i.e., $\tau$ is defined as $\Htag(s,T,K)$. This is \emph{not} merely a combination of what we did while removing $\pw$ and while removing $pk$, and requires a new analysis. Again we will start from the changes to the simulator.
 
 \subsubsection{Changes to the Simulator}
-When $\pw$ is removed from $\Htag$ in \Cref{sec:hash-pk-st}, the simulator needs to change how it extracts $\adv$'s password guess $\pw^*$: it cannot read off $\pw^*$ from $\adv$'s $\Htag$ queries, and instead needs to read off $pk^*$ and then fetch the $\left<\pw^*,pk^*,sk^*\right>$ record. Here, neither $\pw^*$ nor $pk^*$ can be read off from $\adv$'s $\Htag$ queries, and a new extraction strategy is needed. $\sim$ can only read off $K^*$, so it has to go over \emph{all} $\left<\pw^*,pk^*,sk^*\right>$ records and check which one is consistent with $K^*$ and $c^*$. The new simulator is shown in \Cref{fig:oeke-sim-hash-st}.
+When $\pw$ is removed from $\Htag$ in \Cref{sec:hash-pk-st}, the simulator needs to change how it extracts $\adv$'s password guess $\pw^*$: it cannot read off $\pw^*$ from $\adv$'s $\Htag$ queries, and instead needs to read off $pk^*$ and then fetch the $\langle\pw^*,pk^*,sk^*\rangle$ record. Here, neither $\pw^*$ nor $pk^*$ can be read off from $\adv$'s $\Htag$ queries, and a new extraction strategy is needed. $\sim$ can only read off $K^*$, so it has to go over \emph{all} $\langle\pw^*,pk^*,sk^*\rangle$ records and check which one is consistent with $K^*$ and $c^*$. The new simulator is shown in \Cref{fig:oeke-sim-hash-st}.
 
 \begin{figure}[H]
 \begin{framed}
@@ -1204,8 +1218,8 @@ On $(c^*,\tau^*)$ from $\func$, simulate $P$'s output as follows:
   \item Otherwise find $\adv$'s {\color{blue}$\Htag(s,T,K^*)$} query resulting in $\tau^*$.
       \begin{enumerate}
         \item If there is no such query or more than one such query, send $(\TestPwd, sid, P, \bot)$ and then $(\NewKey, sid, P, 0^n)$ to $\func$.
-        \item If there is exactly one such query, retrieve record $\left<\pw^*,pk^*,sk^*\right>$. {\color{blue}For each $\left<\pw^*,pk^*,sk^*\right>$ record}, compute $K := \Decap(sk^*,c^*)$ and check if $K^* = K$. {\color{blue}If there is more than one such record, abort.} If there is no such record, send $(\TestPwd, sid, P, \bot)$ and then $(\NewKey, sid, P, 0^n)$ to $\func$.
-        \item {\color{blue}If there is exactly one record $\left<\pw^*,pk^*,sk^*\right>$ with $\Decap(sk^*,c^*) = K^*$}, send $(\TestPwd, sid, P, \pw^*)$ to $\func$.
+        \item If there is exactly one such query, retrieve record $\langle\pw^*,pk^*,sk^*\rangle$. {\color{blue}For each $\langle\pw^*,pk^*,sk^*\rangle$ record}, compute $K := \Decap(sk^*,c^*)$ and check if $K^* = K$. {\color{blue}If there is more than one such record, abort.} If there is no such record, send $(\TestPwd, sid, P, \bot)$ and then $(\NewKey, sid, P, 0^n)$ to $\func$.
+        \item {\color{blue}If there is exactly one record $\langle\pw^*,pk^*,sk^*\rangle$ with $\Decap(sk^*,c^*) = K^*$}, send $(\TestPwd, sid, P, \pw^*)$ to $\func$.
             \begin{enumerate}
               \item If $\func$ replies with ``wrong guess'', send $(\NewKey, sid, P, 0^n)$ to $\func$.
               \item If $\func$ replies with ``correct guess'', compute $SK := \Hkey(K)$ and send $(\NewKey, sid, P, SK)$ to $\func$.
@@ -1222,8 +1236,8 @@ On $(c^*,\tau^*)$ from $\func$, simulate $P$'s output as follows:
 
 \paragraph{Change in Game 2.}
 \begin{claim}
-\label{clm:htag3}
-Suppose the WNM property holds for the KEM scheme. In the case where $\neg(\pw = \pw' \land (s^*,T^*) = (s,T) \land c^* = c)$, the probability that $P'$ queries $\Htag(s,T,K)$ is negligible.
+\label{clm:htag4}
+Suppose the KBIND and WNM properties hold for the KEM scheme. In the case where $\neg(\pw = \pw' \land (s^*,T^*) = (s,T) \land c^* = c)$, the probability that $P'$ queries $\Htag(s,T,K)$ is negligible.
 \end{claim}
 $P'$ makes a single $\Htag$ query, on $(s^*,T^*,K')$. If $(s^*,T^*) \neq (s,T)$, then of course $P'$'s query is not $\Htag(s,T,K)$. Now assume $(s^*,T^*) = (s,T)$, which implies $\pw \neq \pw' \lor c^* \neq c$ by the condition of the game.
 \begin{itemize}
@@ -1256,6 +1270,41 @@ Overall, we have
 \Pr[P'\text{ queries }\Htag(s,T,K)] \leq (q_2+1)\Adv_{\red_\text{KBIND}}^\text{KBIND} + \Adv_{\red_\text{WNM}}^\text{WNM},
 \]
 which yields the claim. The remaining argument is essentially identical to that in the old Game 2.
+
+\paragraph{Change in Game 11.}
+Game 10 and Game 11 differ only if $\adv$ does not make an $H_2(\pw,T)$ query, but makes an $\Htag(s,T,K^*)$ query resulting in $\tau^*$, where $K^* = \Decap(sk,c^*)$ for a freshly generated $sk$. By a reduction $\red_\text{UNPRE}$ that is essentially identical to the one in \Cref{sec:hash-pw-st}, we have
+\[
+\Dist_\env^{10,11} \leq \Adv_{\red_\text{UNPRE}}^\text{UNPRE}.
+\]
+
+\paragraph{Change in Game 13.}
+We first state the new Game 13, and then make the argument.
+
+\medskip\noindent\emph{Game 13:} In the case where $\neg(\pw = \pw' \land (s^*,T^*) = (s,T) \land (c^*,\tau^*) = (c,\tau'))$, find $\adv$'s $\Htag(s,T,K^*)$ query resulting in $\tau^*$. If there is none or more than one, set $SK := \bot$. Otherwise there is a unique such $\Htag(s,T,K^*)$ query, and
+\begin{itemize}
+  \item For each $\langle\pw^*,pk^*,sk^*\rangle$ record, compute $K := \Decap(sk^*,c^*)$ and check if $K^* = K$. If there is more than one such record, abort.
+  \item If there is no such $\langle\pw^*,pk^*,sk^*\rangle$ record, set $SK := \bot$.
+  \item If there is a unique such $\langle\pw^*,pk^*,sk^*\rangle$ record, but $\pw^* \neq \pw$, also set $SK := \bot$.
+  \item If there is a unique such $\langle\pw^*,pk^*,sk^*\rangle$ record, and $\pw^* = \pw$, set $SK := \Hkey(K)$.
+\end{itemize}
+
+If $\adv$ makes no $\Htag(s,T,\star)$ query resulting in $\tau^*$, then both Game 12 and Game 13 set $SK := \bot$. The probability that $\adv$ makes two different $\Htag(s,T,\star)$ queries both resulting in $\tau^*$ is upper-bounded by $\qtag(\qtag-1)/2^{2n+1}$. (This part does not change from the argument under the old Game 13.) Below we assume that $\adv$ makes a unique $\Htag(s,T,K^*)$ query resulting in $\tau^*$:
+\begin{itemize}
+  \item We first upper-bound the probability that there is more than one $\langle\pw^*,pk^*,\allowbreak sk^*\rangle$ record with $\Decap(sk^*,c^*) = K^*$. Note that in each such record, $(\star,sk^*) \gets \Gen$ is freshly generated, so a straightforward reduction to the ROB property of KEM, $\red_\text{ROB1}$, shows that the probability that the same $c^*$ decapsulates to the same $K^*$ under two freshly generated $sk^*$ is upper-bounded by ${q_2 \choose 2} \cdot \Adv_{\red_\text{ROB1}}^\text{ROB}$.
+  \item If there is no $\langle\pw^*,pk^*,sk^*\rangle$ record with $\Decap(sk^*,c^*) = K^*$, then both Game 12 and Game 13 set $SK := \bot$.
+  \item Next, suppose there is a unique $\langle\pw^*,pk^*,sk^*\rangle$ record with $\Decap(sk^*,c^*) = K^*$, but $\pw^* \neq \pw$. If there is no $\langle\pw,pk,sk\rangle$ record, then both Game 12 and Game 13 set $SK := \bot$. If there is a $\langle\pw,pk,sk\rangle$ record, then $(\star,sk) \gets \Gen$ is freshly generated, so a straightforward reduction to the ROB property of KEM, $\red_\text{ROB2}$, shows that the probability that the same $c^*$ decapsulates to the same $K^*$ under both $sk$ and $sk^*$ is upper-bounded by $q_2 \cdot \Adv_{\red_\text{ROB2}}^\text{ROB2}$. If this does not happen, then again both Game 12 and Game 13 set $SK := \bot$.
+  \item Finally, if there is a unique $\langle\pw^*,pk^*,sk^*\rangle$ record, and $\pw^* = \pw$, then both Game 12 and Game 13 set $SK := \Hkey(K)$.
+\end{itemize}
+
+In sum, we have
+\[
+\Dist_\env^{12,13} \leq \frac{q_2(q_2-1)}{2} \cdot \Adv_{\red_\text{ROB1}}^\text{ROB1} + q_2 \cdot \Adv_{\red_\text{ROB2}}^\text{ROB2} + \frac{\qtag(\qtag-1)}{2^{2n+1}}.
+\]
+
+Overall, we conclude that the ``only hash $(s,T)$'' version is secure under the KBIND, WNM, UNPRE and ROB properties of KEM.
+
+\paragraph{The ``hash $(s,T)$ and $c$'' version.}
+If we define $\tau$ as $\Htag(s,T,c,K)$, then the second bullet of \Cref{clm:htag4} is not needed, and the protocol can be proven secure without the WNM property of KEM (but we still need KBIND, UNPRE and ROB).
 
 \bibliographystyle{alpha}
 \bibliography{bib.bib}
@@ -1300,7 +1349,7 @@ The only (more or less) essential difference lies in the {\color{red}red} text i
 We now turn to the variant where $pk$ is further removed from $\Htag$ inputs, i.e., $\tau$ is defined as $\Htag(\pw,K)$. \Cref{tab:game-summary} suggests that Games 2 and 11 in \Cref{sec:games} need to (essentially) change. In fact the simulator also needs to change quite a bit, which we will start from.
 
 \subsubsection{Changes to the Simulator}
-The only changes to the simulator $\sim$ appear when $\adv$ sends $(c^*,\tau^*)$ to $P$ and $\sim$ needs to extract a password guess $\pw^*$ from it. In the ``hash everything'' version (\Cref{sec:simulator}), $\tau^*$ is computed as $\Htag(\pw^*,pk^*,c^*,K^*)$, so $\sim$ can extract $\pw^*$ from $\adv$'s $\Htag$ queries and \emph{check its consistency with $pk^*,c^*,K^*$} (see the last paragraph of \Cref{sec:sim-intuition}). Here, $\tau^* = \Htag(\pw^*,K^*)$, but the inclusion of $\pw^*$ still allows $\sim$ to find the corresponding $\left<\pw^*,pk^*,sk^*\right>$ record and check for consistency.
+The only changes to the simulator $\sim$ appear when $\adv$ sends $(c^*,\tau^*)$ to $P$ and $\sim$ needs to extract a password guess $\pw^*$ from it. In the ``hash everything'' version (\Cref{sec:simulator}), $\tau^*$ is computed as $\Htag(\pw^*,pk^*,c^*,K^*)$, so $\sim$ can extract $\pw^*$ from $\adv$'s $\Htag$ queries and \emph{check its consistency with $pk^*,c^*,K^*$} (see the last paragraph of \Cref{sec:sim-intuition}). Here, $\tau^* = \Htag(\pw^*,K^*)$, but the inclusion of $\pw^*$ still allows $\sim$ to find the corresponding $\langle\pw^*,pk^*,sk^*\rangle$ record and check for consistency.
 
 However, a more sinister issue emerges when we remove $pk^*$ from $\Htag$: In the case where the two parties' passwords match, $\adv$ can modify $c$ and force the two parties' session keys to be the same --- without making \emph{any} $\Htag$ query! The easiest way to see this is to work out a concrete version for OEKE based on the Diffie-Hellman KEM, which we show in \Cref{fig:attack-no-pk}.
 
@@ -1321,7 +1370,7 @@ P(\pw) \< \< \adv \< \< P'(\pw) \\
 
 In this attack, the two honest parties' passwords $\pw$ are the same. Assuming $\adv$ knows it, it can decrypt $P$'s message to recover $X = g^x$, and then re-encrypt $X^2$ under the same $\pw$; this causes $P'$ to output $SK' = \Hkey(g^{2xy})$ and send $(Y = g^y, \tau' = \Htag(\pw,g^{2xy}))$. Then $\adv$ sends $(Y^2,\tau')$ to $P$, causing $P$'s check to pass and $P$ will also output $\Hkey(g^{2xy})$. (This is not an issue if $pk$ is included in $\Htag$, since $P$ would compute $\tau = \Htag(\dots,Y^2,\dots) \neq \Htag(\dots,Y,\dots) = \tau'$ and its check would fail.)
 
-In fact, it is a stretch to call this an attack, since the only thing $\adv$ does is to modify some protocol messages and cause $P$ and $P'$ to output the same session key --- which $\adv$ \emph{cannot} compute. Still, this scenario is not covered by the previous simulator. It should be simulated as follows: When $\adv$ decrypts $(s,T)$ under $\pw$, $\sim$ records $\left<\pw,pk,sk\right>$ (although there might be a large number of such records, and $\sim$ does not know which is the ``right'' one at this point). Then when $\adv$ sends $(s^*,T^*)$ to $P'$, $\sim$ extracts $\pw$, which allows $\sim$ to retrieve the ``right'' record $\left<\pw,pk,sk\right>$; $\sim$ also computes $K'$ while simulating the $P'$ side. Later, when $\adv$ sends $(c^*,\tau')$, $\sim$ can tell if $\adv$ is performing the aforementioned attack by checking if $\Decap(sk,c^*) = K'$.
+In fact, it is a stretch to call this an attack, since the only thing $\adv$ does is to modify some protocol messages and cause $P$ and $P'$ to output the same session key --- which $\adv$ \emph{cannot} compute. Still, this scenario is not covered by the previous simulator. It should be simulated as follows: When $\adv$ decrypts $(s,T)$ under $\pw$, $\sim$ records $\langle\pw,pk,sk\rangle$ (although there might be a large number of such records, and $\sim$ does not know which is the ``right'' one at this point). Then when $\adv$ sends $(s^*,T^*)$ to $P'$, $\sim$ extracts $\pw$, which allows $\sim$ to retrieve the ``right'' record $\langle\pw,pk,sk\rangle$; $\sim$ also computes $K'$ while simulating the $P'$ side. Later, when $\adv$ sends $(c^*,\tau')$, $\sim$ can tell if $\adv$ is performing the aforementioned attack by checking if $\Decap(sk,c^*) = K'$.
 
 We show the new simulator in \Cref{fig:oeke-sim-hash-pw}. (Only the steps after receiving $(c^*,\tau^*)$ are included.)
 
@@ -1336,7 +1385,7 @@ On $(c^*,\tau^*)$ from $\func$, simulate $P$'s output as follows:
   \item If $(s^*,T^*) = (s,T) \land (c^*,\tau^*) = (c,\tau')$, send $(\NewKey, sid, P, 0^n)$ to $\func$. \textcolor[gray]{0.5}{// $\adv$ is passive}
   {\color{blue}\item If $(s^*,T^*) \neq (s,T) \land \tau^* = \tau'$, and there has been a $(\TestPwd, sid, P, \pw')$ command to $\func$ resulting in ``correct guess'' (i.e., $\sim$ previously entered step 2(b)(ii) in \Cref{fig:oeke-sim2}), there must be a $K'$ defined at that time.
       \begin{enumerate}
-        \item Retrieve record $\left<\pw',\star,sk\right>$. If there is no such record, go to step 3.
+        \item Retrieve record $\langle\pw',\star,sk\rangle$. If there is no such record, go to step 3.
         \item Compute $K := \Decap(sk,c^*)$. If $K \neq K'$, go to step 3.
         \item Send $(\TestPwd, sid, P, \pw')$ to $\func$.
             \begin{enumerate}
@@ -1348,7 +1397,7 @@ On $(c^*,\tau^*)$ from $\func$, simulate $P$'s output as follows:
   \item Otherwise find $\adv$'s {\color{blue}$\Htag(\pw^*,K^*)$} query resulting in $\tau^*$.
       \begin{enumerate}
         \item If there is no such query or more than one such query, send $(\TestPwd, sid, P, \bot)$ and then $(\NewKey, sid, P, 0^n)$ to $\func$.
-        \item If there is exactly one such query, retrieve record $\left<\pw^*,\star,sk^*\right>$. If there is no such record, send $(\TestPwd, sid, P, \bot)$ and then $(\NewKey, sid, P, 0^n)$ to $\func$.
+        \item If there is exactly one such query, retrieve record $\langle\pw^*,\star,sk^*\rangle$. If there is no such record, send $(\TestPwd, sid, P, \bot)$ and then $(\NewKey, sid, P, 0^n)$ to $\func$.
         \item Compute $K := \Decap(sk^*,c^*)$. If $K^* \neq K$, send $(\TestPwd, sid, P, \bot)$ and then $(\NewKey, sid, P, 0^n)$ to $\func$.
         \item Send $(\TestPwd, sid, P, \pw^*)$ to $\func$.
             \begin{enumerate}
@@ -1403,7 +1452,7 @@ This yields the claim. The remaining argument is essentially identical to that i
 \Dist_\env^{10,11} \leq \Adv_{\red_\text{UNPRE1}}^{\text{UNPRE}}.
 \]}
 
-\noindent\emph{Game 12:} This game should read as follows now: In the case where $\pw = \pw' \land (s^*,T^*) = (s,T) \land c^* = c \land \tau^* \neq \tau'$, do what's in the $\pw \neq \pw' \lor ((s^*,T^*) = (s,T) \land c^* \neq c)$ case. That is, first find the $\left<\pw,\star,\star\right>$ record (as per Game 11), then find $\adv$'s $\Htag(\pw,K^*)$ query resulting in $\tau^*$. If there is none or more than one, set $SK := \bot$. If there is a unique such query, do the following:
+\noindent\emph{Game 12:} This game should read as follows now: In the case where $\pw = \pw' \land (s^*,T^*) = (s,T) \land c^* = c \land \tau^* \neq \tau'$, do what's in the $\pw \neq \pw' \lor ((s^*,T^*) = (s,T) \land c^* \neq c)$ case. That is, first find the $\langle\pw,\star,\star\rangle$ record (as per Game 11), then find $\adv$'s $\Htag(\pw,K^*)$ query resulting in $\tau^*$. If there is none or more than one, set $SK := \bot$. If there is a unique such query, do the following:
 \begin{itemize}
   \item If $K^* = K$, set $SK := \Hkey(K)$.
   \item If $K^* \neq K$, set $SK := \bot$.
@@ -1416,7 +1465,7 @@ In Game 11 $SK$ is outright set to $\bot$, whereas here it checks $\adv$'s $\Hta
 In the case where $\pw \neq \pw' \lor ((s^*,T^*) = (s,T) \land (c^* \neq c \lor (c^* = c \land \tau^* \neq \tau')))$, find $\adv$'s $\Htag(\pw^*,K^*)$ query resulting in $\tau^*$. If there is none or more than one, set $SK := \bot$. Otherwise there is a unique such $\Htag(\pw^*,K^*)$ query, and
 \begin{itemize}
   \item If $\pw^* \neq \pw$, set $SK := \bot$.
-  \item If $\pw^* = \pw$, run the remaining part of $P'$'s algorithm except that we now use $\pw^*$ instead of $\pw$ --- that is, if there is no $\left<\pw^*,pk^*,sk^*\right>$ record then set $SK := \bot$; otherwise compute $K := \Decap(sk^*,c^*)$, and if $K^* = K$ then set $SK := \Hkey(K)$, otherwise set $SK := \bot$.
+  \item If $\pw^* = \pw$, run the remaining part of $P'$'s algorithm except that we now use $\pw^*$ instead of $\pw$ --- that is, if there is no $\langle\pw^*,pk^*,sk^*\rangle$ record then set $SK := \bot$; otherwise compute $K := \Decap(sk^*,c^*)$, and if $K^* = K$ then set $SK := \Hkey(K)$, otherwise set $SK := \bot$.
 \end{itemize}
 
 Furthermore, in the case where $\pw = \pw' \land (s^*,T^*) \neq (s,T)$, do the same as above, except that we now find $\adv$ {\color{blue}\emph{or $P'$}}'s $\Htag(\pw^*,K^*)$ query resulting in $\tau^*$.
@@ -1428,12 +1477,12 @@ The previous statistical argument does not really change.
 {\color{blue}
 \medskip\noindent\emph{New game 1:} Now that $(\pw')^*$ --- the password guess extracted from $(s^*,T^*)$ --- is defined, we can finally add (part of) what's in step 2 of \Cref{fig:oeke-sim-hash-pw}. Concretely, we change the game as follows:
 
-In the case where $(s^*,T^*) \neq (s,T) \land (\pw')^* = \pw = \pw' \land \tau^* = \tau'$, there is a record $\left<\pw,\star,sk\right>$, and $\Decap(sk,c^*) = K'$, set $SK := \Hkey(K')$. (In some sense this is the most crucial new game, as it covers the scenario in \Cref{fig:attack-no-pk} --- which is why we need to make all these changes to begin with. It also corresponds to step 2(c)(ii) in \Cref{fig:oeke-sim-hash-pw}. We will deal with step 2(c)(i) later.)
+In the case where $(s^*,T^*) \neq (s,T) \land (\pw')^* = \pw = \pw' \land \tau^* = \tau'$, there is a record $\langle\pw,\star,sk\rangle$, and $\Decap(sk,c^*) = K'$, set $SK := \Hkey(K')$. (In some sense this is the most crucial new game, as it covers the scenario in \Cref{fig:attack-no-pk} --- which is why we need to make all these changes to begin with. It also corresponds to step 2(c)(ii) in \Cref{fig:oeke-sim-hash-pw}. We will deal with step 2(c)(i) later.)
 
 Since $\pw = \pw' \land (s^*,T^*) \neq (s,T)$, Game 16 finds $\adv$ or $P'$'s $\Htag$ query resulting in $\tau^*$ (see the description of Game 13). $P'$ makes a singe query to $\Htag$, on input $(\pw',K')$; and the query result is $\tau' = \tau^*$. Therefore, Game 16 finds this query, and does the following (again see the description of Game 13):
 \begin{enumerate}
   \item Check if $\pw' = \pw$, which is indeed the case.
-  \item Find the $\left<\pw,pk,sk\right>$ record.
+  \item Find the $\langle\pw,pk,sk\rangle$ record.
   \item Compute $K := \Decap(sk,c^*)$ and check if $K = K'$, which is again the case by the condition of this game.
   \item Set $SK := \Hkey(K) (= \Hkey(K'))$.
 \end{enumerate}
@@ -1452,11 +1501,11 @@ There are the following cases:
         \item If $\adv$ queries $\Htag(\pw',K')$, then new game 2 still finds this query, so new game 1 and new game 2 are identical.
         \item If $\adv$ does not query $\Htag(\pw',K')$, then new game 2 sets $SK := \bot$. We argue that new game 1 also sets $SK := \bot$ except with negligible probability. New game 1 finds $P'$'s $\Htag(\pw',K')$ query, and sets $SK := \bot$ unless $\Decap(sk,c^*) = K'$. But note that $sk$ is freshly generated, so a straightforward reduction to the UNPRE property of KEM, $\red_\text{UNPRE2}$, shows that $\Decap(sk,c^*) = K'$ happens with negligible probability (cf. the reduction in Game 11).
       \end{itemize}
-  \item If $(\pw')^* = \pw' \land \tau^* = \tau'$, but there is no $\left<\pw,\star,sk\right>$ record, then both new game 1 and new game 2 outright sets $SK := \bot$, regardless of $\Htag$ queries by $\adv$ or $P'$. Thus, the two games are identical.
+  \item If $(\pw')^* = \pw' \land \tau^* = \tau'$, but there is no $\langle\pw,\star,sk\rangle$ record, then both new game 1 and new game 2 outright sets $SK := \bot$, regardless of $\Htag$ queries by $\adv$ or $P'$. Thus, the two games are identical.
   \item If $(\pw')^* = \pw' \land \tau^* = \tau'$, but $\Decap(sk,c^*) \neq K'$, then new game 1 finds $P'$'s $\Htag(\pw',K')$ query and then sets $SK := \bot$ because the check $\Decap(sk,c^*) \stackrel{?}{=} K'$ does not pass, and new game 2 also sets $SK := \bot$ because it either fails to find $\adv$'s $\Htag(\pw',K')$ query, or it finds such a query but then sets $SK := \bot$ because the check $\Decap(sk,c^*) \stackrel{?}{=} K'$ does not pass. Thus, the two games are identical.
 \end{itemize}
 
-The remaining case is that $(\pw')^* = \pw' \land \tau^* = \tau'$, there is a $\left<\pw,\star,sk\right>$ record, and $\Decap(sk,c^*) = K'$. This is exactly the condition in new game 1, and new game 1 outright sets $SK := \Hkey(K')$ without trying to find any $\Htag$ query (by $\adv$ or $P'$), so the game change does not affect this case. Overall, we conclude that
+The remaining case is that $(\pw')^* = \pw' \land \tau^* = \tau'$, there is a $\langle\pw,\star,sk\rangle$ record, and $\Decap(sk,c^*) = K'$. This is exactly the condition in new game 1, and new game 1 outright sets $SK := \Hkey(K')$ without trying to find any $\Htag$ query (by $\adv$ or $P'$), so the game change does not affect this case. Overall, we conclude that
 \[
 \Dist_\env^{\text{new}1,\text{new}2} \leq \Adv_{\red_\text{UNPRE2}}^{\text{UNPRE}}.
 \]}
@@ -1465,7 +1514,7 @@ The remaining case is that $(\pw')^* = \pw' \land \tau^* = \tau'$, there is a $\
 
 {\color{blue}
 \medskip\noindent\emph{New game 3:}
-In the case where $(s^*,T^*) \neq (s,T) \land (\pw')^* = \pw' \neq \pw \land \tau^* = \tau'$, there is a record $\left<\pw',\star,sk\right>$, and $\Decap(sk,c^*) = K'$, set $SK := \bot$. (This corresponds to step 2(c)(i) in \Cref{fig:oeke-sim-hash-pw}.)
+In the case where $(s^*,T^*) \neq (s,T) \land (\pw')^* = \pw' \neq \pw \land \tau^* = \tau'$, there is a record $\langle\pw',\star,sk\rangle$, and $\Decap(sk,c^*) = K'$, set $SK := \bot$. (This corresponds to step 2(c)(i) in \Cref{fig:oeke-sim-hash-pw}.)
 
 In this case Game 17 tries to find $\adv$'s (unique) $\Htag(\pw^*,K^*)$ query resulting in $\tau^*$, and checks if $\pw^* = \pw$ (see Game 13). But $\tau^* = \tau' = \Htag(\pw',K')$, so $\pw^* = \pw' \neq \pw$ and the check never passes --- that is, both Game 17 and new game 3 set $SK := \bot$. We have
 \[
@@ -1476,12 +1525,12 @@ In this case Game 17 tries to find $\adv$'s (unique) $\Htag(\pw^*,K^*)$ query re
 We have made the following essential changes to the games:
 \begin{itemize}
   \item In the case where $\pw = \pw' \land (s^*,T^*) \neq (s,T)$, Game 2 tries to find $P'$'s $\Htag$ query resulting in $\tau^*$ (in addition to $\adv$'s query).
-  \item In the case where $(s^*,T^*) \neq (s,T) \land (\pw')^* = \pw = \pw' \land \tau^* = \tau'$, there is a record $\left<\pw,\star,sk\right>$, and $\Decap(sk,c^*) = K'$, new game 1 outright sets $SK := \Hkey(K')$ (without trying to find any $\Htag$ query by $\adv$ or $P'$).
+  \item In the case where $(s^*,T^*) \neq (s,T) \land (\pw')^* = \pw = \pw' \land \tau^* = \tau'$, there is a record $\langle\pw,\star,sk\rangle$, and $\Decap(sk,c^*) = K'$, new game 1 outright sets $SK := \Hkey(K')$ (without trying to find any $\Htag$ query by $\adv$ or $P'$).
   \item In the case where $\pw = \pw' \land (s^*,T^*) \neq (s,T)$, new game 2 drops the check on $P'$'s $\Htag$ query introduced in Game 2 (except in new game 1's condition, where all checks on $\Htag$ queries have already been dropped).
-  \item In the case where $(s^*,T^*) \neq (s,T) \land (\pw')^* = \pw' \neq \pw \land \tau^* = \tau'$, there is a record $\left<\pw',\star,sk\right>$, and $\Decap(sk,c^*) = K'$, new game 3 outright sets $SK := \bot$.
+  \item In the case where $(s^*,T^*) \neq (s,T) \land (\pw')^* = \pw' \neq \pw \land \tau^* = \tau'$, there is a record $\langle\pw',\star,sk\rangle$, and $\Decap(sk,c^*) = K'$, new game 3 outright sets $SK := \bot$.
 \end{itemize}
 
-Overall, the net changes are that in the case where $(s^*,T^*) \neq (s,T) \land (\pw')^* = \pw' \land \tau^* = \tau'$, there is a record $\left<\pw',\star,sk\right>$, and $\Decap(sk,c^*) = K'$,
+Overall, the net changes are that in the case where $(s^*,T^*) \neq (s,T) \land (\pw')^* = \pw' \land \tau^* = \tau'$, there is a record $\langle\pw',\star,sk\rangle$, and $\Decap(sk,c^*) = K'$,
 \begin{itemize}
   \item If $(\pw')^* = \pw$, then we set $SK := \Hkey(K')$.
   \item If $(\pw')^* \neq \pw$, then we set $SK := \bot$.
@@ -1510,7 +1559,7 @@ P(\pw) \< \< \adv \< \< P'(\pw') \\
 
 In this attack, the two honest parties' passwords $\pw$ and $\pw'$ may or may not be the same. Assuming $\adv$ knows both, it can decrypt $P$'s message to recover $pk$, and then re-encrypt $pk$ under $\pw'$; this ensures that $P'$ will recover the same $pk$ as on the $P$ side, and use it to compute $c,K',\tau'$ (and eventually $SK'$). But then if $\adv$ forwards $(c,\tau')$ without any modification, $P$ will decapsulate $c$ to the same $K'$ (because it uses the same $pk$), and its output key will be the same as $SK'$ on the $P'$ side. (This is not an issue if $\pw$ is included in $\Htag$, since forwarding $\tau' = \Htag(\pw',\dots) \neq \Htag(\pw,\dots)$ to $P$ would make $P$'s check fail.)
 
-This is (again) a new situation not covered by the previous simulator. It should be simulated as follows: When $\adv$ decrypts $(s,T)$ under $\pw$, $\sim$ records $\left<\pw,pk,sk\right>$ (although there might be a large number of such records, and $\sim$ does not know which is the ``right'' one at this point). Then when $\adv$ sends $(s^*,T^*)$ to $P'$, $\sim$ extracts $\pw'$, \emph{which also gives a $pk'$}. Later, when $\adv$ forwards $(c,\tau')$, $\sim$ knows that $\adv$ is performing the aforementioned attack, and checks which $\left<\pw,pk,sk\right>$ record matches $pk'$. In this way $\sim$ can extract the password guess $\pw$ on the $P$ side.
+This is (again) a new situation not covered by the previous simulator. It should be simulated as follows: When $\adv$ decrypts $(s,T)$ under $\pw$, $\sim$ records $\langle\pw,pk,sk\rangle$ (although there might be a large number of such records, and $\sim$ does not know which is the ``right'' one at this point). Then when $\adv$ sends $(s^*,T^*)$ to $P'$, $\sim$ extracts $\pw'$, \emph{which also gives a $pk'$}. Later, when $\adv$ forwards $(c,\tau')$, $\sim$ knows that $\adv$ is performing the aforementioned attack, and checks which $\langle\pw,pk,sk\rangle$ record matches $pk'$. In this way $\sim$ can extract the password guess $\pw$ on the $P$ side.
 
 We show the new simulator in \Cref{fig:oeke-sim-hash-pk}. (Only the steps after receiving $(c^*,\tau^*)$ are included.)
 
@@ -1523,7 +1572,7 @@ We show the new simulator in \Cref{fig:oeke-sim-hash-pk}. (Only the steps after 
 On $(c^*,\tau^*)$ from $\func$, simulate $P$'s output as follows:
 \begin{enumerate}
   \item If $(s^*,T^*) = (s,T) \land (c^*,\tau^*) = (c,\tau')$, send $(\NewKey, sid, P', 0^n)$ to $\func$. \textcolor[gray]{0.5}{// $\adv$ is passive}
-  {\color{blue}\item If $(s^*,T^*) \neq (s,T) \land (c^*,\tau^*) = (c,\tau')$, and there has been a $(\TestPwd, sid, P', \pw')$ command to $\func$ resulting in ``correct guess'' (i.e., $\sim$ previously entered step 2(b)(ii) in \Cref{fig:oeke-sim2}), there must be a $pk'$ and an $SK'$ defined at that time. If there is more than one record in the form of $\left<\pw^*,pk',\star\right>$, abort. If there is a unique such record, send $(\TestPwd, sid, P, \pw^*)$ to $\func$.
+  {\color{blue}\item If $(s^*,T^*) \neq (s,T) \land (c^*,\tau^*) = (c,\tau')$, and there has been a $(\TestPwd, sid, P', \pw')$ command to $\func$ resulting in ``correct guess'' (i.e., $\sim$ previously entered step 2(b)(ii) in \Cref{fig:oeke-sim2}), there must be a $pk'$ and an $SK'$ defined at that time. If there is more than one record in the form of $\langle\pw^*,pk',\star\rangle$, abort. If there is a unique such record, send $(\TestPwd, sid, P, \pw^*)$ to $\func$.
       \begin{enumerate}[(i)]
         \item If $\func$ replies with ``wrong guess'', send $(\NewKey, sid, P, 0^n)$ to $\func$.
         \item If $\func$ replies with ``correct guess'', send $(\NewKey, sid, P, SK')$ to $\func$.
@@ -1532,7 +1581,7 @@ On $(c^*,\tau^*)$ from $\func$, simulate $P$'s output as follows:
   \item Otherwise find $\adv$'s {\color{blue}$\Htag(pk^*,K^*)$} query resulting in $\tau^*$.
       \begin{enumerate}
         \item If there is no such query or more than one such query, send $(\TestPwd, sid, P, \bot)$ and then $(\NewKey, sid, P, 0^n)$ to $\func$.
-        \item If there is exactly one such query, retrieve record $\left<\pw^*,\star,sk^*\right>$. {\color{blue}If there is more than one such record, abort.} If there is no such record, send $(\TestPwd, sid, P, \bot)$ and then $(\NewKey, sid, P, 0^n)$ to $\func$.
+        \item If there is exactly one such query, retrieve record $\langle\pw^*,\star,sk^*\rangle$. {\color{blue}If there is more than one such record, abort.} If there is no such record, send $(\TestPwd, sid, P, \bot)$ and then $(\NewKey, sid, P, 0^n)$ to $\func$.
         \item Compute $K := \Decap(sk^*,c^*)$. If $K^* \neq K$, send $(\TestPwd, sid, P', \bot)$ and then $(\NewKey, sid, P, 0^n)$ to $\func$.
         \item Send $(\TestPwd, sid, P, \pw^*)$ to $\func$.
             \begin{enumerate}
@@ -1588,7 +1637,7 @@ This yields the claim. The remaining argument is essentially identical to that i
 
 \medskip\noindent\emph{Game 11:} This game hop goes through for essentially the same reason as in \Cref{sec:games}. The difference is that now Game 10 and Game 11 differ if $\adv$ does not make an $H_2(\pw,T)$ query, but $\adv$ \emph{{\color{blue}or $P'$}} makes an $\Htag(pk,K^*)$ query resulting in $\tau^*$. However, $pk$ is freshly generated by $P$, independent of \emph{both} $\adv$ and $P'$'s views. Thus, the distinguishing advantage between Game 10 and Game 11 is still upper-bounded by $H_\infty(pk : (pk,\star) \gets \Gen)$.
 
-\medskip\noindent\emph{Game 12:} This game should read as follows now: In the case where $\pw = \pw' \land (s^*,T^*) = (s,T) \land c^* = c \land \tau^* \neq \tau'$, do what's in the $\pw \neq \pw' \lor ((s^*,T^*) = (s,T) \land c^* \neq c)$ case. That is, first find the $\left<\pw,\star,\star\right>$ record (as per Game 11), then find $\adv$'s $\Htag(pk,K^*)$ query resulting in $\tau^*$. If there is none or more than one, set $SK := \bot$. If there is a unique such query, do the following:
+\medskip\noindent\emph{Game 12:} This game should read as follows now: In the case where $\pw = \pw' \land (s^*,T^*) = (s,T) \land c^* = c \land \tau^* \neq \tau'$, do what's in the $\pw \neq \pw' \lor ((s^*,T^*) = (s,T) \land c^* \neq c)$ case. That is, first find the $\langle\pw,\star,\star\rangle$ record (as per Game 11), then find $\adv$'s $\Htag(pk,K^*)$ query resulting in $\tau^*$. If there is none or more than one, set $SK := \bot$. If there is a unique such query, do the following:
 \begin{itemize}
   \item If $K^* = K$, set $SK := \Hkey(K)$.
   \item If $K^* \neq K$, set $SK := \bot$.
@@ -1600,16 +1649,16 @@ In Game 11 $SK$ is outright set to $\bot$, whereas here it checks $\adv$'s $\Hta
 
 In the case where {\color{blue}$\pw = \pw' \lor (s^*,T^*) = (s,T) \lor (c^*,\tau^*) \neq (c,\tau')$ yet $\neg(\pw = \pw' \land (s^*,T^*) = (s,T) \land (c^*,\tau^*) = (c,\tau'))$}, find $\adv$'s $\Htag(pk^*,K^*)$ query resulting in $\tau^*$. If there is none or more than one, set $SK := \bot$. Otherwise there is a unique such $\Htag(pk^*,K^*)$ query, and
 \begin{itemize}
-  \item If there is no {\color{blue}or more than one} $\left<\pw^*,pk^*,sk^*\right>$ record, set $SK := \bot$.
-  \item If there is a unique $\left<\pw^*,pk^*,sk^*\right>$ record, but $\pw^* \neq \pw$, also set $SK := \bot$.
-  \item If there is a unique $\left<\pw^*,pk^*,sk^*\right>$ record, and $\pw^* = \pw$, compute $K := \Decap(sk^*,c^*)$. If $K^* = K$ then set $SK := \Hkey(K)$, otherwise set $SK := \bot$.
+  \item If there is no {\color{blue}or more than one} $\langle\pw^*,pk^*,sk^*\rangle$ record, set $SK := \bot$.
+  \item If there is a unique $\langle\pw^*,pk^*,sk^*\rangle$ record, but $\pw^* \neq \pw$, also set $SK := \bot$.
+  \item If there is a unique $\langle\pw^*,pk^*,sk^*\rangle$ record, and $\pw^* = \pw$, compute $K := \Decap(sk^*,c^*)$. If $K^* = K$ then set $SK := \Hkey(K)$, otherwise set $SK := \bot$.
 \end{itemize}
 
 Furthermore, in the case where {\color{blue}$\pw \neq \pw' \land (s^*,T^*) \neq (s,T) \land (c^*,\tau^*) = (c,\tau')$}, do the same as above, except that we now find $\adv$ {\color{blue}\emph{or $P'$}}'s $\Htag(pk^*,K^*)$ query resulting in $\tau^*$.
 
-{\color{blue}We first upper-bound the probability that there is more than one $\left<\pw^*,pk^*,sk^*\right>$ record for the same $pk^*$. Note that in each such record, $(pk^*,\star) \gets \Gen$ is freshly generated, so the probability that there is a collision in $pk^*$ is upper-bounded by ${q_2 \choose 2} \cdot H_\infty(pk : (pk,\star) \gets \Gen)$.
+{\color{blue}We first upper-bound the probability that there is more than one $\langle\pw^*,pk^*,sk^*\rangle$ record for the same $pk^*$. Note that in each such record, $(pk^*,\star) \gets \Gen$ is freshly generated, so the probability that there is a collision in $pk^*$ is upper-bounded by ${q_2 \choose 2} \cdot H_\infty(pk : (pk,\star) \gets \Gen)$.
 
-Next, suppose there is a unique $\left<\pw^*,pk^*,sk^*\right>$ record, but $\pw^* \neq \pw$. If there is no $\left<\pw,pk,sk\right>$ record, then both Game 12 and Game 13 set $SK := \bot$. If there is a $\left<\pw,pk,sk\right>$ record, then $(pk,\star) \gets \Gen$ is freshly generated, so $\Pr[pk = pk^*] \leq q_2 \cdot H_\infty(pk : (pk,\star) \gets \Gen)$; and if $pk \neq pk^*$, then $\adv$ does not make an $\Htag(\pw,pk)$ query resulting in $\tau^*$ (because there is only one $\Htag$ query resulting in $\tau^*$, and it is on $pk^*$), so again both Game 12 and Game 13 set $SK := \bot$.}
+Next, suppose there is a unique $\langle\pw^*,pk^*,sk^*\rangle$ record, but $\pw^* \neq \pw$. If there is no $\langle\pw,pk,sk\rangle$ record, then both Game 12 and Game 13 set $SK := \bot$. If there is a $\langle\pw,pk,sk\rangle$ record, then $(pk,\star) \gets \Gen$ is freshly generated, so $\Pr[pk = pk^*] \leq q_2 \cdot H_\infty(pk : (pk,\star) \gets \Gen)$; and if $pk \neq pk^*$, then $\adv$ does not make an $\Htag(\pw,pk)$ query resulting in $\tau^*$ (because there is only one $\Htag$ query resulting in $\tau^*$, and it is on $pk^*$), so again both Game 12 and Game 13 set $SK := \bot$.}
 
 Assuming neither of the above happens, the previous statistical argument does not really change.
 
@@ -1618,21 +1667,21 @@ Assuming neither of the above happens, the previous statistical argument does no
 {\color{blue}
 \medskip\noindent\emph{New game 1:} Now that $(\pw')^*$ --- the password guess extracted from $(s^*,T^*)$ --- is defined, we can finally add (part of) what's in step 2 of \Cref{fig:oeke-sim-hash-pk}. Concretely, we change the game as follows:
 
-In the case where $(\pw')^* = \pw' \land (s^*,T^*) \neq (s,T) \land (c^*,\tau^*) = (c,\tau')$, there must be a $pk'$ defined on the $P'$ side. If there is a unique record $\left<\pw^*,pk',\star\right>$, and $\pw^* = \pw$, set $SK := \Hkey(K')$. (In some sense this is the most crucial new game, as it covers the scenario in \Cref{fig:attack-no-pw} --- which is why we need to make all these changes to begin with. It also corresponds to step 2(c)(ii) in \Cref{fig:oeke-sim-hash-pk}. We will deal with step 2(c)(i) later.)
+In the case where $(\pw')^* = \pw' \land (s^*,T^*) \neq (s,T) \land (c^*,\tau^*) = (c,\tau')$, there must be a $pk'$ defined on the $P'$ side. If there is a unique record $\langle\pw^*,pk',\star\rangle$, and $\pw^* = \pw$, set $SK := \Hkey(K')$. (In some sense this is the most crucial new game, as it covers the scenario in \Cref{fig:attack-no-pw} --- which is why we need to make all these changes to begin with. It also corresponds to step 2(c)(ii) in \Cref{fig:oeke-sim-hash-pk}. We will deal with step 2(c)(i) later.)
 
 We first argue $\pw = \pw'$ with negligible probability.
 
 Since $\pw \neq \pw' \land (s^*,T^*) \neq (s,T) \land (c^*,\tau^*) = (c,\tau')$, Game 16 finds $\adv$ or $P'$'s $\Htag$ query resulting in $\tau^*$ (see the description of Game 13). $P'$ makes a singe query to $\Htag$, on input $(pk',K')$; and the query result is $\tau' = \tau^*$. Therefore, Game 16 finds this query, and does the following (again see the description of Game 13):
 \begin{enumerate}
-  \item Find the (unique) record $\left<\pw^*,pk',sk'\right>$.
+  \item Find the (unique) record $\langle\pw^*,pk',sk'\rangle$.
   \item Check if $\pw^* = \pw$, which is indeed the case.
-  \item Compute $K := \Decap(sk',c^*)$ and check if $K = K'$. We argue that the check must pass. Steps 1 and 2 above mean that there is a (unique) $\left<\pw,pk',sk'\right>$ record. But then
+  \item Compute $K := \Decap(sk',c^*)$ and check if $K = K'$. We argue that the check must pass. Steps 1 and 2 above mean that there is a (unique) $\langle\pw,pk',sk'\rangle$ record. But then
       \begin{gather*}
       (c,K') \gets \Encap(pk')\text{ on the }P'\text{ side}, \\
       c^* = c, \\
       K = \Decap(sk',c^*)\text{ on the }P\text{ side},
       \end{gather*}
-      and $sk'$ is the KEM secret key corresponding to $pk'$ (again, because there is a $\left<\pw,pk',sk'\right>$ record). So $K = K'$ by the correctness property of KEM.
+      and $sk'$ is the KEM secret key corresponding to $pk'$ (again, because there is a $\langle\pw,pk',sk'\rangle$ record). So $K = K'$ by the correctness property of KEM.
   \item Set $SK := \Hkey(K) (= \Hkey(K'))$.
 \end{enumerate}
 This entire process in Game 16 eventually results in setting $SK := \Hkey(K')$, which exactly matches the new game. Thus, there is no difference. We have
@@ -1648,7 +1697,7 @@ There are the following cases:
   \item If $(\pw')^* \neq \pw' \land \tau^* = \tau'$, then $P'$'s $\Htag(pk',K')$ query results in $\tau^*$, and we need to argue that this query can be dropped from the check.
       \begin{itemize}
         \item If $\adv$ queries $\Htag(pk',K')$, then new game 2 still finds this query, so new game 1 and new game 2 are identical.
-        \item If $\adv$ does not query $\Htag(pk',K')$, then new game 2 sets $SK := \bot$. We argue that new game 1 also sets $SK := \bot$ except with negligible probability. New game 1 finds $P'$'s $\Htag(pk',K')$ query, then finds the $\left<\pw^*,pk',sk'\right>$ record, and sets $SK := \bot$ unless $\pw^* = \pw \land \Decap(sk',c^*) = K'$. We claim that $\pw^* = \pw$ with negligible probability; in other words, suppose there is a record $\left<\pw,pk,\star\right>$, then $pk = pk'$ with negligible probability. \\
+        \item If $\adv$ does not query $\Htag(pk',K')$, then new game 2 sets $SK := \bot$. We argue that new game 1 also sets $SK := \bot$ except with negligible probability. New game 1 finds $P'$'s $\Htag(pk',K')$ query, then finds the $\langle\pw^*,pk',sk'\rangle$ record, and sets $SK := \bot$ unless $\pw^* = \pw \land \Decap(sk',c^*) = K'$. We claim that $\pw^* = \pw$ with negligible probability; in other words, suppose there is a record $\langle\pw,pk,\star\rangle$, then $pk = pk'$ with negligible probability. \\
             Note that $(pk,\star) \gets \Gen$ and later $H_1(\pw,r)$ is programmed to $T/pk$; for $pk'$, we have
             \[
             pk' = \frac{T^*}{R'} = \frac{T^*}{H_1(\pw',r')}.
@@ -1660,11 +1709,11 @@ There are the following cases:
             \end{itemize}
             Since $R'$ is independent of both $pk$ and $R'$, $pk' = T^*/R'$ is independent of $pk$ no matter what the distribution of $T^*$ is. Therefore, $\Pr[pk = pk']$ is upper-bounded by $1/|\group|$ for a single $H_1$ query and $(q_1+1)/|\group|$ overall.
       \end{itemize}
-  \item If $(\pw')^* = \pw' \land \tau^* = \tau'$, but there is no or more than one $\left<\pw^*,pk',\star\right>$ record, then both new game 1 and new game 2 outright sets $SK := \bot$, regardless of $\Htag$ queries by $\adv$ or $P'$. Thus, the two games are identical.
-  \item If $(\pw')^* = \pw' \land \tau^* = \tau'$, there is a unique $\left<\pw^*,pk',\star\right>$ record, but $\pw^* \neq \pw$, then again both new game 1 and new game 2 outright sets $SK := \bot$, regardless of $\Htag$ queries by $\adv$ or $P'$. Thus, the two games are identical.
+  \item If $(\pw')^* = \pw' \land \tau^* = \tau'$, but there is no or more than one $\langle\pw^*,pk',\star\rangle$ record, then both new game 1 and new game 2 outright sets $SK := \bot$, regardless of $\Htag$ queries by $\adv$ or $P'$. Thus, the two games are identical.
+  \item If $(\pw')^* = \pw' \land \tau^* = \tau'$, there is a unique $\langle\pw^*,pk',\star\rangle$ record, but $\pw^* \neq \pw$, then again both new game 1 and new game 2 outright sets $SK := \bot$, regardless of $\Htag$ queries by $\adv$ or $P'$. Thus, the two games are identical.
 \end{itemize}
 
-The remaining case is that $(\pw')^* = \pw' \land \tau^* = \tau'$, there is a unique $\left<\pw^*,pk',\star\right>$ record, and $\pw^* = \pw$. This is exactly the condition in new game 1, and new game 1 outright sets $SK := \Hkey(K')$ without trying to find any $\Htag$ query (by $\adv$ or $P'$), so the game change does not affect this case. Overall, we conclude that
+The remaining case is that $(\pw')^* = \pw' \land \tau^* = \tau'$, there is a unique $\langle\pw^*,pk',\star\rangle$ record, and $\pw^* = \pw$. This is exactly the condition in new game 1, and new game 1 outright sets $SK := \Hkey(K')$ without trying to find any $\Htag$ query (by $\adv$ or $P'$), so the game change does not affect this case. Overall, we conclude that
 \[
 \Dist_\env^{\text{new}1,\text{new}2} \leq \frac{q_1+1}{|\group|}.
 \]}
@@ -1672,9 +1721,9 @@ The remaining case is that $(\pw')^* = \pw' \land \tau^* = \tau'$, there is a un
 \noindent\emph{Game 17:} Note that after new game 2, we never try to find $P'$'s $\Htag$ query anymore: in some cases we try to find $\adv$'s $\Htag$ query, and in other cases we outright set $SK$ to be a certain value or $\bot$. Therefore, the reduction still goes through (it can simulate the $P$ side honestly).
 
 {\color{blue}
-\medskip\noindent\emph{New game 3:} In the case where $(\pw')^* = \pw' \land (s^*,T^*) \neq (s,T) \land (c^*,\tau^*) = (c,\allowbreak\tau')$, there is a unique record $\left<\pw^*,pk',\star\right>$, and $\pw^* \neq \pw$, set $SK := \bot$. (This corresponds to step 2(c)(i) in \Cref{fig:oeke-sim-hash-pk}.)
+\medskip\noindent\emph{New game 3:} In the case where $(\pw')^* = \pw' \land (s^*,T^*) \neq (s,T) \land (c^*,\tau^*) = (c,\allowbreak\tau')$, there is a unique record $\langle\pw^*,pk',\star\rangle$, and $\pw^* \neq \pw$, set $SK := \bot$. (This corresponds to step 2(c)(i) in \Cref{fig:oeke-sim-hash-pk}.)
 
-In this case Game 17 first tries to find $\adv$'s (unique) $\Htag(pk^*,K^*)$ query resulting in $\tau^*$. Since $\tau^* = \tau' = \Htag(pk',K')$, we have $pk^* = pk'$. Then Game 17 tries to find the (unique) $\left<\pw^*,pk',\star\right>$ record, and checks if $\pw^* = \pw$ (see Game 13). Since $\pw^* \neq \pw$, the check never passes, so both Game 17 and new game 3 set $SK := \bot$. We have
+In this case Game 17 first tries to find $\adv$'s (unique) $\Htag(pk^*,K^*)$ query resulting in $\tau^*$. Since $\tau^* = \tau' = \Htag(pk',K')$, we have $pk^* = pk'$. Then Game 17 tries to find the (unique) $\langle\pw^*,pk',\star\rangle$ record, and checks if $\pw^* = \pw$ (see Game 13). Since $\pw^* \neq \pw$, the check never passes, so both Game 17 and new game 3 set $SK := \bot$. We have
 \[
 \Dist_\env^{17,\text{new}3} = 0.
 \]
@@ -1683,12 +1732,12 @@ In this case Game 17 first tries to find $\adv$'s (unique) $\Htag(pk^*,K^*)$ que
 We have made the following essential changes to the games:
 \begin{itemize}
   \item In the case where $\pw \neq \pw' \land (s^*,T^*) \neq (s,T) \land c^* = c$, Game 2 tries to find $P'$'s $\Htag$ query resulting in $\tau^*$ (in addition to $\adv$'s query).
-  \item In the case where $(\pw')^* = \pw' \land (s^*,T^*) \neq (s,T) \land (c^*,\tau^*) = (c,\tau')$, there is a unique record $\left<\pw^*,pk',\star\right>$, and $\pw^* = \pw$, new game 1 outright sets $SK := \Hkey(K')$ (without trying to find any $\Htag$ query by $\adv$ or $P'$).
+  \item In the case where $(\pw')^* = \pw' \land (s^*,T^*) \neq (s,T) \land (c^*,\tau^*) = (c,\tau')$, there is a unique record $\langle\pw^*,pk',\star\rangle$, and $\pw^* = \pw$, new game 1 outright sets $SK := \Hkey(K')$ (without trying to find any $\Htag$ query by $\adv$ or $P'$).
   \item In the case where $\pw \neq \pw' \land (s^*,T^*) \neq (s,T) \land c^* = c$, new game 2 drops the check on $P'$'s $\Htag$ query introduced in Game 2 (except in new game 1's condition, where all checks on $\Htag$ queries have already been dropped).
-  \item In the case where $(\pw')^* = \pw' \land (s^*,T^*) \neq (s,T) \land (c^*,\tau^*) = (c,\tau')$, there is a unique record $\left<\pw^*,pk',\star\right>$, and $\pw^* \neq \pw$, new game 3 outright sets $SK := \bot$.
+  \item In the case where $(\pw')^* = \pw' \land (s^*,T^*) \neq (s,T) \land (c^*,\tau^*) = (c,\tau')$, there is a unique record $\langle\pw^*,pk',\star\rangle$, and $\pw^* \neq \pw$, new game 3 outright sets $SK := \bot$.
 \end{itemize}
 
-Overall, the net changes are that in the case where $(\pw')^* = \pw' \land (s^*,T^*) \neq (s,T) \land (c^*,\tau^*) = (c,\tau')$ and there is a unique record $\left<\pw^*,pk',\star\right>$,
+Overall, the net changes are that in the case where $(\pw')^* = \pw' \land (s^*,T^*) \neq (s,T) \land (c^*,\tau^*) = (c,\tau')$ and there is a unique record $\langle\pw^*,pk',\star\rangle$,
 \begin{itemize}
   \item If $(\pw')^* = \pw$, then we set $SK := \Hkey(K')$.
   \item If $(\pw')^* \neq \pw$, then we set $SK := \bot$.
