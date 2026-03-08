@@ -1008,19 +1008,19 @@ $\adv$'s $H_2(\star,T)$ queries & & line 46--51 & the only step \\
 \end{table}
 
 From \Cref{tab:ideal-world-comparison} (and after going through some simple but tedious checks), we can see that Game 17 and the ideal world are exactly identical. (Various aborting conditions are omitted.) This completes the proof.
-\section{Security Analysis of Other Versions}
+\section{Security Analyses of Other Versions (I): Including $(s,T)$ in the hash}
 We assume the reader is familiar with the security proof in \Cref{sec:basic}, as the simulator and many games there will be frequently referred to or reused.
 
 \subsection{What Will Go Wrong If You Don't Hash Everything?}
 One might fear that every new variant of OEKE --- with some inputs removed from $\Htag$ --- needs a new security analysis from scratch, causing this paper to be hundreds of pages long. Fortunately, most of the simulator and the game hops from the proof in \Cref{sec:basic} can be reused. This, in fact, should be expected: only the definition of the $P'$-to-$P$ authenticator $\tau'$ changes in these variants, so the only parts of the proof that are affected are $P$'s behavior --- in particular, how to extract the password guess and when to output $\bot$ --- on the $P'$-to-$P$ message.
 
-Concretely, Games 2, 11 and 13 in \Cref{sec:games} need stronger KEM security properties, or at least a new analysis, to go through. We explained in \emph{{\color{red}\ul{underlined}}} comments in each of them why the current arguments critically require $\pw$, $pk$ and/or $c$ as part of the $\Htag$ inputs, which we summarize in \Cref{tab:game-summary}:
+Concretely, Games 2, 11 and 13 in \Cref{sec:games} need stronger KEM security properties, or at least a new analysis, to go through. We explained in \emph{{\color{red}\ul{underlined}}} comments in each of them why the current arguments critically require $\pw$, $pk$, $(s,T)$ and/or $c$ as part of the $\Htag$ inputs, which we summarize in \Cref{tab:game-summary}:
 \begin{table}[H]\centering
 \begin{tabular}{ |c|c|c| }
 \hline
  \# & summary & \makecell{what needs to be \\ included in $\Htag$} \\
 \hline
- 2 & extract $K^*$ from $\tau^*$ & $\pw,pk,c$ \\
+ 2 & extract $K^*$ from $\tau^*$ & $\pw,(s,T),c$ \\
 \hline
  11 & \makecell{reject if $\adv$ does not make \\ an $H_2(\pw,T)$ query} & $pk$ \\
 \hline
@@ -1031,21 +1031,18 @@ Concretely, Games 2, 11 and 13 in \Cref{sec:games} need stronger KEM security pr
 \label{tab:game-summary}
 \end{table}
 
-\subsection{The ``Hash $\pw$ and $pk$'' Version}
-\label{sec:hash-pw-pk}
-We start from the version where $\tau$ is defined as $\Htag(\pw,pk,K)$, i.e., $c$ is removed from the hash. From \Cref{tab:game-summary}, this is the easiest one to deal with: it only affects Game 2, and the simulator and all other games can be reused in the proof.
+In this section, we analyze seven variants: those with $(s,T)$ included in $\Htag$, but at least one of $\pw,pk,c$ is removed. In \Cref{app:no-st} we analyze the variants where $(s,T)$ are removed from $\Htag$.
+
+\subsection{The ``Hash $\pw$, $pk$ and $(s,T)$'' Version}
+\label{sec:hash-pw-pk-st}
+We start from the version where $\tau$ is defined as $\Htag(\pw,pk,s,T,K)$, i.e., $c$ is removed from the hash. \Cref{tab:game-summary} suggests that only Game 2 needs to change, and the simulator and all other games can be reused in the proof.
 
 Looking closer, only \Cref{clm:htag} in Game 2 needs a new proof: the argument after this claim also does not change if we remove $c$ from $\Htag$. Below we state and prove the new claim.
 \begin{claim}
 \label{clm:htag2}
-Suppose the WNM property holds for the KEM scheme. In the case where $\neg(\pw = \pw' \land (s^*,T^*) = (s,T) \land c^* = c)$, the probability that $P'$ queries $\Htag(\pw,pk,K)$ is negligible.
+Suppose the WNM property holds for the KEM scheme. In the case where $\neg(\pw = \pw' \land (s^*,T^*) = (s,T) \land c^* = c)$, the probability that $P'$ queries $\Htag(\pw,pk,s,T,K)$ is negligible.
 \end{claim}
-$P'$ makes a single $\Htag$ query, on $(\pw',pk',K')$.
-\begin{itemize}
-  \item If $\pw \neq \pw'$, then of course $P'$'s query is not $\Htag(\pw,pk,K)$.
-  \item If $\pw = \pw' \land (s^*,T^*) \neq (s,T)$, then the argument in the proof of \Cref{clm:htag} still goes through, so $\Pr[pk = pk'] \leq (q_1+1)/|\group|$.
-\end{itemize}
-The only remaining case is $\pw = \pw' \land (s^*,T^*) = (s,T)$, which we now focus on. This implies that $pk = pk'$ by the definitions of $pk$ and $pk'$, and $c^* \neq c$ by the condition of this game. We now upper-bound $\Pr[K = K']$. Recall that $K$ is defined as $\Decap(sk,c^*)$, so $\Pr[K = K'] = \Pr[\Decap(sk,c^*) = K']$. We upper-bound this probability via a reduction $\red_\text{WNM}$ to the WNM property of KEM:
+$P'$ makes a single $\Htag$ query, on $(\pw',pk',s,T,K')$. If $\pw \neq \pw' \lor (s^*,T^*) \neq (s,T)$, then of course $P'$'s query is not $\Htag(\pw,pk,s,T,K)$. Now assume $\pw = \pw' \land (s^*,T^*) = (s,T)$. This implies that $pk = pk'$ by the definitions of $pk$ and $pk'$, and $c^* \neq c$ by the condition of this game. We now upper-bound $\Pr[K = K']$. Recall that $K$ is defined as $\Decap(sk,c^*)$, so $\Pr[K = K'] = \Pr[\Decap(sk,c^*) = K']$. We upper-bound this probability via a reduction $\red_\text{WNM}$ to the WNM property of KEM:
 
 \medskip\noindent\textbf{\underline{Reduction $\red_\mathrm{WNM}$}:}
 
@@ -1053,7 +1050,7 @@ The only remaining case is $\pw = \pw' \land (s^*,T^*) = (s,T)$, which we now fo
 On input $(pk,c)$,
 \begin{enumerate}
   \item Invoke $\env$. On $(\NewSession, sid, P, P', \pw, \text{``initiator''})$ from $\env$, run $P$'s algorithm to compute $(s,T)$, except that $\red_\mathrm{WNM}$ uses its input $pk$ rather than $(pk,\star) \gets \Gen$. Send $(s,T)$ to $\adv$.
-  \item On $(\NewSession, sid, P', P, \pw', \text{``respondent''})$ from $\env$ and $(s^*,T^*)$ from $\adv$, if $\neg(\pw = \pw' \land (s^*,T^*) = (s,T))$, abort. Otherwise generate $(c,K') \gets \Encap(pk)$, and compute $SK := \Hkey(K')$ and $\tau := \Htag(\pw,pk,c,K')$. Output $SK'$ to $\env$, and send $(c,\tau')$ to $\adv$.
+  \item On $(\NewSession, sid, P', P, \pw', \text{``respondent''})$ from $\env$ and $(s^*,T^*)$ from $\adv$, if $\neg(\pw = \pw' \land (s^*,T^*) = (s,T))$, abort. Otherwise generate $(c,K') \gets \Encap(pk)$, and compute $SK := \Hkey(K')$ and $\tau := \Htag(\pw,pk,s,T,c,K')$. Output $SK'$ to $\env$, and send $(c,\tau')$ to $\adv$.
   \item On $(c^*,\tau^*)$ from $\adv$, if $c^* = c$, abort. Otherwise output $c^*$.
 \end{enumerate}
 
@@ -1061,8 +1058,155 @@ The definition of $\red_\text{WNM}$ ensures that $\Decap(sk,c) = K'$. If $\adv$ 
 \[
 \Pr[\Decap(sk,c^*) = K'] \leq \Adv_{\red_\text{WNM}}^\text{WNM}.
 \]
-If $\Decap(sk,c) \neq K'$, i.e., $K \neq K'$, then of course $P'$'s query is not $\Htag(\pw,pk,K)$. This yields the claim.
+If $\Decap(sk,c) \neq K'$, i.e., $K \neq K'$, then of course $P'$'s query is not $\Htag(\pw,pk,s,\allowbreak T,K)$. This yields the claim.
 
+\subsection{The ``Hash $\pw$ and $(s,T)$'' Version}
+\label{sec:hash-pw-st}
+We now turn to the variant where $pk$ is further removed from $\Htag$ inputs, i.e., $\tau$ is defined as $\Htag(\pw,s,T,K)$. \Cref{tab:game-summary} suggests that the argument under Game 11 in \Cref{sec:games} need to (essentially) change. (Of course, since $c$ is also removed from $\Htag$, the change in \Cref{sec:hash-pw-pk-st} also needs to be made.) Below we repeat Game 11 and make the new argument.
+
+\medskip\noindent\emph{Game 11:} In the case where $\neg(\pw = \pw' \land (s^*,T^*) = (s,T) \land c^* = c)$, if there is no $\left<\pw,\star,\star\right>$ record, set $SK := \bot$ (i.e., replace the {\color{brown}brown} text in \Cref{fig:intermediate-game} with ``$SK := \bot$'').
+
+Game 10 and Game 11 differ only if $\adv$ does not make an $H_2(\pw,T)$ query, but makes an $\Htag(\pw,s,T,K^*)$ query resulting in $\tau^*$, where $K^* = \Decap(sk,c^*)$ for a freshly generated $sk$. We upper-bound this probability via a reduction $\red_\text{UNPRE}$ to the UNPRE property of KEM:
+
+\medskip\noindent\textbf{\underline{Reduction $\red_\mathrm{UNPRE}$}:}
+
+\medskip\noindent
+\begin{enumerate}
+  \item Invoke $\env$. On $(\NewSession, sid, P, P', \pw, \text{``initiator''})$ from $\env$, sample $s \gets \{0,1\}^{3n}, T \gets \group$. Send $(s,T)$ to $\adv$.
+  \item On $(\NewSession, sid, P', P, \pw', \text{``respondent''})$ from $\env$ and $(s^*,T^*)$ from $\adv$, run $P'$'s algorithm in Game 10 to compute $c$, $SK'$ and $\tau'$. Output $SK'$ to $\env$, and send $(c,\tau')$ to $\adv$.
+  \item On $(c^*,\tau^*)$ from $\adv$, if $\pw = \pw' \land (s^*,T^*) = (s,T) \land c^* = c$, abort. Otherwise find $\adv$'s $\Htag(\pw,s,T,K^*)$ query resulting in $\tau^*$. If there is none or more than one, abort. Otherwise output $(c^*,k^*)$.
+  \item On $\adv$'s $H_2(\pw^*,T)$ query, if $\pw^* = \pw$, abort. Otherwise do what Game 10 specifies.
+\end{enumerate}
+
+It is straightforward to see that if the ``bad event'' above happens, then $\red_\mathrm{UNPRE}$ wins its UNPRE game. We have
+\[
+\Dist_\env^{10,11} \leq \Adv_{\red_\text{UNPRE}}^\text{UNPRE}.
+\]
+
+Overall, we conclude that the ``hash $\pw$ and $(s,T)$'' version is secure under the WNM and UNPRE properties of KEM.
+
+\paragraph{The ``hash $\pw$, $(s,T)$ and $c$'' version.}
+Note that the change in Game 2 (which requires WNM) and the change in Game 11 (which require UNPRE) are unrelated to each other. Therefore, if we define $\tau$ as $\Htag(\pw,s,T,c,K)$, then only Game 11 needs to change, and the protocol is secure under the UNPRE property of KEM.
+
+\subsection{The ``Hash $pk$ and $(s,T)$'' Version}
+We now consider the variant where $\pw$, but not $pk$, is further removed from $\Htag$ inputs, i.e., $\tau$ is defined as $\Htag(pk,s,T,K)$. \Cref{tab:game-summary} suggests that Games 2 and 13 in \Cref{sec:games} need to (essentially) change. In fact the simulator also needs to change a bit, which we start from.
+
+\subsubsection{Changes to the Simulator}
+The only changes to the simulator $\sim$ appear when $\adv$ sends $(c^*,\tau^*)$ to $P$ and $\sim$ needs to extract a password guess $\pw^*$ from it. In the ``hash everything'' version (\Cref{sec:simulator}), $\tau^*$ is computed as $\Htag(\pw^*,pk^*,s,T,c^*,K^*)$, so $\sim$ can extract $\pw^*$ directly from $\adv$'s $\Htag$ queries and \emph{check its consistency with $pk^*,c^*,K^*$} (see the last paragraph of \Cref{sec:sim-intuition}). Here, $\tau^* = \Htag(pk^*,s,T,K^*)$, which prevents $\sim$ from reading off $\pw^*$ from $\adv$'s $\Htag$ queries. However, the inclusion of $pk^*$ still allows $\sim$ to find the corresponding $\left<\pw^*,pk^*,sk^*\right>$ record, from which $\sim$ can recover $\pw^*$ and check for consistency. Still, there is a negligible chance that there are multiple $\left<\pw^*,pk^*,sk^*\right>$ records for the same $pk^*$, which we must rule out.
+
+We show the new simulator in \Cref{fig:oeke-sim-hash-pk}. (Only the steps after receiving $(c^*,\tau^*)$ are included.)
+
+\begin{figure}[H]
+\begin{framed}
+\begin{small}
+\underline{$P$'s session key}
+
+\medskip
+On $(c^*,\tau^*)$ from $\func$, simulate $P$'s output as follows:
+\begin{enumerate}
+  \item If $(s^*,T^*) = (s,T) \land (c^*,\tau^*) = (c,\tau')$, send $(\NewKey, sid, P', 0^n)$ to $\func$. \textcolor[gray]{0.5}{// $\adv$ is passive}
+  \item Otherwise find $\adv$'s {\color{blue}$\Htag(pk^*,s,T,K^*)$} query resulting in $\tau^*$.
+      \begin{enumerate}
+        \item If there is no such query or more than one such query, send $(\TestPwd, sid, P, \bot)$ and then $(\NewKey, sid, P, 0^n)$ to $\func$.
+        \item If there is exactly one such query, retrieve record $\left<\pw^*,\star,sk^*\right>$. {\color{blue}If there is more than one such record, abort.} If there is no such record, send $(\TestPwd, sid, P, \bot)$ and then $(\NewKey, sid, P, 0^n)$ to $\func$.
+        \item Compute $K := \Decap(sk^*,c^*)$. If $K^* \neq K$, send $(\TestPwd, sid, P', \bot)$ and then $(\NewKey, sid, P, 0^n)$ to $\func$.
+        \item Send $(\TestPwd, sid, P, \pw^*)$ to $\func$.
+            \begin{enumerate}
+              \item If $\func$ replies with ``wrong guess'', send $(\NewKey, sid, P, 0^n)$ to $\func$.
+              \item If $\func$ replies with ``correct guess'', compute $SK := \Hkey(K)$ and send $(\NewKey, sid, P, SK)$ to $\func$.
+            \end{enumerate}
+      \end{enumerate}
+\end{enumerate}
+\end{small}
+\end{framed}
+\caption{UC simulator $\sim$ for the ``hash $pk$ and $(s,T)$'' variant of OEKE. Only the paragraph that needs significant change (shown in {\color{blue}blue}) is included}
+\label{fig:oeke-sim-hash-pk-st}
+\end{figure}
+
+\subsubsection{Changes in the Games}
+
+\paragraph{Change in Game 2.}
+\begin{claim}
+\label{clm:htag3}
+Suppose the WNM property holds for the KEM scheme. In the case where $\neg(\pw = \pw' \land (s^*,T^*) = (s,T) \land c^* = c)$, the probability that $P'$ queries $\Htag(pk,s,T,K)$ is negligible.
+\end{claim}
+$P'$ makes a single $\Htag$ query, on $(pk',s^*,T^*,K')$. If $(s^*,T^*) \neq (s,T)$, then of course $P'$'s query is not $\Htag(pk,s,T,K)$. Now assume $(s^*,T^*) = (s,T)$, which implies $\pw \neq \pw' \lor c^* \neq c$ by the condition of the game.
+\begin{itemize}
+    \item If $\pw \neq \pw'$, we have
+      \begin{gather*}
+      pk = \frac{T}{R} = \frac{T}{H_1(\pw,r)} = \frac{T}{H_1(\pw,s \oplus t)}, \\
+      pk' = \frac{T}{R'} = \frac{T}{H_1(\pw',r')} = \frac{T}{H_1(\pw',s \oplus t')}.
+      \end{gather*}
+      Since $\pw \neq \pw'$, $H_1(\pw,s \oplus t)$ and $H_1(\pw',s \oplus t')$ are independent of each other, so $\Pr[pk = pk'] = \Pr[H_1(\pw,s \oplus t) = H_1(\pw',s \oplus t')] \leq (q_1+1)/|\group|$.
+  \item If $c^* \neq c$, we claim that $pk = pk' \land K = K'$ happens with negligible probability. Suppose $pk = pk'$. Then we can reduce the event $K = K'$ to the WNM property of KEM, via a reduction $\Adv_{\red_\text{WNM}}^\text{WNM}$ similar to that in the proof of \Cref{clm:htag2}. We have $\Pr[pk = pk' \land K = K'] \leq \Adv_{\red_\text{WNM}}^\text{WNM}$.
+\end{itemize}
+
+This yields the claim. The remaining argument is essentially identical to that in the old Game 2.
+
+\paragraph{Change in Game 13.}
+We first state the new Game 13, and then make the argument.
+
+\medskip\noindent\emph{Game 13:} In the case where $\neg(\pw = \pw' \land (s^*,T^*) = (s,T) \land (c^*,\tau^*) = (c,\tau'))$, find $\adv$'s $\Htag(pk^*,s,T,K^*)$ query resulting in $\tau^*$. If there is none or more than one, set $SK := \bot$. Otherwise there is a unique such $\Htag(pk^*,s,T,K^*)$ query, and
+\begin{itemize}
+  \item If there is more than one $\left<\pw^*,pk^*,sk^*\right>$ record, abort.
+  \item If there is no $\left<\pw^*,pk^*,sk^*\right>$ record, set $SK := \bot$.
+  \item If there is a unique $\left<\pw^*,pk^*,sk^*\right>$ record, but $\pw^* \neq \pw$, also set $SK := \bot$.
+  \item If there is a unique $\left<\pw^*,pk^*,sk^*\right>$ record, and $\pw^* = \pw$, compute $K := \Decap(sk^*,c^*)$. If $K^* = K$ then set $SK := \Hkey(K)$, otherwise set $SK := \bot$.
+\end{itemize}
+
+If $\adv$ makes no $\Htag(\star,s,T,\star)$ query resulting in $\tau^*$, then in particular $\adv$ makes no $\Htag(pk,s,T,\star)$ query resulting in $\tau^*$, so both Game 12 and Game 13 set $SK := \bot$. The probability that $\adv$ makes two different $\Htag(\star,s,T,\star)$ queries both resulting in $\tau^*$ is upper-bounded by $\qtag(\qtag-1)/2^{2n+1}$. (This part does not change from the argument under the old Game 13.) Below we assume that $\adv$ makes a unique $\Htag(pk^*,s,T,K^*)$ query resulting in $\tau^*$:
+\begin{itemize}
+  \item We first upper-bound the probability that there is more than one $\left<\pw^*,pk^*,sk^*\right>$ record for the same $pk^*$. Note that in each such record, $(pk^*,\star) \gets \Gen$ is freshly generated, so the probability that there is a collision in $pk^*$ is upper-bounded by ${q_2 \choose 2} \cdot H_\infty(pk : (pk,\star) \gets \Gen)$.
+  \item Next, suppose there is a unique $\left<\pw^*,pk^*,sk^*\right>$ record, but $\pw^* \neq \pw$. If there is no $\left<\pw,pk,sk\right>$ record, then both Game 12 and Game 13 set $SK := \bot$. If there is a $\left<\pw,pk,sk\right>$ record, then $(pk,\star) \gets \Gen$ is freshly generated, so $\Pr[pk = pk^*] \leq q_2 \cdot H_\infty(pk : (pk,\star) \gets \Gen)$; and if $pk \neq pk^*$, then $\adv$ does not make an $\Htag(\pw,s,T,pk)$ query resulting in $\tau^*$ (because there is only one $\Htag$ query resulting in $\tau^*$, and it is on $pk^*$), so again both Game 12 and Game 13 set $SK := \bot$.
+  \item Finally, if there is a unique $\left<\pw^*,pk^*,sk^*\right>$ record, and $\pw^* = \pw$, then Game 13 just runs $P$'s algorithm in Game 12, so these two games are identical.
+\end{itemize}
+
+Overall, we have
+\[
+\Dist_\env^{12,13} \leq \frac{q_2(q_2+1)}{2}\cdot H_\infty(pk : (pk,\star) \gets \Gen) + \frac{\qtag(\qtag-1)}{2^{2n+1}}.
+\]
+
+\paragraph{The ``hash $pk$, $(s,T)$ and $c$'' version.}
+If we define $\tau$ as $\Htag(pk,s,T,c,K)$, then the second bullet of \Cref{clm:htag3} is not needed, and the protocol can be proven secure without the WNM property of KEM (i.e., under the same assumptions as in the ``hash everything'' version).
+
+\bibliographystyle{alpha}
+\bibliography{bib.bib}
+\appendix
+\section{Comparison Between Our Simulator and the One in \cite{EPRINT:ArrBarJar25}}
+\label{app:comparison}
+Our simulator in \Cref{sec:sim} is, by and large, the same as the one in \cite[Fig.5~and~6]{EPRINT:ArrBarJar25}, although we completely rewrite it to improve readability. We first summarize some of the notational differences in \Cref{tab:sim-notations}.
+\begin{table}[H]\centering
+\begin{tabular}{ |c|c|c|c| }
+\hline
+ & \makecell{our \\ notation} & \makecell{notation in \\ \cite{EPRINT:ArrBarJar25}} & comment \\
+\hline
+honest parties & $P$, $P'$ & $\mathsf{A}$, $\mathsf{B}$ & \makecell{easy to confuse \\ with adversary $\adv$} \\
+\hline
+simulated $P$-to-$P'$ message & $(s,T)$ & $(\overline{s},\overline{T})$ & \\
+\hline
+adversarial $P$-to-$P'$ message & $(s^*,T^*)$ & $(s,T)$ & \\
+\hline
+$\adv$'s guess of $P'$'s password & $(\pw')^*$ & $\pw^*$ & \\
+\hline
+\makecell{KEM public key corresponding to \\ correct password guess on $P'$} & $pk'$ & $\mathsf{pk}^*$ & \\
+\hline
+simulated $P'$-to-$P$ message & $(c,\tau')$ & $(c,\mathsf{tag})$ & \\
+\hline
+adversarial $P'$-to-$P$ message & $(c^*,\tau^*)$ & $(c,\mathsf{tag})$ & \makecell{same $(c,\mathsf{tag})$ \\ for different things} \\
+\hline
+$\adv$'s guess of $P$'s password & $\pw^*$ & $\pw^*$ & \makecell{same $\pw^*$ \\ for different things} \\
+\hline
+\end{tabular}
+\caption{Comparison of notations between our simulator and the one in \cite{EPRINT:ArrBarJar25}}
+\label{tab:sim-notations}
+\end{table}
+
+The simulator in \cite{EPRINT:ArrBarJar25} has more bookkeeping and aborts more frequently. In particular, we completely remove their record $\mathsf{forwS}$, and when detecting whether an adversarial $P$-to-$P'$ message contains more than one password guess (causing the simulator to abort), we only check the relevant $H_2$ queries, whereas they check \emph{all} $H_2$ queries --- including those that are completely unrelated to the attack in the $P$-to-$P'$ direction. For a more detailed explanation, see the comment after Game 15 in \Cref{sec:games}.
+
+The only (more or less) essential difference lies in the {\color{red}red} text in \Cref{fig:oeke-sim1}: in the case where the adversary makes an incorrect password guess on $P'$, we compute $c$ from a uniformly random KEM public key $pk'$, whereas they compute $c$ from an honestly generated $pk'$. While both methods work, our method simplifies the reduction; this is further explained in the comment after Game 18 in \Cref{sec:games}, item (2).
+
+\section{Security Analyses of Other Versions (II): Removing $(s,T)$ from the Hash}
+\label{app:no-st}
 \subsection{The ``Hash $\pw$'' Version}
 \label{sec:hash-pw}
 We now turn to the variant where $pk$ is further removed from $\Htag$ inputs, i.e., $\tau$ is defined as $\Htag(\pw,K)$. \Cref{tab:game-summary} suggests that Games 2 and 11 in \Cref{sec:games} need to (essentially) change. In fact the simulator also needs to change quite a bit, which we will start from.
@@ -1462,40 +1606,4 @@ Overall, the net changes are that in the case where $(\pw')^* = \pw' \land (s^*,
   \item If $(\pw')^* \neq \pw$, then we set $SK := \bot$.
 \end{itemize}
 This exactly matches step 2 of \Cref{fig:oeke-sim-hash-pk}, so new game 3 is identical to the ideal world.} This completes the proof.
-
-\bibliographystyle{alpha}
-\bibliography{bib.bib}
-\appendix
-\section{Comparison Between Our Simulator and the One in \cite{EPRINT:ArrBarJar25}}
-\label{app:comparison}
-Our simulator in \Cref{sec:sim} is, by and large, the same as the one in \cite[Fig.5~and~6]{EPRINT:ArrBarJar25}, although we completely rewrite it to improve readability. We first summarize some of the notational differences in \Cref{tab:sim-notations}.
-\begin{table}[H]\centering
-\begin{tabular}{ |c|c|c|c| }
-\hline
- & \makecell{our \\ notation} & \makecell{notation in \\ \cite{EPRINT:ArrBarJar25}} & comment \\
-\hline
-honest parties & $P$, $P'$ & $\mathsf{A}$, $\mathsf{B}$ & \makecell{easy to confuse \\ with adversary $\adv$} \\
-\hline
-simulated $P$-to-$P'$ message & $(s,T)$ & $(\overline{s},\overline{T})$ & \\
-\hline
-adversarial $P$-to-$P'$ message & $(s^*,T^*)$ & $(s,T)$ & \\
-\hline
-$\adv$'s guess of $P'$'s password & $(\pw')^*$ & $\pw^*$ & \\
-\hline
-\makecell{KEM public key corresponding to \\ correct password guess on $P'$} & $pk'$ & $\mathsf{pk}^*$ & \\
-\hline
-simulated $P'$-to-$P$ message & $(c,\tau')$ & $(c,\mathsf{tag})$ & \\
-\hline
-adversarial $P'$-to-$P$ message & $(c^*,\tau^*)$ & $(c,\mathsf{tag})$ & \makecell{same $(c,\mathsf{tag})$ \\ for different things} \\
-\hline
-$\adv$'s guess of $P$'s password & $\pw^*$ & $\pw^*$ & \makecell{same $\pw^*$ \\ for different things} \\
-\hline
-\end{tabular}
-\caption{Comparison of notations between our simulator and the one in \cite{EPRINT:ArrBarJar25}}
-\label{tab:sim-notations}
-\end{table}
-
-The simulator in \cite{EPRINT:ArrBarJar25} has more bookkeeping and aborts more frequently. In particular, we completely remove their record $\mathsf{forwS}$, and when detecting whether an adversarial $P$-to-$P'$ message contains more than one password guess (causing the simulator to abort), we only check the relevant $H_2$ queries, whereas they check \emph{all} $H_2$ queries --- including those that are completely unrelated to the attack in the $P$-to-$P'$ direction. For a more detailed explanation, see the comment after Game 15 in \Cref{sec:games}.
-
-The only (more or less) essential difference lies in the {\color{red}red} text in \Cref{fig:oeke-sim1}: in the case where the adversary makes an incorrect password guess on $P'$, we compute $c$ from a uniformly random KEM public key $pk'$, whereas they compute $c$ from an honestly generated $pk'$. While both methods work, our method simplifies the reduction; this is further explained in the comment after Game 18 in \Cref{sec:games}, item (2).
 \end{document} 
