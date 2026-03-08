@@ -1108,7 +1108,7 @@ On $(c^*,\tau^*)$ from $\func$, simulate $P$'s output as follows:
   \item Otherwise find $\adv$'s {\color{blue}$\Htag(pk^*,s,T,K^*)$} query resulting in $\tau^*$.
       \begin{enumerate}
         \item If there is no such query or more than one such query, send $(\TestPwd, sid, P, \bot)$ and then $(\NewKey, sid, P, 0^n)$ to $\func$.
-        \item If there is exactly one such query, retrieve record $\left<\pw^*,\star,sk^*\right>$. {\color{blue}If there is more than one such record, abort.} If there is no such record, send $(\TestPwd, sid, P, \bot)$ and then $(\NewKey, sid, P, 0^n)$ to $\func$.
+        \item If there is exactly one such query, retrieve record $\left<\pw^*,pk^*,sk^*\right>$. {\color{blue}If there is more than one such record, abort.} If there is no such record, send $(\TestPwd, sid, P, \bot)$ and then $(\NewKey, sid, P, 0^n)$ to $\func$.
         \item Compute $K := \Decap(sk^*,c^*)$. If $K^* \neq K$, send $(\TestPwd, sid, P', \bot)$ and then $(\NewKey, sid, P, 0^n)$ to $\func$.
         \item Send $(\TestPwd, sid, P, \pw^*)$ to $\func$.
             \begin{enumerate}
@@ -1157,6 +1157,7 @@ We first state the new Game 13, and then make the argument.
 If $\adv$ makes no $\Htag(\star,s,T,\star)$ query resulting in $\tau^*$, then in particular $\adv$ makes no $\Htag(pk,s,T,\star)$ query resulting in $\tau^*$, so both Game 12 and Game 13 set $SK := \bot$. The probability that $\adv$ makes two different $\Htag(\star,s,T,\star)$ queries both resulting in $\tau^*$ is upper-bounded by $\qtag(\qtag-1)/2^{2n+1}$. (This part does not change from the argument under the old Game 13.) Below we assume that $\adv$ makes a unique $\Htag(pk^*,s,T,K^*)$ query resulting in $\tau^*$:
 \begin{itemize}
   \item We first upper-bound the probability that there is more than one $\left<\pw^*,pk^*,sk^*\right>$ record for the same $pk^*$. Note that in each such record, $(pk^*,\star) \gets \Gen$ is freshly generated, so the probability that there is a collision in $pk^*$ is upper-bounded by ${q_2 \choose 2} \cdot H_\infty(pk : (pk,\star) \gets \Gen)$.
+  \item If there is no $\left<\pw^*,pk^*,sk^*\right>$ record, then both Game 12 and Game 13 set $SK := \bot$.
   \item Next, suppose there is a unique $\left<\pw^*,pk^*,sk^*\right>$ record, but $\pw^* \neq \pw$. If there is no $\left<\pw,pk,sk\right>$ record, then both Game 12 and Game 13 set $SK := \bot$. If there is a $\left<\pw,pk,sk\right>$ record, then $(pk,\star) \gets \Gen$ is freshly generated, so $\Pr[pk = pk^*] \leq q_2 \cdot H_\infty(pk : (pk,\star) \gets \Gen)$; and if $pk \neq pk^*$, then $\adv$ does not make an $\Htag(\pw,s,T,pk)$ query resulting in $\tau^*$ (because there is only one $\Htag$ query resulting in $\tau^*$, and it is on $pk^*$), so again both Game 12 and Game 13 set $SK := \bot$.
   \item Finally, if there is a unique $\left<\pw^*,pk^*,sk^*\right>$ record, and $\pw^* = \pw$, then Game 13 just runs $P$'s algorithm in Game 12, so these two games are identical.
 \end{itemize}
