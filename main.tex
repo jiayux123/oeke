@@ -43,6 +43,7 @@
 }
 
 \newcommand{\group}{\mathbb{G}}
+\newcommand{\pkspace}{\mathcal{PK}}
 \newcommand{\Z}{\mathbb{Z}}
 
 \newcommand{\negl}{\mathsf{negl}}
@@ -103,10 +104,10 @@
 \subsection{KEM Properties Used in the ``Hash Everything'' Version}
 \begin{definition}
 \label{def:uni-ano-ro}
-A KEM scheme is \emph{anonymous with $q$ uniform public keys and random oracles ($q$-UNI-ANO-RO)} if the following two distributions are indistinguishable:
+A KEM scheme is \emph{anonymous with $q$ uniform public keys and random oracles ($q$-UNI-ANO-RO)} if $\Pr[b = 1]$ in the following two games are negligibly close:
 \[
     \fcodebox{
-    $pk_1, \dots, pk_q \gets \group$ \\
+    $pk_1, \dots, pk_q \gets \pkspace$ \\
     $i \gets \adv(pk_1, \dots, pk_q)$ \\
     $(c,K) \gets \Encap(pk_i)$ \\
     $h_1 := H_1(K); h_2 := H_2(K)$ \\
@@ -114,7 +115,7 @@ A KEM scheme is \emph{anonymous with $q$ uniform public keys and random oracles 
     }
     \quad
     \fcodebox{
-    $pk',pk_1, \dots, pk_q \gets \group$ \\
+    $pk',pk_1, \dots, pk_q \gets \pkspace$ \\
     $i \gets \adv(pk_1, \dots, pk_q)$ \\
     $(c,\star) \gets \Encap(pk')$ \\
     $h_1 \gets \{0,1\}^n; h_2 \gets \{0,1\}^{2n}$ \\
@@ -156,7 +157,7 @@ A KEM scheme is \emph{output key binding (KBIND)} if for any PPT adversary $\adv
 \[
     \fcodebox{
     $(pk,sk) \gets \Gen$ \\
-    $pk' \gets \group$ \\
+    $pk' \gets \pkspace$ \\
     $(c,K') \gets \Encap(pk')$ \\
     $c^* \gets \adv(pk,pk',c,K')$ \\
     $\adv$ wins if $\Decap(sk,c^*) = K'$
@@ -168,8 +169,8 @@ A KEM scheme is \emph{output key binding (KBIND)} if for any PPT adversary $\adv
 A KEM scheme is \emph{robust (ROB)} if for any PPT adversary $\adv$, the probability that $\adv$ wins the following game is negligible:
 \[
     \fcodebox{
-    $(pk,sk) \gets \Gen$ \\
-    $(pk',sk') \gets \Gen$ \\
+    $(pk,sk) \gets \pkspace$ \\
+    $(pk',sk') \gets \pkspace$ \\
     $c^* \gets \adv(pk,pk')$ \\
     $\adv$ wins if $\Decap(sk,c^*) = \Decap(sk',c^*)$
     }
