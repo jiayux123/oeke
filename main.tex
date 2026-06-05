@@ -179,6 +179,7 @@ A KEM scheme is \emph{robust (ROB)} if for any PPT adversary $\adv$, the probabi
 \end{definition}
 
 \subsection{UC Description of the OEKE Protocol}
+\label{sec:protocol-uc}
 We give a formal, UC-compatible description of the OEKE protocol in \Cref{fig:protocol-uc}. Note that UC PAKE considers the case that the two parties' passwords are different; therefore, we need to use different notations $\pw$ and $\pw'$ for the password of $P$ and $P'$, respectively.\footnote{\cite[Fig.4]{EPRINT:ArrBarJar25} uses $\pw$ for both parties' passwords, which is not the ``right'' protocol description in the UC setting.} We only describe the ``hash everything'' version of the protocol; in other variants one or more of $\pw$, $pk$, $(s,T)$ and $c$ can be removed from the inputs to $\Htag$.
 
 \begin{figure}[H]
@@ -223,6 +224,14 @@ and output $(sid,SK)$. \quad \textcolor[gray]{0.5}{// No need to store $\pw$, $p
 \caption{UC description of the OEKE protocol (the ``hash everything'' version)}
 \label{fig:protocol-uc}
 \end{figure}
+
+\paragraph{Correctness.}
+Suppose $\pw = \pw'$ and there is no adversary. Then $P'$ computes
+\begin{align*}
+t' &= H_2(\pw',T) = t, &r' &= s \oplus t' = r, \\
+R' &= H_1(\pw',r') = R, &pk' &= T/R' = pk,
+\end{align*}
+so $(c,K')$ is the result of $\Encap(pk')$. Then on the $P$ side, $P$ computes $K := \Decap(sk,c)$, which is equal to $K'$ except with probability $\varepsilon_\text{correctness}$ (the correctness error of the KEM). If $K = K'$ then $\tau = \tau'$ so $P$'s check passes, and $P$ will output $SK = SK'$. Therefore, the OEKE protocol has correctness error $\varepsilon_\text{correctness}$.
 
 \section{Security Analysis of the ``Hash Everything'' Version}
 \label{sec:basic}
@@ -387,9 +396,10 @@ A game-by-game comparison with the proof in \cite[Section~5]{EPRINT:ArrBarJar25}
   \item It is intercepted by the man-in-the-middle adversary $\adv$, who sends $(s^*,T^*)$ (which may or may not be equal to $(s,T)$) to $P'$;
   \item $P'$ outputs session key $SK'$ and sends $(c,\tau')$ to $P$;
   \item It is again intercepted by $\adv$, who sends $(c^*,\tau^*)$ to $P$;
-  \item $P$ computes $\tau$. If $\tau^* = \tau$ then $P$ outputs $SK$, otherwise $P$ outputs $\bot$.
+  \item $P$ computes $\tau$. If $\tau = \tau^*$ then $P$ outputs an $n$-bit string $SK$, otherwise $P$ outputs $\bot$.
 \end{itemize}
 (Note that there are three $\tau$ values: $\tau'$ computed and sent by $P'$, $\tau^*$ sent by $\adv$, and $\tau$ computed by $P$ used in $P$'s check.) A graphic illustration is shown in \Cref{fig:real-world}.
+
 \begin{figure}
 \pseudocodeblock[codesize=\scriptsize]{
 P(\pw) \< \< \adv \< \< P'(\pw') \\ 
@@ -419,17 +429,20 @@ K := \Decap(sk,c^*) \< \< \< \< \\
 \caption{Game 0 (the real world)}
 \label{fig:real-world}
 \end{figure}
+
+\medskip
+\emph{{\color{red}This game corresponds to game $\mathsf{G}_1$ in \cite{EPRINT:ArrBarJar25}.}}
 \paragraph{$P$ and $P'$'s passwords match and $\adv$ is passive, except maybe modifying the tag.}
-\mbox{}
+\mbox{} % force linebreak after paragraph title
 
 \medskip\noindent\emph{Game 1:} In the case where $\pw = \pw' \land (s^*,T^*) = (s,T) \land c^* = c$, do the following:
 \begin{itemize}
   \item If $\tau^* = \tau'$ (i.e., $\adv$ is passive), set $SK := SK'$.
   \item If $\tau^* \neq \tau'$, set $SK := \bot$.
 \end{itemize}
-By correctness of the protocol (see \Cref{sec:prelim}), in Game 0 $\tau = \tau'$ except with probability $\Adv^\text{correctness}$. This means that except with probability $\Adv^\text{correctness}$, $P$'s check $\tau^* \stackrel{?}{=} \tau$ in Game 0 is equivalent to $P$'s check $\tau^* \stackrel{?}{=} \tau'$ in Game 1. If the check passes then both games set $SK := \Hkey(K)$, otherwise both games set $SK := \bot$. We have
+By correctness of the protocol (see \Cref{sec:protocol-uc}), in Game 0 $\tau = \tau'$ except with probability $\varepsilon_\text{correctness}$. This means that except with probability $\varepsilon_\text{correctness}$, $P$'s check $\tau^* \stackrel{?}{=} \tau$ in Game 0 is equivalent to $P$'s check $\tau^* \stackrel{?}{=} \tau'$ in Game 1. If the check passes then both games set $SK := \Hkey(K)$, otherwise both games set $SK := \bot$. We have
 \[
-\Dist_\env^{0,1} = \Adv^\text{correctness}.
+\Dist_\env^{0,1} = \varepsilon_\text{correctness}.
 \]
 
 \emph{{\color{red}This game corresponds to games $\mathsf{G}_3$--$\mathsf{G}_5$ in \cite{EPRINT:ArrBarJar25}. We believe having a single game that handles both the $\tau^* = \tau'$ case and the $\tau^* \neq \tau'$ case is much cleaner.}}
