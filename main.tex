@@ -287,6 +287,8 @@ $\sim$ should find the $\Htag$ query resulting in $\tau^*$, which contains $(\pw
 
 Below we use $\func$ as a shorthand for $\Fpake$. Please see \Cref{fig:oeke-sim1,fig:oeke-sim2} for the simulator $\sim$.
 
+As notational conventions, we write ``$\sim$ sends message $m$ from $P$ to $P'$'' as a shorthand for ``$\sim$ sends $m$ to $\env$ that pretends to be a real-world protocol message from $P$ to $P'$, intercepted by $\adv$ which in turn forwards it to $\env$''. Similarly, we write ``$\sim$ receives message $m$ from $\adv$ to $P$'' for ``$\env$ instructs $\adv$ to send $m$ to $P$, and in the ideal world it is $\sim$ who receives $m$ from $\env$''.
+
 \begin{figure}[H]
 \begin{framed}
 \begin{small}
