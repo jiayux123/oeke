@@ -177,6 +177,52 @@ A KEM scheme is \emph{robust (ROB)} if for any PPT adversary $\adv$, the probabi
 \]
 \end{definition}
 
+\subsection{UC Description of the OEKE Protocol}
+We give a formal, UC-compatible description of the OEKE protocol in \Cref{fig:protocol-uc}. Note that UC PAKE considers the case that the two parties' passwords are different; therefore, we need to use different notations $\pw$ and $\pw'$ for the password of $P$ and $P'$, respectively.\footnote{\cite[Fig.4]{EPRINT:ArrBarJar25} uses $\pw$ for both parties' passwords, which is not the ``right'' protocol description in the UC setting.} We only describe the ``hash everything'' version of the protocol; in other variants one or more of $\pw$, $pk$, $(s,T)$ and $c$ can be removed from the inputs to $\Htag$.
+
+\begin{figure}[H]
+\begin{framed}
+\begin{small}
+\underline{Party $P$, step 1}
+
+\medskip
+On input $(\NewSession, sid, P', \pw, \text{``initializer''})$, generate $(pk,sk) \gets \Gen$, sample $r \gets \{0,1\}^{3n}$, compute
+\begin{align*}
+R &:= H_1(\pw,r), &T &:= pk \cdot R, \\
+t &:= H_2(\pw,T), &s &:= r \oplus t,
+\end{align*}
+and send $(sid,s,T)$ to $P'$. Store $\langle\pw,pk,sk,s,T\rangle$ associated with $sid$.
+
+\medskip
+\underline{Party $P'$}
+
+\medskip
+On input $(\NewSession, sid, P, \pw', \text{``responder''})$ and $(sid,s,T)$ from $P$, compute
+\begin{align*}
+t' &:= H_2(\pw',T), &r' &:= s \oplus t', \\
+R' &:= H_1(\pw',r'), &pk' &:= T/R',
+\end{align*}
+$(c,K') \gets \Encap(pk')$, $SK' := \Hkey(K')$, and $\tau' := \Htag(\pw',pk',s,T,c,K')$, send $(sid,c,\tau')$ to $P$, and output $(sid,SK')$.
+
+\medskip
+\underline{Party $P$, step 2}
+
+\medskip
+On $(sid,c,\tau')$ from $P'$, retrieve $\langle\pw,pk,sk,s,T\rangle$ associated with $sid$. Then compute $K := \Decap(sk,c)$, $\tau := \Htag(\pw,pk,s,T,c,K)$, and
+\[
+SK :=
+\begin{cases}
+\Hkey(K) & \text{if }\tau = \tau' \\
+\bot & \text{if }\tau \neq \tau'
+\end{cases}
+\]
+and output $(sid,SK)$. \quad \textcolor[gray]{0.5}{// No need to store $\pw$, $pk$ or $(s,T)$ in step 1 if not included in $\Htag$ (but always need to store $sk$)}
+\end{small}
+\end{framed}
+\caption{UC description of the OEKE protocol (the ``hash everything'' version)}
+\label{fig:protocol-uc}
+\end{figure}
+
 \section{Security Analysis of the ``Hash Everything'' Version}
 \label{sec:basic}
 
