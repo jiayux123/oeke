@@ -197,7 +197,7 @@ and send $(sid,s,T)$ to $P'$. Store $\langle\pw,pk,sk,s,T\rangle$ associated wit
 \underline{Party $P'$}
 
 \medskip
-On input $(\NewSession, sid, P, \pw', \text{``responder''})$ and $(sid,s,T)$ from $P$, compute
+On input $(\NewSession, sid, P, \pw', \text{``respondent''})$ and $(sid,s,T)$ from $P$, compute
 \begin{align*}
 t' &:= H_2(\pw',T), &r' &:= s \oplus t', \\
 R' &:= H_1(\pw',r'), &pk' &:= T/R',
@@ -293,13 +293,13 @@ Below we use $\func$ as a shorthand for $\Fpake$. Please see \Cref{fig:oeke-sim1
 \underline{$P$-to-$P'$ message}
 
 \medskip
-On $(\NewSession, sid, P, P')$ from $\func$, sample $s \gets \{0,1\}^{3n}, T \gets \group$ and send $(s,T)$ from $P$ to $P'$.
+On $(\NewSession, sid, P, P', \text{``initiator''})$ from $\func$, sample $s \gets \{0,1\}^{3n}, T \gets \group$ and send $(s,T)$ from $P$ to $P'$.
 
 \medskip
 \underline{$P'$'s session key and $P'$-to-$P$ message}
 
 \medskip
-On $(\NewSession, sid, P', P)$ from $\func$ and $(s^*,T^*)$ from $\adv$ to $P'$, simulate $P'$'s output and the $P'$-to-$P$ message as follows:
+On $(\NewSession, sid, P', P, \text{``respondent''})$ from $\func$ and $(s^*,T^*)$ from $\adv$ to $P'$, simulate $P'$'s output and the $P'$-to-$P$ message as follows:
 \begin{enumerate}
   \item If $(s^*,T^*) = (s,T)$, send $(\NewKey, sid, P', 0^n)$ to $\func$; generate $(pk',\star) \gets \Gen$, compute $(c,\star) \gets \Encap(pk')$, sample $\tau' \gets \{0,1\}^{2n}$, and send $(c',\tau')$ from $P'$ to $P$.
   \item Otherwise find $\adv$'s $H_2((\pw')^*,T^*)$ query (let the result be $t^*$) that satisfies \emph{either} of the following:
