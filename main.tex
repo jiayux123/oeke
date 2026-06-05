@@ -233,6 +233,8 @@ Suppose the UNI-PK, OW-1PCA and ANO-1PCA properties hold for the KEM scheme. The
 \end{theorem}
 The rest of this section is dedicated to the proof of \Cref{thm:basic}. In \Cref{sec:simulator} we describe the simulator, and in \Cref{sec:games} we argue why the simulator generates a view indistinguishable from the real-world view.
 
+As standard in UC proofs, w.l.o.g. we only construct a simulator $\sim$ for the ``dummy'' adversary $\adv$ that merely forwards all messages between the environment $\env$ and protocol parties \cite[Claim~11]{FOCS:Canetti01}. We omit $sid$ in protocol messages and honest parties' outputs (e.g., we say ``$P$ outputs $SK$'' rather than ``$P$ outputs $(sid,SK)$'').
+
 \subsection{The Simulator}
 \label{sec:simulator}
 \subsubsection{Simulation Strategy}
