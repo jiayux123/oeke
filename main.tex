@@ -101,7 +101,7 @@
 
 \section{Preliminaries and Technical Overview}
 \label{sec:prelim}
-Let $n$ be the security parameter. Let $\mathcal{G}$ be a PPT algorithm that, on input $1^n$, outputs a (multiplicative) Abelian group $\group$ whose order is superpolynomial, and where multiplication and inverse can be done in polynomial time. (We do not require $\group$ to be cyclic, and do not assume $|\group|$ to be public.) We implicitly assume that $\group \gets \mathcal{G}(1^n)$ is run as part of the initialization process. Furthermore, we assume that all algorithms take $1^n$ and $\group$ as inputs, and do not explicitly write them.
+Let $n$ be the security parameter. Let $\mathcal{G}$ be a PPT algorithm that, on input $1^n$, outputs a (multiplicative) Abelian group $\group$ whose order is superpolynomial, and where uniformly sampling, multiplication and inverse can be done in polynomial time. (We do not require $\group$ to be cyclic, and do not assume $|\group|$ to be public.) We implicitly assume that $\group \gets \mathcal{G}(1^n)$ is run as part of the initialization process. Furthermore, we assume that all algorithms take $1^n$ and $\group$ as inputs, and do not explicitly write them.
 \subsection{KEM Properties Used in the ``Hash Everything'' Version}
 \begin{definition}
 \label{def:uni-ano-ro}
