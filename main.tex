@@ -109,7 +109,7 @@ This property roughly says that given a public key and a ciphertext, an adversar
 A KEM scheme is \emph{one-way (OW)} if for any PPT adversary $\adv$, the probability that $\adv$ wins the following game is negligible:
 \[
     \fcodebox{
-    $(pk,\star) \gets \Gen$ \\
+    $(pk,sk) \gets \Gen$ \\
     $(c,K) \gets \Encap(pk)$ \\
     $K^* \gets \adv(pk,c)$ \\
     $\adv$ wins if $K^* = K$
@@ -126,24 +126,57 @@ OW-1PCA is needed in the scenario where the OEKE adversary $\adv$ forwards the $
 
 Furthermore, later when $\adv$ modifies $(c,\tau')$ to $(c^* \neq c, \tau^* = \Htag(\dots,K^*))$ for $K^*$ of its choice, it can check if $K^* = \Decap(sk,c^*)$ by observing if $P$'s session key $SK = \Hkey(K^*)$. This corresponds to the (single) query to the plaintext-checking oracle. (This requires that $P$ and $P'$'s passwords match; otherwise $sk$ on the $P$ side does not correspond to $pk'$ on the $P'$ side.)
 
+\paragraph{Anonymity and a variant.}
+This property roughly says that given a public key and a ciphertext, an adversary cannot feasibly tell whether the ciphertext corresponds to this public key or some other (freshly sampled) public key.
 \begin{definition}
-\label{def:uni-ano-ro}
-A KEM scheme is \emph{anonymous with $q$ uniform public keys and random oracles ($q$-UNI-ANO-RO)} if $\Pr[b = 1]$ in the following two games are negligibly close:
+A KEM scheme is \emph{anonymous (ANO)} if for any PPT adversary $\adv$, $\Pr[b^* = 1]$ in the following two games are negligibly close:\footnote{The challenge bit $b$ is not actually used in the definition, but it will be handy in the later security proofs.}
 \[
     \fcodebox{
+    \underline{challenge bit $b = 0$}: \\
+    $(pk,sk) \gets \Gen$ \\
+    $(c,\star) \gets \Encap(pk)$ \\
+    $b^* \gets \adv(pk,c)$
+    }
+    \quad
+    \fcodebox{
+    \underline{challenge bit $b = 1$}: \\
+    $(pk,sk) \gets \Gen$ \\
+    $(pk',\star) \gets \Gen$ \\
+    $(c,\star) \gets \Encap(pk')$ \\
+    $b^* \gets \adv(pk,c)$
+    }
+    \]
+\end{definition}
+Similar to OW-1PCA, we also need the 1PCA variant of ANO.
+\begin{definition}
+The definition of \emph{anonymity under one plaintext-checking attack (ANO-1PCA)} is the same as that of ANO, except that the adversary $\adv$ is additionally given access to an oracle $\PC(sk,\star,\star)$, which on input $(c' \neq c, K')$ outputs 1 if $K' = \Decap(sk,c')$ and 0 otherwise. $\adv$ is allowed to query this oracle only once.
+\end{definition}
+This property is the same as what's called ANO-PCA in \cite[Definition~4]{EPRINT:ArrBarJar25}, except that in our notion (1) the adversary can query its plaintext-checking oracle only once, and (2) the adversary is not given $pk'$ (whereas in their notion $pk'$ is generated and given to the adversary in both games).
+
+ANO-1PCA is needed again in the scenario where the OEKE adversary $\adv$ forwards the $P$-to-$P'$ message $(s,T)$ without modification, but then modifies the $P'$-to-$P$ message $(c,\tau')$. Consider $c$: in the real world $c$ is the result of $\Encap(pk)$ (assuming the two parties' passwords match), whereas in the ideal world the simulator does not know $pk$ at this point (it learns no information about $\pw$, so it cannot decrypt $(s,T)$ and learn $pk$) and has to simulate $c$ as the result of $\Encap(pk')$ for a fresh $pk'$. $\adv$ should not be able to tell these two cases apart (even after it learns $\pw$ later and uses it to decrypt $(s,T)$ and learn $pk$), which is ANO. 1PCA is needed for the same reason as in OW-1PCA.
+
+\paragraph{Anonymity with uniform public keys and random oracles.}
+Finally, we define a highly tailored KEM property that is implied by the preceding more standard properties.
+\begin{definition}
+\label{def:uni-ano-ro}
+A KEM scheme is \emph{anonymous with $q$ uniform public keys and random oracles ($q$-UNI-ANO-RO)} if $\Pr[b^* = 1]$ in the following two games are negligibly close:
+\[
+    \fcodebox{
+    \underline{challenge bit $b = 0$}: \\
     $pk_1, \dots, pk_q \gets \pkspace$ \\
     $i \gets \adv(pk_1, \dots, pk_q)$ \\
     $(c,K) \gets \Encap(pk_i)$ \\
     $h_1 := H_1(K); h_2 := H_2(K)$ \\
-    $b \gets \adv(c,h_1,h_2)$
+    $b^* \gets \adv(c,h_1,h_2)$
     }
     \quad
     \fcodebox{
+    \underline{challenge bit $b = 1$}: \\
     $pk',pk_1, \dots, pk_q \gets \pkspace$ \\
     $i \gets \adv(pk_1, \dots, pk_q)$ \\
     $(c,\star) \gets \Encap(pk')$ \\
     $h_1 \gets \{0,1\}^n; h_2 \gets \{0,1\}^{2n}$ \\
-    $b \gets \adv(c,h_1,h_2)$
+    $b^* \gets \adv(c,h_1,h_2)$
     }
     \]
 Here, $H_1$ and $H_2$ are ROs with range $\{0,1\}^n$ and $\{0,1\}^{2n}$, respectively.
@@ -549,7 +582,7 @@ The difference between Game 3 and Game 4 is that in Game 3 both $P$ and $P'$ use
 On input $(pk,c)$,
 \begin{enumerate}
   \item Invoke $\env$. On $(\NewSession, sid, P, P', \pw, \text{``initiator''})$ from $\env$, run $P$'s algorithm to compute $(s,T)$, except that $\red_\text{ANO-1PCA}$ uses its input $pk$ instead of $(pk,\star) \gets \Gen$. Send $(s,T)$ to $\adv$.
-  \item On $(\NewSession, sid, P', P, \pw', \text{``respondent''})$ from $\env$ and $(s^*,T^*)$ from $\adv$, if $\neg(\pw = \pw' \land (s^*,T^*) = (s,T))$, abort. Otherwise sample $SK',\tau' \gets \{0,1\}^n$, output $SK'$ to $\env$, and send $(c,\tau')$ to $\adv$. ($c$ is part of $\red_\text{ANO-PCA1}$'s inputs.)
+  \item On $(\NewSession, sid, P', P, \pw', \text{``respondent''})$ from $\env$ and $(s^*,T^*)$ from $\adv$, if $\neg(\pw = \pw' \land (s^*,T^*) = (s,T))$, output 1 and halt. Otherwise sample $SK' \gets \{0,1\}^n, \tau' \gets \{0,1\}^{2n}$, output $SK'$ to $\env$, and send $(c,\tau')$ to $\adv$. ($c$ is part of $\red_\text{ANO-PCA1}$'s inputs.)
   \item On $(c^*,\tau^*)$ from $\adv$,
       \begin{enumerate}
         \item If $c^* = c$, do what's described in Game 1.
@@ -561,7 +594,7 @@ On input $(pk,c)$,
   \item {\color{blue}When $\env$ outputs bit $b^*$, copy $\env$'s output.}
 \end{enumerate}
 
-$\red_\text{ANO-1PCA}$ uses its input $pk$ on the $P$ side and $c$ on the $P'$ side. If $b = 0$ then $c \gets \Encap(pk)$, i.e., both $P$ and $P'$ use the same $pk$, so $\red_\text{ANO-1PCA}$ simulates Game 3; if $b = 1$ then $c \gets \Encap(pk')$, i.e., $P'$ uses an independently generated $pk'$, so $\red_\text{ANO-1PCA}$ simulates Game 4. We have
+$\red_\text{ANO-1PCA}$ uses its input $pk$ on the $P$ side and $c$ on the $P'$ side. If $\red_\text{ANO-1PCA}$'s challenge bit $b = 0$ then $c \gets \Encap(pk)$, i.e., both $P$ and $P'$ use the same $pk$, so $\red_\text{ANO-1PCA}$ simulates Game 3; if $b = 1$ then $c \gets \Encap(pk')$, i.e., $P'$ uses an independently generated $pk'$, so $\red_\text{ANO-1PCA}$ simulates Game 4. We have
 \[
 \Dist_\env^{3,4} \leq \Adv_{\red_\text{ANO-1PCA}}^\text{ANO-1PCA}.
 \]
@@ -569,7 +602,7 @@ $\red_\text{ANO-1PCA}$ uses its input $pk$ on the $P$ side and $c$ on the $P'$ s
 \emph{{\color{red}This game corresponds to game $\mathsf{G}_9$ in \cite{EPRINT:ArrBarJar25}. However, there are two differences:
 \begin{enumerate}
   \item \cite{EPRINT:ArrBarJar25} reduces to ANO-PCA (where the KEM adversary can query its plaintext-checking oracle polynomially many times), rather than ANO-1PCA. Unlike in Game 3, here reducing to this stronger assumption does not provide any advantage.
-  \item The assumption \cite{EPRINT:ArrBarJar25} reduces to is even further stronger in that their KEM adversary's inputs are $(pk,pk',c)$, whereas we do not give $pk'$ to the KEM adversary. Note that the reduction does not need $pk'$ at all (it only needs to send $c$ which is an encapsulation of either $pk$ or $pk'$), so the assumption in \cite{EPRINT:ArrBarJar25} is unnecessarily strong.
+  \item The assumption \cite{EPRINT:ArrBarJar25} reduces to is even further stronger in that their KEM adversary's input is $(pk,pk',c)$, whereas we do not give $pk'$ to the KEM adversary. Note that the reduction does not need $pk'$ at all (it only needs to send $c$ which is an encapsulation of either $pk$ or $pk'$), so the assumption in \cite{EPRINT:ArrBarJar25} is unnecessarily strong.
 \end{enumerate}
 }}
 
