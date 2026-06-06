@@ -204,6 +204,12 @@ Here, $H_1$ and $H_2$ are ROs with range $\{0,1\}^n$ and $\{0,1\}^{2n}$, respect
 
 This property emerges when the OEKE adversary $\adv$ sends $(s^*,T^*)$ to $P'$ which contains a wrong password guess. In the real world, $(s^*,T^*)$ decrypt to a uniformly random KEM public key, which is then used to compute $c,SK,\tau$ (the left game). In simulation, we want to remove the decryption process and outright use a freshly sampled public key to compute $c,SK,\tau$ (the right game). ($h_1,h_2$ in \Cref{def:uni-ano-ro} correspond to $SK,\tau$ in the protocol, respectively.) What complicates things is that $\adv$ can decrypt a large number of $(s^*,T^*)$ pairs \emph{under both correct and incorrect passwords}, resulting in a large number of $pk^*$ values, \emph{before} sending $(s^*,T^*)$ to $P'$ (or even before initiating $P'$'s session); at this time the reduction does not know which $(s^*,T^*)$ will be used by $\adv$, or which password is correct, yet it has to program the public key (the ``right'' one that will be used in $P'$'s algorithm) into the decryption process. As such, we need to give the reduction polynomially many public keys.
 
+It is not hard to see that for $q$-UNI-ANO-RO is implied by the more standard properties:
+\begin{lemma}
+\label{lem:uni-ano-ro}
+Suppose the UNI-PK, OW-1PCA and ANO-1PCA properties hold for the KEM scheme. Then for any polynomial $q$, the $q$-UNI-ANO-RO property also holds for the KEM scheme.
+\end{lemma}
+
 \subsection{Additional KEM Properties Used in Other Versions}
 \begin{definition}
 A KEM scheme is \emph{weakly non-malleable (WNM)} if for any PPT adversary $\adv$, the probability that $\adv$ wins the following game is negligible:
@@ -466,7 +472,7 @@ Our simulator is, by and large, the same as the one in \cite[Fig.5~and~6]{EPRINT
 
 \subsection{Game-Hop Argument}
 \label{sec:games}
-We now prove that for any PPT environment $\env$, the simulator $\sim$ in \Cref{sec:sim} generates an ideal-world view indistinguishable from $\env$'s real-world view. The sequence of games starts from the real world (Game 0) and ends in the ideal world (Game 17).
+We now prove that for any PPT environment $\env$, the simulator $\sim$ in \Cref{sec:sim} generates an ideal-world view indistinguishable from $\env$'s real-world view. The sequence of games starts from the real world (Game 0) and ends in the ideal world (Game 17). We assume that $\adv$ makes $q_1,q_2,\qkey,\qtag$ queries to ROs $H_1,H_2,\Hkey,\Htag$, respectively. By \Cref{lem:uni-ano-ro}, we may additionally assume that the $(q_1+1)(q_2+1)$-UNI-ANO-RO property holds for the KEM scheme. For two adjacent games $i$ and $i+1$, let $\Dist_\env^{i,i+1}$ be $\env$'s distinguishing advantage between them.
 
 A game-by-game comparison with the proof in \cite[Section~5]{EPRINT:ArrBarJar25} is shown in \emph{{\color{red}red}}, with the parts that critically rely on certain items being included as inputs to $\Htag$ \emph{{\color{red}\ul{underlined}}}.
 
@@ -563,7 +569,7 @@ critically relies on $\pw,s,T,c$ being included in $\Htag$ inputs.}}}
 
 \medskip\noindent\emph{Game 3:} In the case where $\pw = \pw' \land (s^*,T^*) = (s,T)$, sample $SK',\tau' \gets \{0,1\}^n$. ($c$ is still computed as before.)
 
-Let $\Query_1$ be the event that $\adv$ queries \emph{either} $\Hkey(K')$ \emph{or} $\Htag(\pw,pk,s,T,c,\allowbreak K')$. Clearly Game 2 and Game 3 are identical unless $\Query_1$ happens. We upper-bound $\Pr[\Query_1]$ via a reduction $\red_\text{OW-1PCA1}$ to the OW-1PCA property of KEM:
+Let $\Query_1$ be the event that $\adv$ queries \emph{either} $\Hkey(K')$ \emph{or} $\Htag(\pw,pk,s,T,c,\allowbreak K')$. Clearly Game 2 and Game 3 are identical unless $\Query_1$ happens. We upper-bound $\Pr[\Query_1]$ via a reduction $\red_\text{OW-1PCA1}$ to the OW-1PCA property of the KEM scheme:
 
 \medskip\noindent\textbf{\underline{Reduction $\red_\mathrm{OW\text{-}1PCA1}$}:} \quad \textcolor[gray]{0.5}{// \fbox{Boxed text} indicates the single $\PC$ oracle query; same for reductions below}
 
@@ -598,7 +604,7 @@ Assuming $\Query_1$ happens, the only difference between Game 2/3 and $\red_\tex
 
 \medskip\noindent\emph{Game 4:} Again in the case where $\pw = \pw' \land (s^*,T^*) = (s,T)$, generate $P'$'s KEM public key $(pk',\star) \gets \Gen$ and compute $(c,\star) \gets \Encap(pk')$. (Note that $K'$ is not used anywhere since Game 3 --- in particular, $P'$ does not use $K'$ to compute $SK'$ or $\tau'$ anymore --- so we do not need to explicitly mention it.)
 
-The difference between Game 3 and Game 4 is that in Game 3 both $P$ and $P'$ use the same $pk$, whereas in Game 4 $P$ uses $pk$ and $P'$ uses an independent $pk'$. We construct a reduction $\red_\text{ANO-1PCA}$ to the ANO-1PCA property of KEM. This reduction, in fact, is identical to the reduction $\red_\text{OW-1PCA1}$ to the OW-1PCA property in Game 3 except the last step; for completeness, we still present the full reduction and highlight the difference in {\color{blue}blue}:
+The difference between Game 3 and Game 4 is that in Game 3 both $P$ and $P'$ use the same $pk$, whereas in Game 4 $P$ uses $pk$ and $P'$ uses an independent $pk'$. We construct a reduction $\red_\text{ANO-1PCA}$ to the ANO-1PCA property of the KEM scheme. This reduction, in fact, is identical to the reduction $\red_\text{OW-1PCA1}$ to the OW-1PCA property in Game 3 except the last step; for completeness, we still present the full reduction and highlight the difference in {\color{blue}blue}:
 
 \medskip\noindent\textbf{\underline{Reduction $\red_\mathrm{ANO\text{-}1PCA}$}:}
 
@@ -648,7 +654,7 @@ Now suppose the aborting condition does not happen. The difference between Game 
   \item For $H_2(\pw^*,T)$ queries where $\pw^* \neq \pw'$, $sk^*$ (or even $pk^*$) is not used anywhere in the game;
   \item For the $H_2(\pw',T)$ query, we cannot say the above anymore, since $pk'$ is used while computing $c$ and $K'$. However, since $\pw \neq \pw'$, we know that $pk = T/H_1(\pw,r)$ is independent of $pk' = T/H_1(\pw',r')$, so $sk'$ is still not used anywhere else in the game.
 \end{itemize}
-So, the distinguishing advantage between Game 4 and Game 5 can be reduced to the UNI-PK property of KEM. We only sketch the reduction $\red_\text{UNI-PK}$ here: $\red_\text{UNI-PK}$, on input $pk^*$ (which is either an honestly generated public key or a uniformly random value), samples $i \gets [q_2+1]$, and answers the (either $\adv$'s or $P'$'s) first $i-1$ $H_2$ queries as in Game 4 and the last $q_2-i+1$ $H_2$ queries as in Game 5; for the $i$-th $H_2$ query, $\red_\text{UNI-PK}$ computes
+So, the distinguishing advantage between Game 4 and Game 5 can be reduced to the UNI-PK property of the KEM scheme. We only sketch the reduction $\red_\text{UNI-PK}$ here: $\red_\text{UNI-PK}$, on input $pk^*$ (which is either an honestly generated public key or a uniformly random value), samples $i \gets [q_2+1]$, and answers the (either $\adv$'s or $P'$'s) first $i-1$ $H_2$ queries as in Game 4 and the last $q_2-i+1$ $H_2$ queries as in Game 5; for the $i$-th $H_2$ query, $\red_\text{UNI-PK}$ computes
 \[
 r^* := s \oplus t^*, \quad R^* := T/pk^*
 \]
@@ -668,7 +674,7 @@ A standard hybrid argument shows that (assuming the aborting condition does not 
 
 \medskip\noindent\emph{Game 6:} In the case where $\pw \neq \pw' \land (s^*,T^*) = (s,T)$, sample $SK',\tau' \gets \{0,1\}^n$. ($c$ is still computed as before.)
 
-Let $\Query_2$ be the event that $\adv$ queries \emph{either} $\Hkey(K')$ \emph{or} $\Htag(\pw',pk',s,T,\allowbreak c,K')$. Clearly Game 5 and Game 6 are identical unless $\Query_2$ happens. We upper-bound $\Pr[\Query_2]$ via a reduction $\red_\text{OW1}$ to the OW property of KEM. This is somewhat similar to the reduction $\red_\text{OW-1PCA}$ to the OW-1PCA property in Game 3, and we highlight the differences in {\color{blue}blue}:
+Let $\Query_2$ be the event that $\adv$ queries \emph{either} $\Hkey(K')$ \emph{or} $\Htag(\pw',pk',s,T,\allowbreak c,K')$. Clearly Game 5 and Game 6 are identical unless $\Query_2$ happens. We upper-bound $\Pr[\Query_2]$ via a reduction $\red_\text{OW1}$ to the OW property of the KEM scheme. This is somewhat similar to the reduction $\red_\text{OW-1PCA}$ to the OW-1PCA property in Game 3, and we highlight the differences in {\color{blue}blue}:
 
 \medskip\noindent\textbf{\underline{Reduction $\red_\mathrm{OW1}$}:}
 
@@ -724,7 +730,7 @@ The difference between Game 6 and Game 7 is that in Game 6 $c$ is generated by
 \[
 pk' = \frac{T}{H_1(\pw',s \oplus H_2(\pw',T))}
 \]
-which $\adv$ can compute, whereas in Game 7 $c$ is generated by an independent $pk''$. We construct a reduction $\red_\text{ANO}$ to the ANO property of KEM. This reduction, in fact, is identical to the reduction $\red_\text{OW1}$ to the OW property in Game 6 except the last step; for completeness, we still present the full reduction and highlight the difference in {\color{blue}blue}:
+which $\adv$ can compute, whereas in Game 7 $c$ is generated by an independent $pk''$. We construct a reduction $\red_\text{ANO}$ to the ANO property of the KEM scheme. This reduction, in fact, is identical to the reduction $\red_\text{OW1}$ to the OW property in Game 6 except the last step; for completeness, we still present the full reduction and highlight the difference in {\color{blue}blue}:
 
 \medskip\noindent\textbf{\underline{Reduction $\red_\mathrm{ANO}$}:}
 
@@ -887,7 +893,7 @@ Game 10 and Game 11 differ only if $\adv$ does not make an $H_2(\pw,T)$ query, b
 
 \medskip\noindent\emph{Game 12:} In the case where $\pw = \pw' \land (s^*,T^*) = (s,T) \land c^* = c \land \tau^* \neq \tau'$, do what's in the $\neg(\pw = \pw' \land (s^*,T^*) = (s,T) \land c^* = c)$ case.
 
-In Game 11 $SK$ is outright set to $\bot$, whereas here it is treated the same as the ``normal'' case. Let $\mathsf{Query}_3$ be the event that $\adv$ queries $\Htag(\pw,pk,s,T,c,K)$, where $pk$ is the KEM public key generated on $\adv$'s $H_2(\pw,T)$ query; Game 11 and Game 12 are identical unless $\mathsf{Query}_3$ happens. To trigger $\mathsf{Query}_3$, $\adv$ must know $K$, which suggests a reduction $\red_\text{OW2}$ to the OW property of KEM. This reduction is simple, so we only provide a sketch: $\red_\text{OW2}$, on inputs $(pk,c)$, invokes $\env$ and simulates $(s,T)$ and the $P'$ side honestly. (Note that $P'$ uses a freshly generated $pk'$ independent of the $P$ side.) When $\adv$ queries $H_2(\pw,T)$, $\red_\text{OW2}$ uses its input $pk$ in lieu of $(pk,\star) \gets \Gen$. Along the way, as long as $\red_\text{OW2}$ detects that $\pw = \pw' \land (s^*,T^*) = (s,T) \land c^* = c \land \tau^* \neq \tau'$ does not happen, it aborts. Finally, $\red_\text{OW2}$ finds the (unique) $\adv$'s $\Htag(\pw,pk,s,T,c,K^*)$ query resulting in $\tau^*$, and outputs $K^*$. We have
+In Game 11 $SK$ is outright set to $\bot$, whereas here it is treated the same as the ``normal'' case. Let $\mathsf{Query}_3$ be the event that $\adv$ queries $\Htag(\pw,pk,s,T,c,K)$, where $pk$ is the KEM public key generated on $\adv$'s $H_2(\pw,T)$ query; Game 11 and Game 12 are identical unless $\mathsf{Query}_3$ happens. To trigger $\mathsf{Query}_3$, $\adv$ must know $K$, which suggests a reduction $\red_\text{OW2}$ to the OW property of the KEM scheme. This reduction is simple, so we only provide a sketch: $\red_\text{OW2}$, on inputs $(pk,c)$, invokes $\env$ and simulates $(s,T)$ and the $P'$ side honestly. (Note that $P'$ uses a freshly generated $pk'$ independent of the $P$ side.) When $\adv$ queries $H_2(\pw,T)$, $\red_\text{OW2}$ uses its input $pk$ in lieu of $(pk,\star) \gets \Gen$. Along the way, as long as $\red_\text{OW2}$ detects that $\pw = \pw' \land (s^*,T^*) = (s,T) \land c^* = c \land \tau^* \neq \tau'$ does not happen, it aborts. Finally, $\red_\text{OW2}$ finds the (unique) $\adv$'s $\Htag(\pw,pk,s,T,c,K^*)$ query resulting in $\tau^*$, and outputs $K^*$. We have
 \[
 \Dist_\env^{11,12} \leq \Pr[\Query_3] \leq \Adv_{\red_\text{OW2}}^\text{OW}.
 \]
@@ -990,7 +996,7 @@ The condition of this game specifies that $\pw^* = \pw'$, and type (2) in Game 1
 
 \medskip\noindent\emph{Game 17:} Again in the case where $(s^*,T^*) \neq (s,T)$, if $\pw^* \neq \pw'$ or no $\pw^*$ is defined, sample $pk' \gets \group$, compute $(c,\star) \gets \Encap(pk')$, and sample $SK',\tau' \gets \{0,1\}^n$.
 
-We construct a reduction $\red_\text{UNI-ANO-RO}$ to the $(q_1+1)(q_2+1)$-UNI-ANO-RO property of KEM:
+We construct a reduction $\red_\text{UNI-ANO-RO}$ to the $(q_1+1)(q_2+1)$-UNI-ANO-RO property of the KEM scheme:
 
 \medskip\noindent\textbf{\underline{Reduction $\red_\mathrm{UNI\text{-}ANO\text{-}RO}$}:}
 
@@ -1050,7 +1056,7 @@ We have
 \Dist_\env^{16,17} \leq \Adv_{\red_\text{UNI-ANO-RO}}^{(q_1+1)(q_2+1)\text{-UNI-ANO-RO}}.
 \]
 
-\emph{{\color{red}This game corresponds to games $\mathsf{G}_{18}$ and $\mathsf{G}_{19}$ in \cite{EPRINT:ArrBarJar25}. \cite{EPRINT:ArrBarJar25} has two games: $\mathsf{G}_{18}$ that changes $SK'$ and $\tau'$ (via a reduction to the OW-PCA property of KEM), and $\mathsf{G}_{19}$ that changes $c$ (via a reduction to the ANO-PCA property of KEM). While we believe their argument is fundamentally correct, it could be significantly improved:
+\emph{{\color{red}This game corresponds to games $\mathsf{G}_{18}$ and $\mathsf{G}_{19}$ in \cite{EPRINT:ArrBarJar25}. \cite{EPRINT:ArrBarJar25} has two games: $\mathsf{G}_{18}$ that changes $SK'$ and $\tau'$ (via a reduction to the OW-PCA property of the KEM scheme), and $\mathsf{G}_{19}$ that changes $c$ (via a reduction to the ANO-PCA property of the KEM scheme). While we believe their argument is fundamentally correct, it could be significantly improved:
 \begin{enumerate}
   \item \cite{EPRINT:ArrBarJar25} reduces to OW-PCA and ANO-PCA\footnote{\cite{EPRINT:ArrBarJar25} actually mentions ANO-CPA, which appears to be a typo.}, which is unnecessary: OW and ANO suffice.
   \item Their simulation strategy is slightly different from ours: they use $pk'$ generated by $\Gen$, rather than sampled uniformly at random. Note that in this ``incorrect password guess'' case, in the real world $pk' = T^*/H_1(\pw',r')$ is already uniformly random, so this is fundamentally a KEM property about encapsulation of uniformly random (rather than honestly generated) public keys and we believe it is clearer to present it in this way.\footnote{By contrast, in the $(s^*,T^*) = (s,T)$ case $pk'$ has to be generated honestly, which is our Games 3, 4, 6 and 7: If $\pw = \pw' \land (s^*,T^*) = (s,T)$ then $sk$ corresponding to $pk = pk'$ is used on the $P$ side (in decapsulation), so $pk'$ cannot be changed to uniformly random; and the $\pw \neq \pw' \land (s^*,T^*) = (s,T)$ case cannot be separated from the $\pw = \pw' \land (s^*,T^*) = (s,T)$ case (since the simulator never knows if $\pw = \pw'$ or not), so $pk'$ cannot be changed to uniformly random in this case either.}
@@ -1212,7 +1218,7 @@ Looking more closely, only \Cref{clm:htag} in Game 2 needs a new proof: the argu
 \label{clm:htag2}
 Suppose the WNM property holds for the KEM scheme. In the case where $\neg(\pw = \pw' \land (s^*,T^*) = (s,T) \land c^* = c)$, the probability that $P'$ queries $\Htag(\pw,pk,s,T,K)$ is negligible.
 \end{claim}
-$P'$ makes a single $\Htag$ query, on $(\pw',pk',s,T,K')$. If $\pw \neq \pw' \lor (s^*,T^*) \neq (s,T)$, then of course $P'$'s query is not $\Htag(\pw,pk,s,T,K)$. Now assume $\pw = \pw' \land (s^*,T^*) = (s,T)$. This implies that $pk = pk'$ by the definitions of $pk$ and $pk'$, and $c^* \neq c$ by the condition of this game. We now upper-bound $\Pr[K = K']$. Recall that $K$ is defined as $\Decap(sk,c^*)$, so $\Pr[K = K'] = \Pr[\Decap(sk,c^*) = K']$. We upper-bound this probability via a reduction $\red_\text{WNM}$ to the WNM property of KEM:
+$P'$ makes a single $\Htag$ query, on $(\pw',pk',s,T,K')$. If $\pw \neq \pw' \lor (s^*,T^*) \neq (s,T)$, then of course $P'$'s query is not $\Htag(\pw,pk,s,T,K)$. Now assume $\pw = \pw' \land (s^*,T^*) = (s,T)$. This implies that $pk = pk'$ by the definitions of $pk$ and $pk'$, and $c^* \neq c$ by the condition of this game. We now upper-bound $\Pr[K = K']$. Recall that $K$ is defined as $\Decap(sk,c^*)$, so $\Pr[K = K'] = \Pr[\Decap(sk,c^*) = K']$. We upper-bound this probability via a reduction $\red_\text{WNM}$ to the WNM property of the KEM scheme:
 
 \medskip\noindent\textbf{\underline{Reduction $\red_\mathrm{WNM}$}:}
 
@@ -1236,7 +1242,7 @@ We now turn to the variant where $pk$ is further removed from $\Htag$ inputs, i.
 
 \medskip\noindent\emph{Game 11:} In the case where $\neg(\pw = \pw' \land (s^*,T^*) = (s,T) \land c^* = c)$, if there is no $\langle\pw,\star,\star\rangle$ record, set $SK := \bot$ (i.e., replace the {\color{brown}brown} text in \Cref{fig:intermediate-game} with ``$SK := \bot$'').
 
-Game 10 and Game 11 differ only if $\adv$ does not make an $H_2(\pw,T)$ query, but makes an $\Htag(\pw,s,T,K^*)$ query resulting in $\tau^*$, where $K^* = \Decap(sk,c^*)$ for a freshly generated $sk$. We upper-bound this probability via a reduction $\red_\text{UNPRE}$ to the UNPRE property of KEM:
+Game 10 and Game 11 differ only if $\adv$ does not make an $H_2(\pw,T)$ query, but makes an $\Htag(\pw,s,T,K^*)$ query resulting in $\tau^*$, where $K^* = \Decap(sk,c^*)$ for a freshly generated $sk$. We upper-bound this probability via a reduction $\red_\text{UNPRE}$ to the UNPRE property of the KEM scheme:
 
 \medskip\noindent\textbf{\underline{Reduction $\red_\mathrm{UNPRE}$}:}
 
@@ -1253,10 +1259,10 @@ It is straightforward to see that if the ``bad event'' above happens, then $\red
 \Dist_\env^{10,11} \leq \Adv_{\red_\text{UNPRE}}^\text{UNPRE}.
 \]
 
-Overall, we conclude that the ``hash $\pw$ and $(s,T)$'' version is secure under the WNM and UNPRE properties of KEM.
+Overall, we conclude that the ``hash $\pw$ and $(s,T)$'' version is secure under the WNM and UNPRE properties of the KEM scheme.
 
 \paragraph{The ``hash $\pw$, $(s,T)$ and $c$'' version.}
-Note that the change in Game 2 (which requires WNM) and the change in Game 11 (which require UNPRE) are unrelated to each other. Therefore, if we define $\tau$ as $\Htag(\pw,s,T,c,K)$, then only Game 11 needs to change, and the protocol is secure under the UNPRE property of KEM.
+Note that the change in Game 2 (which requires WNM) and the change in Game 11 (which require UNPRE) are unrelated to each other. Therefore, if we define $\tau$ as $\Htag(\pw,s,T,c,K)$, then only Game 11 needs to change, and the protocol is secure under the UNPRE property of the KEM scheme.
 
 \subsection{The ``Hash $pk$ and $(s,T)$'' Version}
 \label{sec:hash-pk-st}
@@ -1338,10 +1344,10 @@ In sum, we have
 \Dist_\env^{12,13} \leq \frac{q_2(q_2+1)}{2}\cdot H_\infty(pk : (pk,\star) \gets \Gen) + \frac{\qtag(\qtag-1)}{2^{2n+1}}.
 \]
 
-Overall, we conclude that the ``hash $pk$ and $(s,T)$'' version is secure under the WNM property of KEM.
+Overall, we conclude that the ``hash $pk$ and $(s,T)$'' version is secure under the WNM property of the KEM scheme.
 
 \paragraph{The ``hash $pk$, $(s,T)$ and $c$'' version.}
-If we define $\tau$ as $\Htag(pk,s,T,c,K)$, then the second bullet of \Cref{clm:htag3} is not needed, and the protocol can be proven secure without the WNM property of KEM (i.e., under the same assumptions as in the ``hash everything'' version).
+If we define $\tau$ as $\Htag(pk,s,T,c,K)$, then the second bullet of \Cref{clm:htag3} is not needed, and the protocol can be proven secure without the WNM property of the KEM scheme (i.e., under the same assumptions as in the ``hash everything'' version).
 
 \subsection{The ``Only Hash $(s,T)$'' Version}
 \label{sec:hash-st}
@@ -1386,7 +1392,7 @@ Suppose the KBIND and WNM properties hold for the KEM scheme. In the case where 
 \end{claim}
 $P'$ makes a single $\Htag$ query, on $(s^*,T^*,K')$. If $(s^*,T^*) \neq (s,T)$, then of course $P'$'s query is not $\Htag(s,T,K)$. Now assume $(s^*,T^*) = (s,T)$, which implies $\pw \neq \pw' \lor c^* \neq c$ by the condition of the game.
 \begin{itemize}
-  \item If $\pw \neq \pw'$, by the proof of \Cref{clm:htag2}, $pk$ and $pk'$ are independent of each other (where $pk$ is honestly generated and $pk'$ is uniformly random). This suggests that we should upper-bound $\Pr[K = K'] = \Pr[\Decap(sk,c^*) = K']$ via a reduction $\red_\text{KBIND}$ to the KBIND property of KEM:
+  \item If $\pw \neq \pw'$, by the proof of \Cref{clm:htag2}, $pk$ and $pk'$ are independent of each other (where $pk$ is honestly generated and $pk'$ is uniformly random). This suggests that we should upper-bound $\Pr[K = K'] = \Pr[\Decap(sk,c^*) = K']$ via a reduction $\red_\text{KBIND}$ to the KBIND property of the KEM scheme:
       \vspace{6pt} \\ % force \medskip in itemize environment
       \textbf{\underline{Reduction $\red_\mathrm{KBIND}$}:}
       \vspace{6pt} \\
@@ -1435,9 +1441,9 @@ We first state the new Game 13, and then make the argument.
 
 If $\adv$ makes no $\Htag(s,T,\star)$ query resulting in $\tau^*$, then both Game 12 and Game 13 set $SK := \bot$. The probability that $\adv$ makes two different $\Htag(s,T,\star)$ queries both resulting in $\tau^*$ is upper-bounded by $\qtag(\qtag-1)/2^{2n+1}$. (This part does not change from the argument under the old Game 13.) Below we assume that $\adv$ makes a unique $\Htag(s,T,K^*)$ query resulting in $\tau^*$:
 \begin{itemize}
-  \item We first upper-bound the probability that there is more than one $\langle\pw^*,pk^*,\allowbreak sk^*\rangle$ record with $\Decap(sk^*,c^*) = K^*$. Note that in each such record, $(\star,sk^*) \gets \Gen$ is freshly generated, so a straightforward reduction to the ROB property of KEM, $\red_\text{ROB1}$, shows that the probability that the same $c^*$ decapsulates to the same $K^*$ under two freshly generated $sk^*$ is upper-bounded by ${q_2 \choose 2} \cdot \Adv_{\red_\text{ROB1}}^\text{ROB}$.
+  \item We first upper-bound the probability that there is more than one $\langle\pw^*,pk^*,\allowbreak sk^*\rangle$ record with $\Decap(sk^*,c^*) = K^*$. Note that in each such record, $(\star,sk^*) \gets \Gen$ is freshly generated, so a straightforward reduction to the ROB property of the KEM scheme, $\red_\text{ROB1}$, shows that the probability that the same $c^*$ decapsulates to the same $K^*$ under two freshly generated $sk^*$ is upper-bounded by ${q_2 \choose 2} \cdot \Adv_{\red_\text{ROB1}}^\text{ROB}$.
   \item If there is no $\langle\pw^*,pk^*,sk^*\rangle$ record with $\Decap(sk^*,c^*) = K^*$, then both Game 12 and Game 13 set $SK := \bot$.
-  \item Next, suppose there is a unique $\langle\pw^*,pk^*,sk^*\rangle$ record with $\Decap(sk^*,c^*) = K^*$, but $\pw^* \neq \pw$. If there is no $\langle\pw,pk,sk\rangle$ record, then both Game 12 and Game 13 set $SK := \bot$. If there is a $\langle\pw,pk,sk\rangle$ record, then $(\star,sk) \gets \Gen$ is freshly generated, so a straightforward reduction to the ROB property of KEM, $\red_\text{ROB2}$, shows that the probability that the same $c^*$ decapsulates to the same $K^*$ under both $sk$ and $sk^*$ is upper-bounded by $q_2 \cdot \Adv_{\red_\text{ROB2}}^\text{ROB2}$. If this does not happen, then again both Game 12 and Game 13 set $SK := \bot$.
+  \item Next, suppose there is a unique $\langle\pw^*,pk^*,sk^*\rangle$ record with $\Decap(sk^*,c^*) = K^*$, but $\pw^* \neq \pw$. If there is no $\langle\pw,pk,sk\rangle$ record, then both Game 12 and Game 13 set $SK := \bot$. If there is a $\langle\pw,pk,sk\rangle$ record, then $(\star,sk) \gets \Gen$ is freshly generated, so a straightforward reduction to the ROB property of the KEM scheme, $\red_\text{ROB2}$, shows that the probability that the same $c^*$ decapsulates to the same $K^*$ under both $sk$ and $sk^*$ is upper-bounded by $q_2 \cdot \Adv_{\red_\text{ROB2}}^\text{ROB2}$. If this does not happen, then again both Game 12 and Game 13 set $SK := \bot$.
   \item Finally, if there is a unique $\langle\pw^*,pk^*,sk^*\rangle$ record, and $\pw^* = \pw$, then both Game 12 and Game 13 set $SK := \Hkey(K)$.
 \end{itemize}
 
@@ -1446,10 +1452,10 @@ In sum, we have
 \Dist_\env^{12,13} \leq \frac{q_2(q_2-1)}{2} \cdot \Adv_{\red_\text{ROB1}}^\text{ROB1} + q_2 \cdot \Adv_{\red_\text{ROB2}}^\text{ROB2} + \frac{\qtag(\qtag-1)}{2^{2n+1}}.
 \]
 
-Overall, we conclude that the ``only hash $(s,T)$'' version is secure under the KBIND, WNM, UNPRE and ROB properties of KEM.
+Overall, we conclude that the ``only hash $(s,T)$'' version is secure under the KBIND, WNM, UNPRE and ROB properties of the KEM scheme.
 
 \paragraph{The ``hash $(s,T)$ and $c$'' version.}
-If we define $\tau$ as $\Htag(s,T,c,K)$, then the second bullet of \Cref{clm:htag4} is not needed, and the protocol can be proven secure without the WNM property of KEM (but we still need KBIND, UNPRE and ROB).
+If we define $\tau$ as $\Htag(s,T,c,K)$, then the second bullet of \Cref{clm:htag4} is not needed, and the protocol can be proven secure without the WNM property of the KEM scheme (but we still need KBIND, UNPRE and ROB).
 
 \bibliographystyle{alpha}
 \bibliography{bib.bib}
@@ -1586,13 +1592,13 @@ This yields the claim. The remaining argument is essentially identical to that i
 
 \medskip\noindent\emph{Games 3--4:} These two games deal with the case where $\pw = \pw' \land (s^*,T^*) = (s,T)$. This falls into the first case of Game 2, and in this case there is no difference between the old and new versions of Game 2. As such, the reductions still go through: they abort if $\pw = \pw' \land (s^*,T^*) = (s,T)$ does not hold, and if $\pw = \pw' \land (s^*,T^*) = (s,T)$, they can still simulate the games by checking $\adv$'s $\Htag$ queries. Crucially, the reductions do not need to check $P'$'s $\Htag$ query (which they cannot do), since in this case we have defined Game 2 so that it only checks $\adv$'s $\Htag$ queries.
 
-\medskip\noindent\emph{Game 5:} This game involves a reduction to the UNI-PK property of KEM. The reduction works essentially because $sk'$ is not used anywhere in the game (so the reduction can embed its challenge as $pk'$ without knowing $sk'$), and this fact still holds even though we need to additionally check $P'$'s $\Htag$ queries in some cases now. So, this reduction still goes through.
+\medskip\noindent\emph{Game 5:} This game involves a reduction to the UNI-PK property of the KEM scheme. The reduction works essentially because $sk'$ is not used anywhere in the game (so the reduction can embed its challenge as $pk'$ without knowing $sk'$), and this fact still holds even though we need to additionally check $P'$'s $\Htag$ queries in some cases now. So, this reduction still goes through.
 
 \medskip\noindent\emph{Games 6--8:} These three games deal with the case where $\pw \neq \pw' \land (s^*,T^*) = (s,T)$. This again falls into the first case of Game 2, so the reductions in Games 6 and 7 still go through; Game 8 involves a statistical argument which does not need to change either.
 
 \medskip\noindent\emph{Games 9--10:} These two games involve statistical arguments only, and they have nothing to do with whether the games need to check $P'$'s $\Htag$ queries.
 
-\medskip\noindent\emph{Game 11:} The argument for this game needs to change essentially (see \Cref{tab:game-summary}). {\color{blue}Game 10 and Game 11 differ if $\adv$ does not make an $H_2(\pw,T)$ query, but $\adv$ \emph{or $P'$} makes an $\Htag(\pw,K^*)$ query resulting in $\tau^*$, where $K^* = \Decap(sk,c^*)$ for a freshly generated $sk$. A straightforward reduction to the UNPRE property of KEM, $\red_\text{UNPRE1}$, shows that
+\medskip\noindent\emph{Game 11:} The argument for this game needs to change essentially (see \Cref{tab:game-summary}). {\color{blue}Game 10 and Game 11 differ if $\adv$ does not make an $H_2(\pw,T)$ query, but $\adv$ \emph{or $P'$} makes an $\Htag(\pw,K^*)$ query resulting in $\tau^*$, where $K^* = \Decap(sk,c^*)$ for a freshly generated $sk$. A straightforward reduction to the UNPRE property of the KEM scheme, $\red_\text{UNPRE1}$, shows that
 \[
 \Dist_\env^{10,11} \leq \Adv_{\red_\text{UNPRE1}}^{\text{UNPRE}}.
 \]}
@@ -1644,7 +1650,7 @@ There are the following cases:
   \item If $(\pw')^* \neq \pw' \land \tau^* = \tau'$, then $P'$'s $\Htag(\pw',K')$ query results in $\tau^*$, and we need to argue that this query can be dropped from the check.
       \begin{itemize}
         \item If $\adv$ queries $\Htag(\pw',K')$, then new game 2 still finds this query, so new game 1 and new game 2 are identical.
-        \item If $\adv$ does not query $\Htag(\pw',K')$, then new game 2 sets $SK := \bot$. We argue that new game 1 also sets $SK := \bot$ except with negligible probability. New game 1 finds $P'$'s $\Htag(\pw',K')$ query, and sets $SK := \bot$ unless $\Decap(sk,c^*) = K'$. But note that $sk$ is freshly generated, so a straightforward reduction to the UNPRE property of KEM, $\red_\text{UNPRE2}$, shows that $\Decap(sk,c^*) = K'$ happens with negligible probability (cf. the reduction in Game 11).
+        \item If $\adv$ does not query $\Htag(\pw',K')$, then new game 2 sets $SK := \bot$. We argue that new game 1 also sets $SK := \bot$ except with negligible probability. New game 1 finds $P'$'s $\Htag(\pw',K')$ query, and sets $SK := \bot$ unless $\Decap(sk,c^*) = K'$. But note that $sk$ is freshly generated, so a straightforward reduction to the UNPRE property of the KEM scheme, $\red_\text{UNPRE2}$, shows that $\Decap(sk,c^*) = K'$ happens with negligible probability (cf. the reduction in Game 11).
       \end{itemize}
   \item If $(\pw')^* = \pw' \land \tau^* = \tau'$, but there is no $\langle\pw,\star,sk\rangle$ record, then both new game 1 and new game 2 outright sets $SK := \bot$, regardless of $\Htag$ queries by $\adv$ or $P'$. Thus, the two games are identical.
   \item If $(\pw')^* = \pw' \land \tau^* = \tau'$, but $\Decap(sk,c^*) \neq K'$, then new game 1 finds $P'$'s $\Htag(\pw',K')$ query and then sets $SK := \bot$ because the check $\Decap(sk,c^*) \stackrel{?}{=} K'$ does not pass, and new game 2 also sets $SK := \bot$ because it either fails to find $\adv$'s $\Htag(\pw',K')$ query, or it finds such a query but then sets $SK := \bot$ because the check $\Decap(sk,c^*) \stackrel{?}{=} K'$ does not pass. Thus, the two games are identical.
@@ -1757,7 +1763,7 @@ Suppose the WNM property holds for the KEM scheme. In the first case above, the 
 \end{claim}
 $P'$ makes a single $\Htag$ query, on $(pk',K')$. There are the following cases:
 \begin{itemize}
-  \item If $c^* \neq c$, we claim that $pk = pk' \land K = K'$ happens with negligible probability. Suppose $pk = pk'$. Then we can reduce the event $K = K'$ to the WNM property of KEM, via a reduction $\Adv_{\red_\text{WNM}}^\text{WNM}$ similar to that in the proof of \Cref{clm:htag2}. We have $\Pr[pk = pk' \land K = K'] \leq \Adv_{\red_\text{WNM}}^\text{WNM}$.
+  \item If $c^* \neq c$, we claim that $pk = pk' \land K = K'$ happens with negligible probability. Suppose $pk = pk'$. Then we can reduce the event $K = K'$ to the WNM property of the KEM scheme, via a reduction $\Adv_{\red_\text{WNM}}^\text{WNM}$ similar to that in the proof of \Cref{clm:htag2}. We have $\Pr[pk = pk' \land K = K'] \leq \Adv_{\red_\text{WNM}}^\text{WNM}$.
   \item If $c^* = c$, then $\pw = \pw' \lor (s^*,T^*) = (s,T)$ (by the condition of this game) yet $\neg(\pw = \pw' \land (s^*,T^*) = (s,T))$ (otherwise we fall into the condition of Game 1).
       \begin{itemize}
         \item If $\pw = \pw' \land (s^*,T^*) \neq (s,T)$, then the argument in the proof of \Cref{clm:htag} still goes through, so $\Pr[pk = pk'] \leq (q_1+1)/|\group|$.
@@ -1774,7 +1780,7 @@ This yields the claim. The remaining argument is essentially identical to that i
 
 \medskip\noindent\emph{Games 3--4:} These two games deal with the case where $\pw = \pw' \land (s^*,T^*) = (s,T)$. This falls into the first case of Game 2, and in this case there is no difference between the old and new versions of Game 2. As such, the reductions still go through: they abort if $\pw = \pw' \land (s^*,T^*) = (s,T)$ does not hold, and if $\pw = \pw' \land (s^*,T^*) = (s,T)$, they can still simulate the games by checking $\adv$'s $\Htag$ queries. Crucially, the reductions do not need to check $P'$'s $\Htag$ query (which they cannot do), since in this case we have defined Game 2 so that it only checks $\adv$'s $\Htag$ queries.
 
-\medskip\noindent\emph{Game 5:} This game involves a reduction to the UNI-PK property of KEM. The reduction works essentially because $sk'$ is not used anywhere in the game (so the reduction can embed its challenge as $pk'$ without knowing $sk'$), and this fact still holds even though we need to additionally check $P'$'s $\Htag$ queries in some cases now. So, this reduction still goes through.
+\medskip\noindent\emph{Game 5:} This game involves a reduction to the UNI-PK property of the KEM scheme. The reduction works essentially because $sk'$ is not used anywhere in the game (so the reduction can embed its challenge as $pk'$ without knowing $sk'$), and this fact still holds even though we need to additionally check $P'$'s $\Htag$ queries in some cases now. So, this reduction still goes through.
 
 \medskip\noindent\emph{Games 6--8:} These three games deal with the case where $\pw \neq \pw' \land (s^*,T^*) = (s,T)$. This again falls into the first case of Game 2, so the reductions in Games 6 and 7 still go through; Game 8 involves a statistical argument which does not need to change either.
 
@@ -1826,7 +1832,7 @@ Since $\pw \neq \pw' \land (s^*,T^*) \neq (s,T) \land (c^*,\tau^*) = (c,\tau')$,
       c^* = c, \\
       K = \Decap(sk',c^*)\text{ on the }P\text{ side},
       \end{gather*}
-      and $sk'$ is the KEM secret key corresponding to $pk'$ (again, because there is a $\langle\pw,pk',sk'\rangle$ record). So $K = K'$ by the correctness property of KEM.
+      and $sk'$ is the KEM secret key corresponding to $pk'$ (again, because there is a $\langle\pw,pk',sk'\rangle$ record). So $K = K'$ by the correctness property of the KEM scheme.
   \item Set $SK := \Hkey(K) (= \Hkey(K'))$.
 \end{enumerate}
 This entire process in Game 16 eventually results in setting $SK := \Hkey(K')$, which exactly matches the new game. Thus, there is no difference. We have
