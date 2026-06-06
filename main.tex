@@ -103,6 +103,22 @@
 \label{sec:prelim}
 Let $n$ be the security parameter. Let $\mathcal{G}$ be a PPT algorithm that, on input $1^n$, outputs a (multiplicative) Abelian group $\group$ whose order is superpolynomial, and where uniformly sampling, multiplication and inverse can be done in polynomial time. (We do not require $\group$ to be cyclic, and do not assume $|\group|$ to be public.) We implicitly assume that $\group \gets \mathcal{G}(1^n)$ is run as part of the initialization process. Furthermore, we assume that all algorithms take $1^n$ and $\group$ as inputs, and do not explicitly write them.
 \subsection{KEM Properties Used in the ``Hash Everything'' Version}
+\paragraph{One-Wayness under one Plaintext-Checking Attack (OW-1PCA).}
+This property roughly says that given a public key and a ciphertext, an adversary cannot feasibly find the key encapsulated in the ciphertext. We additionally give the adversary access to a \emph{plaintext-checking oracle}, which tells the adversary whether a ciphertext decapsulates to a certain key.
+\begin{definition}
+A KEM scheme is \emph{one-way under one plaintext-checking attack (OW-1PCA)} if for any PPT adversary $\adv$, the probability that $\adv$ wins the following game is negligible:
+\[
+    \fcodebox{
+    $(pk,\star) \gets \Gen$ \\
+    $(c,K) \gets \Encap(pk)$ \\
+    $K^* \gets \adv^{\PC(sk,\star,\star)}(pk,c)$ \\
+    $\adv$ wins if $K^* = K$
+    }
+\]
+Here, oracle $\PC(sk,\star,\star)$ on input $(c' \neq c, K')$ outputs 1 if $K' = \Decap(sk,c')$ and 0 otherwise. $\adv$ is allowed to query this oracle only once.
+\end{definition}
+This property is the same as what's called OW-PCA in \cite[Definition~3]{EPRINT:ArrBarJar25}, except that in our notion (1) the adversary can query its plaintext-checking oracle only once, and (2) the adversary is prohibited from querying the challenge ciphertext to its plaintext-checking oracle. The plaintext-checking oracle was first studied in \cite{PKC:AbdBenPoi15} in the context of public-key encryption schemes.
+
 \begin{definition}
 \label{def:uni-ano-ro}
 A KEM scheme is \emph{anonymous with $q$ uniform public keys and random oracles ($q$-UNI-ANO-RO)} if $\Pr[b = 1]$ in the following two games are negligibly close:
@@ -452,7 +468,7 @@ By correctness of the protocol (see \Cref{sec:protocol-uc}), in Game 0 $\tau = \
 
 \medskip\noindent\emph{Game 2:} In the case where $\neg(\pw = \pw' \land (s^*,T^*) = (s,T) \land c^* = c)$, find $\adv$'s $\Htag(\pw,pk,s,T,c^*,K^*)$ query resulting in $\tau^*$. If there is none or more than one, set $SK := \bot$. If there is a unique such query, do the following:
 \begin{itemize}
-  \item If $K^* = K$, set $SK := \Hkey(K)$ (i.e., there is no change from Game 1).
+  \item If $K^* = K$, set $SK := \Hkey(K)$.
   \item If $K^* \neq K$, set $SK := \bot$.
 \end{itemize}
 
@@ -468,10 +484,10 @@ Going back to the game hop, Game 1 and Game 2 are identical unless one of the fo
 \begin{enumerate}
   \item $\adv$ never makes an $\Htag(\pw,pk,s,T,c^*,\star)$ query resulting in $\tau^*$, yet $P$'s check $\tau^* \stackrel{?}{=} \Htag(\pw,pk,s,T,c^*,K)$ passes.
   \item $\adv$ makes more than one $\Htag(\pw,pk,s,T,c^*,\star)$ query resulting in $\tau^*$.
-  \item $\adv$ makes an $\Htag(\pw,pk,s,T,c^*,K^*)$ query resulting in $\tau^*$, and $P$'s $\Htag(\pw,\allowbreak pk, s,T,c^*,K)$ query also results in $\tau^*$.
+  \item $\adv$ makes an $\Htag(\pw,pk,s,T,c^*,K^*)$ query (where $K^* \neq K$) resulting in $\tau^*$, and $P$'s $\Htag(\pw,\allowbreak pk, s,T,c^*,K)$ query also results in $\tau^*$.
 \end{enumerate}
 
-In the first event, by \Cref{clm:htag} $P'$ does not query $\Htag(\pw,pk,s,T,c^*,K)$. $\adv$ itself also does not query $\Htag(\pw,pk,s,T,c^*,K)$ (otherwise the result is $\tau^*$). So $\Htag(\pw,pk,s,T,c^*,K)$ is independent of $\adv$'s view, and the probability that $\adv$ sends $\tau^* = \Htag(\pw,pk,s,T,c^*,K)$ is $1/2^{2n}$. The second and third events are collision in $\Htag$, whose (combined) probability is upper-bounded by $\qtag(\qtag+1)/2^{2n+1}$. Overall,
+In the first event, by \Cref{clm:htag} $P'$ does not query $\Htag(\pw,pk,s,T,c^*,K)$. $\adv$ itself also does not query $\Htag(\pw,pk,s,T,c^*,K)$ (otherwise the result is $\tau^*$). So $\Htag(\pw,pk,s,T,c^*,K)$ is independent of $\adv$'s view, and the probability that $\adv$ sends $\tau^* = \Htag(\pw,pk,s,T,c^*,K)$ is $1/2^{2n}$. The second and third events are collision in $\Htag$ from either $\adv$'s or $P$'s queries, whose (combined) probability is upper-bounded by $\qtag(\qtag+1)/2^{2n+1}$. Overall,
 \[
 \Dist_\env^{1,2} \leq \frac{\qtag(\qtag+1)+2}{2^{2n+1}}.
 \]
