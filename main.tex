@@ -156,7 +156,7 @@ This property is the same as what's called ANO-PCA in \cite[Definition~4]{EPRINT
 ANO-1PCA is needed again in the scenario where the OEKE adversary $\adv$ forwards the $P$-to-$P'$ message $(s,T)$ without modification, but then modifies the $P'$-to-$P$ message $(c,\tau')$. Consider $c$: in the real world $c$ is the result of $\Encap(pk)$ (assuming the two parties' passwords match), whereas in the ideal world the simulator does not know $pk$ at this point (it learns no information about $\pw$, so it cannot decrypt $(s,T)$ and learn $pk$) and has to simulate $c$ as the result of $\Encap(pk')$ for a fresh $pk'$. $\adv$ should not be able to tell these two cases apart (even after it learns $\pw$ later and uses it to decrypt $(s,T)$ and learn $pk$), which is ANO. 1PCA is needed for the same reason as in OW-1PCA.
 
 \paragraph{Anonymity with uniform public keys and random oracles.}
-Finally, we define a highly tailored KEM property that is implied by the preceding more standard properties.
+Finally, we define a highly tailored KEM property that is implied by the preceding more standard properties. This property is for facilitating the security proof of OEKE only; we do not expect it to be of independent interest.
 \begin{definition}
 \label{def:uni-ano-ro}
 A KEM scheme is \emph{anonymous with $q$ uniform public keys and random oracles ($q$-UNI-ANO-RO)} if $\Pr[b^* = 1]$ in the following two games are negligibly close:
