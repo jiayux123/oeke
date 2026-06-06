@@ -103,21 +103,28 @@
 \label{sec:prelim}
 Let $n$ be the security parameter. Let $\mathcal{G}$ be a PPT algorithm that, on input $1^n$, outputs a (multiplicative) Abelian group $\group$ whose order is superpolynomial, and where uniformly sampling, multiplication and inverse can be done in polynomial time. (We do not require $\group$ to be cyclic, and do not assume $|\group|$ to be public.) We implicitly assume that $\group \gets \mathcal{G}(1^n)$ is run as part of the initialization process. Furthermore, we assume that all algorithms take $1^n$ and $\group$ as inputs, and do not explicitly write them.
 \subsection{KEM Properties Used in the ``Hash Everything'' Version}
-\paragraph{One-Wayness under one Plaintext-Checking Attack (OW-1PCA).}
-This property roughly says that given a public key and a ciphertext, an adversary cannot feasibly find the key encapsulated in the ciphertext. We additionally give the adversary access to a \emph{plaintext-checking oracle}, which tells the adversary whether a ciphertext decapsulates to a certain key.
+\paragraph{One-wayness and a variant.}
+This property roughly says that given a public key and a ciphertext, an adversary cannot feasibly find the key encapsulated in the ciphertext.
 \begin{definition}
-A KEM scheme is \emph{one-way under one plaintext-checking attack (OW-1PCA)} if for any PPT adversary $\adv$, the probability that $\adv$ wins the following game is negligible:
+A KEM scheme is \emph{one-way (OW)} if for any PPT adversary $\adv$, the probability that $\adv$ wins the following game is negligible:
 \[
     \fcodebox{
     $(pk,\star) \gets \Gen$ \\
     $(c,K) \gets \Encap(pk)$ \\
-    $K^* \gets \adv^{\PC(sk,\star,\star)}(pk,c)$ \\
+    $K^* \gets \adv(pk,c)$ \\
     $\adv$ wins if $K^* = K$
     }
 \]
-Here, oracle $\PC(sk,\star,\star)$ on input $(c' \neq c, K')$ outputs 1 if $K' = \Decap(sk,c')$ and 0 otherwise. $\adv$ is allowed to query this oracle only once.
+\end{definition}
+We also need a stronger variant in which the adversary is additionally given access to a \emph{plaintext-checking oracle}, which tells the adversary whether a ciphertext decapsulates to a certain key.
+\begin{definition}
+The definition of \emph{one-wayness under one plaintext-checking attack (OW-1PCA)} is the same as that of OW, except that the adversary $\adv$ is additionally given access to an oracle $\PC(sk,\star,\star)$, which on input $(c' \neq c, K')$ outputs 1 if $K' = \Decap(sk,c')$ and 0 otherwise. $\adv$ is allowed to query this oracle only once.
 \end{definition}
 This property is the same as what's called OW-PCA in \cite[Definition~3]{EPRINT:ArrBarJar25}, except that in our notion (1) the adversary can query its plaintext-checking oracle only once, and (2) the adversary is prohibited from querying the challenge ciphertext to its plaintext-checking oracle. The plaintext-checking oracle was first studied in \cite{PKC:AbdBenPoi15} in the context of public-key encryption schemes.
+
+OW-1PCA is needed in the scenario where the OEKE adversary $\adv$ forwards the $P$-to-$P'$ message $(s,T)$ without modification, but then modifies the $P'$-to-$P$ message $(c,\tau')$ to some other $(c^*,\tau^*)$. Consider the time when $P'$ outputs its session key $SK'$: at this point $\adv$ has not done any attack yet, so in the ideal world the PAKE functionality will set $SK'$ at random. This means that $\adv$ must not be able to compute $K'$ (otherwise it can query $\Hkey(K')$ and distinguish $SK'$ from random); furthermore, forward secrecy requires that $\adv$ should not compute $K'$ even if it learns $\pw'$ later (which allows $\adv$ to decrypt $(s,T)$ and learn $pk'$) --- which is why we give the public key to the adversary in the security game.
+
+Furthermore, later when $\adv$ modifies $(c,\tau')$ to $(c^* \neq c, \tau^* = \Htag(\dots,K^*))$ for $K^*$ of its choice, it can check if $K^* = \Decap(sk,c^*)$ by observing if $P$'s session key $SK = \Hkey(K^*)$. This corresponds to the (single) query to the plaintext-checking oracle. (This requires that $P$ and $P'$'s passwords match; otherwise $sk$ on the $P$ side does not correspond to $pk'$ on the $P'$ side.)
 
 \begin{definition}
 \label{def:uni-ano-ro}
@@ -508,7 +515,7 @@ Sample $i \gets [\qkey+\qtag]$ as a guess that $\adv$'s $i$-th $\Hkey$ or $\Htag
 On input $(pk,c)$,
 \begin{enumerate}
   \item Invoke $\env$. On $(\NewSession, sid, P, P', \pw, \text{``initiator''})$ from $\env$, run $P$'s algorithm to compute $(s,T)$, except that $\red_\text{ANO-1PCA}$ uses its input $pk$ instead of $(pk,\star) \gets \Gen$. (Note that computing $(s,T)$ does not require knowing $sk$.) Send $(s,T)$ to $\adv$.
-  \item On $(\NewSession, sid, P', P, \pw', \text{``respondent''})$ from $\env$ and $(s^*,T^*)$ from $\adv$, if $\neg(\pw = \pw' \land (s^*,T^*) = (s,T))$, abort. Otherwise sample $SK',\tau' \gets \{0,1\}^n$, output $SK'$ to $\env$, and send $(c,\tau')$ to $\adv$. ($c$ is part of $\red_\text{OW-1PCA1}$'s inputs.)
+  \item On $(\NewSession, sid, P', P, \pw', \text{``respondent''})$ from $\env$ and $(s^*,T^*)$ from $\adv$, if $\neg(\pw = \pw' \land (s^*,T^*) = (s,T))$, abort. Otherwise sample $SK' \gets \{0,1\}^n, \tau' \gets \{0,1\}^{2n}$, output $SK'$ to $\env$, and send $(c,\tau')$ to $\adv$. ($c$ is part of $\red_\text{OW-1PCA1}$'s inputs.)
   \item On $(c^*,\tau^*)$ from $\adv$,
       \begin{enumerate}
         \item If $c^* = c$, do what's described in Game 1.
@@ -527,7 +534,7 @@ Assuming $\Query_1$ happens, the only difference between Game 2/3 and $\red_\tex
 
 \emph{{\color{red}This game corresponds to game $\mathsf{G}_8$ in \cite{EPRINT:ArrBarJar25}. However, there are two differences:
 \begin{enumerate}
-  \item \cite{EPRINT:ArrBarJar25} reduces to OW-PCA (where the KEM adversary can query its plaintext-checking oracle polynomially many times), rather than OW-1PCA. In this case, step 4 of the reduction above can query $\PC(sk,c,(K')^*)$ $\qkey+\qtag$ times to check which of $\adv$'s query (if any) triggers $\Query_1$, hence avoiding the $\qkey+\qtag$ loss in its advantage.
+  \item \cite{EPRINT:ArrBarJar25} reduces to OW-PCA (where the KEM adversary can query its plaintext-checking oracle polynomially many times), rather than OW-1PCA. In this case, step 4 of the reduction above can query $\PC(sk,c,(K')^*)$ $\qkey+\qtag$ times to check which of $\adv$'s queries (if any) triggers $\Query_1$, hence avoiding the $\qkey+\qtag$ loss in its advantage.
   \item The above also means that the plaintext-checking oracle in their OW-PCA game has to allow for $\PC(sk,c,\star)$ queries, whereas our reduction to OW-1PCA never makes a query in this form and thus the plaintext-checking oracle in our OW-1PCA game can disallow such queries.
 \end{enumerate}
 }}
