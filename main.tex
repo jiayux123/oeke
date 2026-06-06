@@ -101,8 +101,28 @@
 
 \section{Preliminaries and Technical Overview}
 \label{sec:prelim}
-Let $n$ be the security parameter. Let $\mathcal{G}$ be a PPT algorithm that, on input $1^n$, outputs a (multiplicative) Abelian group $\group$ whose order is superpolynomial, and where uniformly sampling, multiplication and inverse can be done in polynomial time. (We do not require $\group$ to be cyclic, and do not assume $|\group|$ to be public.) We implicitly assume that $\group \gets \mathcal{G}(1^n)$ is run as part of the initialization process. Furthermore, we assume that all algorithms take $1^n$ and $\group$ as inputs, and do not explicitly write them.
+Let $n$ be the security parameter; we assume that all algorithms take $1^n$ as an input, and do not explicitly write it.
 \subsection{KEM Properties Used in the ``Hash Everything'' Version}
+\paragraph{Pseudorandom public keys.}
+This property roughly says that an honestly generated public key is indistinguishable from uniformly random.
+\begin{definition}
+A KEM scheme has \emph{pseudorandom public keys (UNI-PK)} if for any PPT adversary $\adv$, $\Pr[b^* = 1]$ in the following two games are negligibly close:\footnote{The challenge bit $b$ is not actually used in the definition, but it will come in handy in the later security proofs.}
+\[
+    \fcodebox{
+    \underline{challenge bit $b = 0$}: \\
+    $(pk,\star) \gets \Gen$ \\
+    $b^* \gets \adv(pk)$
+    }
+    \quad
+    \fcodebox{
+    \underline{challenge bit $b = 1$}: \\
+    $pk' \gets \pkspace$ \\
+    $b^* \gets \adv(pk')$
+    }
+    \]
+\end{definition}
+This property is the same as what's called UNI-PK in \cite[Definition~5]{EPRINT:ArrBarJar25}. It is needed because otherwise --- as an extreme example, suppose $\Gen$ is so biased that half of the elements in $\pkspace$ (call the set of them $U$) are unreachable by $\Gen$ --- the OEKE adversary $\adv$ can run an offline dictionary attack as follows: $\adv$ tries to decrypt $\mathsf{2F}^{\text{-}1}(\pw^*,(s,T))$ using various $\pw^*$ values, and if the result is in $U$ then $\adv$ knows that $\pw^*$ is not the real password $\pw$. In this way $\adv$ can rule out half of all candidate passwords in expectation.
+
 \paragraph{One-wayness and a variant.}
 This property roughly says that given a public key and a ciphertext, an adversary cannot feasibly find the key encapsulated in the ciphertext.
 \begin{definition}
@@ -129,7 +149,7 @@ Furthermore, later when $\adv$ modifies $(c,\tau')$ to $(c^* \neq c, \tau^* = \H
 \paragraph{Anonymity and a variant.}
 This property roughly says that given a public key and a ciphertext, an adversary cannot feasibly tell whether the ciphertext corresponds to this public key or some other (freshly sampled) public key.
 \begin{definition}
-A KEM scheme is \emph{anonymous (ANO)} if for any PPT adversary $\adv$, $\Pr[b^* = 1]$ in the following two games are negligibly close:\footnote{The challenge bit $b$ is not actually used in the definition, but it will be handy in the later security proofs.}
+A KEM scheme is \emph{anonymous (ANO)} if for any PPT adversary $\adv$, $\Pr[b^* = 1]$ in the following two games are negligibly close:
 \[
     \fcodebox{
     \underline{challenge bit $b = 0$}: \\
@@ -153,7 +173,7 @@ The definition of \emph{anonymity under one plaintext-checking attack (ANO-1PCA)
 \end{definition}
 This property is the same as what's called ANO-PCA in \cite[Definition~4]{EPRINT:ArrBarJar25}, except that in our notion (1) the adversary can query its plaintext-checking oracle only once, and (2) the adversary is not given $pk'$ (whereas in their notion $pk'$ is generated and given to the adversary in both games).
 
-ANO-1PCA is needed again in the scenario where the OEKE adversary $\adv$ forwards the $P$-to-$P'$ message $(s,T)$ without modification, but then modifies the $P'$-to-$P$ message $(c,\tau')$. Consider $c$: in the real world $c$ is the result of $\Encap(pk)$ (assuming the two parties' passwords match), whereas in the ideal world the simulator does not know $pk$ at this point (it learns no information about $\pw$, so it cannot decrypt $(s,T)$ and learn $pk$) and has to simulate $c$ as the result of $\Encap(pk')$ for a fresh $pk'$. $\adv$ should not be able to tell these two cases apart (even after it learns $\pw$ later and uses it to decrypt $(s,T)$ and learn $pk$), which is ANO. 1PCA is needed for the same reason as in OW-1PCA.
+ANO-1PCA is needed again in the scenario where the OEKE adversary $\adv$ forwards the $P$-to-$P'$ message $(s,T)$ without modification, but then modifies the $P'$-to-$P$ message $(c,\tau')$. Consider $c$: in the real world $c$ is the result of $\Encap(pk)$ (assuming the two parties' passwords match), whereas in the ideal world the simulator does not know $pk$ at this point (it learns no information about $\pw$, so it cannot decrypt $(s,T)$ and learn $pk$) and has to simulate $c$ as the result of $\Encap(pk')$ for a fresh $pk'$. $\adv$ should not be able to tell these two cases apart (even after it learns $\pw$ later and uses it to decrypt $pk := \mathsf{2F}^{\text{-}1}(\pw,(s,T))$), which is ANO. 1PCA is needed for the same reason as in OW-1PCA.
 
 \paragraph{Anonymity with uniform public keys and random oracles.}
 Finally, we define a highly tailored KEM property that is implied by the preceding more standard properties. This property is for facilitating the security proof of OEKE only; we do not expect it to be of independent interest.
@@ -241,6 +261,10 @@ We give a formal, UC-compatible description of the OEKE protocol in \Cref{fig:pr
 \begin{figure}[H]
 \begin{framed}
 \begin{small}
+Let $\mathcal{G}$ be a PPT algorithm that outputs a (multiplicative) Abelian group $\group$ whose order is superpolynomial, and where uniformly sampling, multiplication and inverse can be done in polynomial time. (We do not require $\group$ to be cyclic, and do not assume $|\group|$ to be public.) We implicitly assume that $\group \gets \mathcal{G}$ is run as part of the initialization process. Furthermore, we assume that all algorithms take $\group$ as an input, and do not explicitly write it. \\
+Let $(\Encap,\Decap)$ be a KEM scheme whose public-key space $\pkspace = \group$.
+
+\medskip
 \underline{Party $P$, step 1}
 
 \medskip
@@ -617,7 +641,7 @@ If $H_1(\pw^*,r^*)$ has already been defined and it is not $R^*$, abort. Otherwi
 
 Furthermore, in the case where $\pw \neq \pw' \land (s^*,T^*) = (s,T)$, when $P'$ queries $H_2(\pw',T)$, use the method described above to generate $pk',r',R'$ and program $H_1$. (Note that the case where $\pw = \pw' \land (s^*,T^*) = (s,T)$ has already been addressed in Game 3 and Game 4, and $P'$ does not need to make an $H_2$ query there.)\footnote{A slightly confusing case is when $s^* \neq s \land T^* = T$, causing $P'$ to query $t' := H_2(\pw',T)$; and $\adv$ also queries $H_2(\pw',T)$. In this case $P'$'s $r' = s^* \oplus t'$ and $\adv$'s $r^* = s \oplus t'$ are different, causing $P'$'s values $R',pk'$ and $\adv$'s values $R^*,pk^*$ to be independent of each other. Therefore, the game should run $P'$'s algorithm as usual when $P'$ queries $H_2(\pw',T)$ (which generates $R',pk'$), and use the new method described in Game 5 when $\adv$ makes the same query (which generates $R^*,pk^*$).}
 
-In the analysis below, we combine $\adv$'s $H_2(\pw^*,T)$ queries and $P'$'s (possible) $H_2(\pw',T)$ query, and call all of them ``$H_2(\pw^*,T)$''. We first upper-bound the aborting probability. For every fresh $H_2(\pw^*,T)$ query, an independent $t^* \gets \{0,1\}^{3n}$ value is sampled, which results in an independent $r^* \gets \{0,1\}^{3n}$ (regardless of the distribution of $s$). As such, there are up to $q_2+1$ independent and uniformly random $r^*$ values. The probability that one of $\adv$'s $q_1$ $H_1(\pw^*,r^*)$ query happens \emph{before} the $H_2(\pw^*,T)$ query (when $r^*$ is generated) is upper-bounded by $q_1(q_2+1)/2^{3n}$.\footnote{$P$ also makes an $H_1$ query, but it is on $(\pw,r)$ which is guaranteed to be different from $(\pw^*,r^*)$ (in the case where $\adv$ queries $H_2(\pw^*,T)$) and $(\pw',r')$ (in the case where $P'$ queries $H_2(\pw',T)$).}
+In the analysis below, we combine $\adv$'s $H_2(\pw^*,T)$ queries and $P'$'s (possible) $H_2(\pw',T)$ query, and call all of them ``$H_2(\pw^*,T)$''. We first upper-bound the aborting probability. For every fresh $H_2(\pw^*,T)$ query, an independent $t^* \gets \{0,1\}^{3n}$ value is sampled, which results in an independent $r^* \gets \{0,1\}^{3n}$ (regardless of the distribution of $s$). As such, there are up to $q_2+1$ independent and uniformly random $r^*$ values. The probability that one of $\adv$'s $q_1$ $H_1(\pw^*,r^*)$ queries happens \emph{before} the $H_2(\pw^*,T)$ query (when $r^*$ is generated) is upper-bounded by $q_1(q_2+1)/2^{3n}$.\footnote{$P$ also makes an $H_1$ query, but it is on $(\pw,r)$ where $\pw \neq \pw^*$ (so this $H_1$ query is impossible to trigger an abortion).}
 
 Now suppose the aborting condition does not happen. The difference between Game 4 and Game 5 is that Game 4 samples $H_1(\pw^*,r^*)$ uniformly at random, whereas Game 5 defines it as $T/pk^*$. Note that
 \begin{itemize}
