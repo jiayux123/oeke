@@ -165,7 +165,7 @@ A KEM scheme is \emph{anonymous (ANO)} if for any PPT adversary $\adv$, $\Pr[b^*
     $(c,\star) \gets \Encap(pk')$ \\
     $b^* \gets \adv(pk,c)$
     }
-    \]
+\]
 \end{definition}
 Similar to OW-1PCA, we also need the 1PCA variant of ANO.
 \begin{definition}
@@ -198,17 +198,18 @@ A KEM scheme is \emph{anonymous with $q$ uniform public keys and random oracles 
     $h_1 \gets \{0,1\}^n; h_2 \gets \{0,1\}^{2n}$ \\
     $b^* \gets \adv(c,h_1,h_2)$
     }
-    \]
+\]
 Here, $H_1$ and $H_2$ are ROs with range $\{0,1\}^n$ and $\{0,1\}^{2n}$, respectively.
 \end{definition}
 
 This property emerges when the OEKE adversary $\adv$ sends $(s^*,T^*)$ to $P'$ which contains a wrong password guess. In the real world, $(s^*,T^*)$ decrypt to a uniformly random KEM public key, which is then used to compute $c,SK,\tau$ (the left game). In simulation, we want to remove the decryption process and outright use a freshly sampled public key to compute $c,SK,\tau$ (the right game). ($h_1,h_2$ in \Cref{def:uni-ano-ro} correspond to $SK,\tau$ in the protocol, respectively.) What complicates things is that $\adv$ can decrypt a large number of $(s^*,T^*)$ pairs \emph{under both correct and incorrect passwords}, resulting in a large number of $pk^*$ values, \emph{before} sending $(s^*,T^*)$ to $P'$ (or even before initiating $P'$'s session); at this time the reduction does not know which $(s^*,T^*)$ will be used by $\adv$, or which password is correct, yet it has to program the public key (the ``right'' one that will be used in $P'$'s algorithm) into the decryption process. As such, we need to give the reduction polynomially many public keys.
 
-It is not hard to see that for $q$-UNI-ANO-RO is implied by the more standard properties:
+It is not hard to see that $q$-UNI-ANO-RO is implied by the more standard properties:
 \begin{lemma}
 \label{lem:uni-ano-ro}
-Suppose the UNI-PK, OW-1PCA and ANO-1PCA properties hold for the KEM scheme. Then for any polynomial $q$, the $q$-UNI-ANO-RO property also holds for the KEM scheme.
+Suppose the UNI-PK, OW and ANO properties hold for a KEM scheme. Then for any polynomial $q$, the $q$-UNI-ANO-RO property also holds for the KEM scheme.
 \end{lemma}
+The proof is deferred to \Cref{sec:uni-ano-ro-proof}.
 
 \subsection{Additional KEM Properties Used in Other Versions}
 \begin{definition}
@@ -687,7 +688,7 @@ On input $(pk',c)$,
   \item On $(\NewSession, sid, P', P, \pw', \text{``respondent''})$ from $\env$ and $(s^*,T^*)$ from $\adv$, if $\neg({\color{blue}\pw \neq \pw'} \land (s^*,T^*) = (s,T))$, abort. Otherwise
       \begin{enumerate}
         {\color{blue}\item If $\adv$ has not queried $H_2(\pw',T)$, make this query on behalf of $P'$.}
-        \item Sample $SK',\tau' \gets \{0,1\}^n$, output $SK'$ to $\env$, and send $(c,\tau')$ to $\adv$. ($c$ is part of $\red_\text{OW1}$'s inputs.)
+        \item Sample $SK' \gets \{0,1\}^n, \tau' \gets \{0,1\}^{2n}$, output $SK'$ to $\env$, and send $(c,\tau')$ to $\adv$. ($c$ is part of $\red_\text{OW1}$'s inputs.)
       \end{enumerate}
   \item On $(c^*,\tau^*)$ from $\adv$,
       \begin{enumerate}
@@ -715,7 +716,7 @@ It is very subtle why the reduction needs to guess the index $j$ and lose a fact
       \]
   \item Initiate $P'$'s session on password $\pw'$ and instruct $\adv$ to forward $(s,T)$ to $P'$.
 \end{enumerate}
-To simulate Game 5/6 correctly, $\red_\text{OW1}$ must use its input $pk'$ to program $H_1(\pw',r') := T/pk'$ in step 3. The problem is that \emph{$\red_\mathrm{OW1}$ does not know $\pw'$ until step 4, so it has no idea which $H_1(\pw',r')$ query in step 3 needs to be programmed using $pk'$}! The only way to get around is to make a guess over all $H_2$ queries, which incurs a $q_2+1$ loss. (If we require $\env$ to always initiate $P$ and $P'$'s sessions simultaneously, this loss can be avoided since in step 3 $\red_\mathrm{OW1}$ must have already learned $\pw'$. However, the UC PAKE functionality does not place this restriction on $\env$.)
+To simulate Game 5/6 correctly, $\red_\text{OW1}$ must use its input $pk'$ to program $H_1(\pw',r') := T/pk'$ in step 3. The problem is that \emph{$\red_\mathrm{OW1}$ does not know $\pw'$ until step 4, so it has no idea which $H_1(\pw',r')$ query in step 3 needs to be programmed using $pk'$}! The only way to get around is to make a guess over all $H_2(\star,T)$ queries, which incurs a loss up to $q_2+1$. (If we require $\env$ to always initiate $P$ and $P'$'s sessions simultaneously, this loss can be avoided since in step 3 $\red_\mathrm{OW1}$ must have already learned $\pw'$. However, the UC PAKE functionality does not place this restriction on $\env$.)
 \end{remark}
 
 \medskip\emph{{\color{red}This game corresponds to game $\mathsf{G}_{11}$ in \cite{EPRINT:ArrBarJar25}, except that they reduce to OW-PCA and avoids the $\qkey+\qtag$ loss (cf. the comment after Game 3).}}
@@ -724,7 +725,7 @@ To simulate Game 5/6 correctly, $\red_\text{OW1}$ must use its input $pk'$ to pr
 \[
 r' := s \oplus t', \quad R' := T/pk'.
 \]
-($(s,T)$ are the honest $P$-to-$P'$ message.) If $H_1(\pw',r')$ has already been defined and it is not $R'$, abort. Otherwise program $H_1(\pw',r') := R'$}, \ul{compute $(c,\star) \gets \Encap(pk')$}, and sample $SK',\tau' \gets \{0,1\}^n$. Finally, output $SK'$ and send $(c,\tau')$ to $P$. (Note that $K'$ is not used anywhere since Game 6 --- in particular, $P'$ does not use $K'$ to compute $SK'$ or $\tau'$ anymore --- so we do not need to explicitly mention it.) In this game, we independently generate $(pk'',\star) \gets \Gen$ and compute $(c,\star) \gets \Encap(pk'')$ (the underlined expression).
+($(s,T)$ are the honest $P$-to-$P'$ message.) If $H_1(\pw',r')$ has already been defined and it is not $R'$, abort. Otherwise program $H_1(\pw',r') := R'$}, \ul{compute $(c,\star) \gets \Encap(pk')$}, and sample $SK' \gets \{0,1\}^n, \tau' \gets \{0,1\}^{2n}$. Finally, output $SK'$ and send $(c,\tau')$ to $P$. (Note that $K'$ is not used anywhere since Game 6 --- in particular, $P'$ does not use $K'$ to compute $SK'$ or $\tau'$ anymore --- so we do not need to explicitly mention it.) In this game, we independently generate $(pk'',\star) \gets \Gen$ and compute $(c,\star) \gets \Encap(pk'')$ (replacing the \underline{underlined} expression).
 
 The difference between Game 6 and Game 7 is that in Game 6 $c$ is generated by
 \[
@@ -743,7 +744,7 @@ On input $(pk',c)$,
   \item On $(\NewSession, sid, P', P, \pw', \text{``respondent''})$ from $\env$ and $(s^*,T^*)$ from $\adv$, if $\neg(\pw \neq \pw' \land (s^*,T^*) = (s,T))$, abort. Otherwise
       \begin{enumerate}
         \item If $\adv$ has not queried $H_2(\pw',T)$, make this query on behalf of $P'$.
-        \item Sample $SK',\tau' \gets \{0,1\}^n$, output $SK'$ to $\env$, and send $(c,\tau')$ to $\adv$. ($c$ is part of $\red_\text{ANO}$'s inputs.)
+        \item Sample $SK' \gets \{0,1\}^n,\tau' \gets \{0,1\}^{2n}$, output $SK'$ to $\env$, and send $(c,\tau')$ to $\adv$. ($c$ is part of $\red_\text{ANO}$'s inputs.)
       \end{enumerate}
   \item On $(c^*,\tau^*)$ from $\adv$,
       \begin{enumerate}
@@ -1061,7 +1062,7 @@ We have
   \item \cite{EPRINT:ArrBarJar25} reduces to OW-PCA and ANO-PCA\footnote{\cite{EPRINT:ArrBarJar25} actually mentions ANO-CPA, which appears to be a typo.}, which is unnecessary: OW and ANO suffice.
   \item Their simulation strategy is slightly different from ours: they use $pk'$ generated by $\Gen$, rather than sampled uniformly at random. Note that in this ``incorrect password guess'' case, in the real world $pk' = T^*/H_1(\pw',r')$ is already uniformly random, so this is fundamentally a KEM property about encapsulation of uniformly random (rather than honestly generated) public keys and we believe it is clearer to present it in this way.\footnote{By contrast, in the $(s^*,T^*) = (s,T)$ case $pk'$ has to be generated honestly, which is our Games 3, 4, 6 and 7: If $\pw = \pw' \land (s^*,T^*) = (s,T)$ then $sk$ corresponding to $pk = pk'$ is used on the $P$ side (in decapsulation), so $pk'$ cannot be changed to uniformly random; and the $\pw \neq \pw' \land (s^*,T^*) = (s,T)$ case cannot be separated from the $\pw = \pw' \land (s^*,T^*) = (s,T)$ case (since the simulator never knows if $\pw = \pw'$ or not), so $pk'$ cannot be changed to uniformly random in this case either.}
   \item Their honest generation of $pk'$ also means that their reductions cannot simulate the games perfectly, since they program $H_1(\pw',r')$ using $pk'$ which is not uniformly random --- while it ``should'' be uniformly random. As such, they have do a reduction to UNI-PK within the OW-PCA/ANO-PCA reduction.
-  \item What makes things even worse is that none of their (or our) reductions knows which of the $H_1(\pw',r')$ queries should be programmed using $pk'$, since $\adv$ can make many decryption efforts, resulting in many $H_1$ values to be programmed, \emph{before} sending $(s^*,T^*)$ to $P'$ (cf. discussion after \Cref{def:uni-ano-ro}). This means that their UNI-PK reduction cannot be moved ``out of'' the OW-PCA/ANO-PCA reduction by defining a separate game that uses honestly generated $pk'$ to program $H_1(\pw',r')$, as that would require the \emph{game} to make a guess! What's going on here is essentially a hybrid argument (in the sense of \cite[Section~3.4.3]{book:BonSho23}), which is not explained clearly in \cite{EPRINT:ArrBarJar25}.
+  \item What makes things even worse is that none of their (or our) reductions knows which of the $H_1(\pw',r')$ queries should be programmed using $pk'$, since $\adv$ can make many decryption efforts, resulting in many $H_1$ values to be programmed, \emph{before} sending $(s^*,T^*)$ to $P'$ (cf. discussion after \Cref{def:uni-ano-ro}). This means that their UNI-PK reduction cannot be moved ``out of'' the OW-PCA/ANO-PCA reduction by defining a separate game that uses honestly generated $pk'$ to program $H_1(\pw',r')$, as that would require the \emph{game} to make a guess! This ``reduction within a reduction'' would better be filtered out as a separate helper security property (cf. our \Cref{lem:uni-ow,lem:uni-ano}), which is not mentioned in \cite{EPRINT:ArrBarJar25}.
   \item Finally, the reductions in \cite{EPRINT:ArrBarJar25} appear to never check for the ``related key attack'', i.e., from their proof it is unclear what will go wrong if we remove what's our Game 16 (or their game $\mathsf{G}_{17}$).
 \end{enumerate}
 }}
@@ -1894,4 +1895,214 @@ Overall, the net changes are that in the case where $(\pw')^* = \pw' \land (s^*,
   \item If $(\pw')^* \neq \pw$, then we set $SK := \bot$.
 \end{itemize}
 This exactly matches step 2 of \Cref{fig:oeke-sim-hash-pk}, so new game 3 is identical to the ideal world.} This completes the proof.
+
+\section{Proof of \Cref{lem:uni-ano-ro}}
+\label{sec:uni-ano-ro-proof}
+We need two helper lemmas first.
+\begin{lemma}
+\label{lem:uni-ow}
+Suppose the UNI-PK and OW properties hold for a KEM scheme. Then for any PPT adversary $\adv$, the probability that $\adv$ wins the following game is negligible:
+\[
+    \fcodebox{
+    $pk \gets \pkspace$ \\
+    $(c,K) \gets \Encap(pk)$ \\
+    $K^* \gets \adv(pk,c)$ \\
+    $\adv$ wins if $K^* = K$
+    }
+\]
+(Below we call this property UNI-OW.)
+\end{lemma}
+\begin{proof}
+This is straightforward so we only provide a sketch. We claim that the following two games are indistinguishable:
+\[
+    \fcodebox{
+    \underline{UNI-OW game}: \\
+    $pk \gets \pkspace$ \\
+    $(c,K) \gets \Encap(pk)$ \\
+    $K^* \gets \adv(pk,c)$ \\
+    $\adv$ wins if $K^* = K$
+    }
+    \quad
+    \fcodebox{
+    \underline{OW game}: \\
+    $(pk,\star) \gets \Gen$ \\
+    $(c,K) \gets \Encap(pk)$ \\
+    $K^* \gets \adv(pk,c)$ \\
+    $\adv$ wins if $K^* = K$
+    }
+\]
+This is due to a reduction $\red_\text{UNI-PK}$ to the UNI-PK property of the KEM scheme: $\red_\text{UNI-PK}$, on input $pk$, can run either the UNI-OW game or the OW-game --- depending on whether its challenge bit $b = 1$ (i.e., $pk$ is uniformly random) or $b = 0$ (i.e., $pk$ is honestly generated) --- and output 1 if $\adv$ wins and 0 otherwise. The difference between $\Pr[\adv\text{ wins the UNI-OW game}]$ and $\Pr[\adv\text{ wins the OW game}]$ is equal to $\red_\text{UNI-PK}$'s advantage, which must be negligible. Since the OW property holds for the KEM scheme, $\Pr[\adv\text{ wins the OW}\allowbreak\text{game}]$ is also negligible. So $\Pr[\adv\text{ wins the UNI-OW game}]$ must be negligible.
+\end{proof}
+\begin{lemma}
+\label{lem:uni-ano}
+Suppose the UNI-PK and ANO properties hold for a KEM scheme. Then for any PPT adversary $\adv$, $\Pr[b^* = 1]$ in the following two games are negligibly close:
+\[
+    \fcodebox{
+    \underline{challenge bit $b = 0$}: \\
+    $pk \gets \pkspace$ \\
+    $(c,\star) \gets \Encap(pk)$ \\
+    $b^* \gets \adv(pk,c)$
+    }
+    \quad
+    \fcodebox{
+    \underline{challenge bit $b = 1$}: \\
+    $pk,pk' \gets \pkspace$ \\
+    $(c,\star) \gets \Encap(pk')$ \\
+    $b^* \gets \adv(pk,c)$
+    }
+\]
+(Below we call this property UNI-ANO.)
+\end{lemma}
+\begin{proof}
+The proof goes by a sequence of games, and we again only provide a sketch. The following two games
+\[
+    \fcodebox{
+    \underline{challenge bit $b = 0$}: \\
+    $pk \gets \pkspace$ \\
+    $(c,\star) \gets \Encap(pk)$ \\
+    $b^* \gets \adv(pk,c)$
+    }
+    \quad
+    \fcodebox{
+    \underline{challenge bit $b = 0$ in the ANO game}: \\
+    $(pk,\star) \gets \Gen$ \\
+    $(c,\star) \gets \Encap(pk)$ \\
+    $b^* \gets \adv(pk,c)$
+    }
+\]
+are indistinguishable due to the UNI-PK property of the KEM scheme (the reduction is very similar to that in the proof of \Cref{lem:uni-ow}, except that here the reduction copies $\adv$'s output bit instead of making a guess and outputting one of $\adv$'s RO queries); the following two games
+\[
+    \fcodebox{
+    \underline{challenge bit $b = 0$ in the ANO game}: \\
+    $(pk,\star) \gets \Gen$ \\
+    $(c,\star) \gets \Encap(pk)$ \\
+    $b^* \gets \adv(pk,c)$
+    }
+    \quad
+    \fcodebox{
+    \underline{challenge bit $b = 1$ in the ANO game}: \\
+    $(pk,\star) \gets \Gen$ \\
+    $(pk',\star) \gets \Gen$ \\
+    $(c,\star) \gets \Encap(pk')$ \\
+    $b^* \gets \adv(pk,c)$
+    }
+\]
+are indistinguishable because this is exactly what the ANO property of the KEM scheme says; finally, the following two games
+\[
+    \fcodebox{
+    \underline{challenge bit $b = 1$ in the ANO game}: \\
+    $(pk,\star) \gets \Gen$ \\
+    $(pk',\star) \gets \Gen$ \\
+    $(c,\star) \gets \Encap(pk')$ \\
+    $b^* \gets \adv(pk,c)$
+    }
+    \quad
+    \fcodebox{
+    \underline{challenge bit $b = 1$}: \\
+    $pk,pk' \gets \pkspace$ \\
+    $(c,\star) \gets \Encap(pk')$ \\
+    $b^* \gets \adv(pk,c)$
+    }
+\]
+are indistinguishable again due to the UNI-PK property of the KEM scheme.
+\end{proof}
+\begin{proof}[Proof of \Cref{lem:uni-ano-ro}]
+The proof goes by a sequence of games, and we again only provide a sketch. Suppose $\adv$ makes $q_1,q_2$ queries to ROs $H_1,H_2$, respectively. We start from the game where the challenge bit $b = 0$. To begin with, we claim that $Pr[b^* = 1]$ does not change if we simplify the game so that $\adv$ cannot choose its index $i$:
+\[
+    \fcodebox{
+    \underline{challenge bit $b = 0$}: \\
+    $pk_1, \dots, pk_q \gets \pkspace$ \\
+    $i \gets \adv(pk_1, \dots, pk_q)$ \\
+    $(c,K) \gets \Encap(pk_i)$ \\
+    $h_1 := H_1(K); h_2 := H_2(K)$ \\
+    $b^* \gets \adv(c,h_1,h_2)$
+    }
+    \quad
+    \fcodebox{
+    \underline{simplified $b = 0$ game}: \\
+    $pk \gets \pkspace$ \\
+    $(c,\star) \gets \Encap(pk)$ \\
+    $h_1 := H_1(K); h_2 := H_2(K)$ \\
+    $b^* \gets \adv(pk,c,h_1,h_2)$
+    }
+\]
+Note that no matter which index $i$ $\adv$ chooses, once $i$ is fixed $\adv$'s view is identical to its view in the simplified game (plus redundant public keys $pk_{i^*}$ for $i^* \neq i$, which are not used anywhere in the game and thus do not affect $\Pr[b^* = 1]$). Therefore, letting
+\begin{align*}
+p_{i^*} &= \Pr[b^* = 1 \mid i = i^*\text{ in the original game}], \\
+p &= \Pr[b^* = 1\text{ in the simplified game}],
+\end{align*}
+we have that for any $i^* \in [q]$,
+\[
+p_{i^*} = p.
+\]
+But then
+\begin{align*}
+\Pr[b^* = 1 \text{ in the original game}] &= \sum_{i^* = 1}^q p_{i^*}\cdot\Pr[i = i^*] \\
+&= \sum_{i^* = 1}^q p\cdot\Pr[i = i^*] \\
+&= p\cdot\sum_{i^* = 1}^q \Pr[i = i^*] = p,
+\end{align*}
+so $Pr[b^* = 1]$ in the original game and the simplified game are equal. (Note that we do not need a hybrid argument here, which is why we presented this argument in detail.)
+
+Next, we sample $h_1,h_2$ at random rather than set them to the real RO outputs:
+\[
+    \fcodebox{
+    \underline{simplified $b = 0$ game}: \\
+    $pk \gets \pkspace$ \\
+    $(c,\star) \gets \Encap(pk)$ \\
+    $h_1 := H_1(K); h_2 := H_2(K)$ \\
+    $b^* \gets \adv(pk,c,h_1,h_2)$
+    }
+    \quad
+    \fcodebox{
+    \underline{intermediate game}: \\
+    $pk \gets \pkspace$ \\
+    $(c,K) \gets \Encap(pk)$ \\
+    $h_1 \gets \{0,1\}^n; h_2 \gets \{0,1\}^{2n}$ \\
+    $b^* \gets \adv(pk,c,h_1,h_2)$
+    }
+\]
+
+The two games are identical unless $\adv$ queries either $H_1(K)$ or $H_2(K)$, which happens with negligible probability due to a reduction $\red_\text{UNI-OW}$ to the UNI-OW property of the KEM scheme (\Cref{lem:uni-ow}). $\red_\text{UNI-OW}$, on input $(pk,c)$, samples $i \gets [q_1+q_2]$ as a guess that $\adv$'s $i$-th $H_1$ or $H_2$ query is on $K$. Then $\red_\text{UNI-OW}$ samples $pk \gets \pkspace, h_1 \gets \{0,1\}^n, h_2 \gets \{0,1\}^{2n}$ and invokes $\adv$ on input $(pk,c,h_1,h_2)$ to $\adv$. On $\adv$'s $i$-th $H_1$ or $H_2$ query (say the query input is $K^*$), $\red_\text{UNI-OW}$ outputs $K^*$. Assuming $\adv$ queries either $H_1(K)$ or $H_2(K)$, and $\red_\text{UNI-OW}$'s guess of index $i$ is correct, $\red_\text{UNI-OW}$ simulates the two games perfectly until the ``bad event'' happens and wins the UNI-OW game. So the above two games are indistinguishable (with a $q_1+q_2$ reduction loss).
+
+After that, we change the generation of $c$ from using $pk_i$ to using a fresh $pk'$:
+\[
+    \fcodebox{
+    \underline{intermediate game}: \\
+    $pk \gets \pkspace$ \\
+    $(c,\star) \gets \Encap(pk)$ \\
+    $h_1 \gets \{0,1\}^n; h_2 \gets \{0,1\}^{2n}$ \\
+    $b^* \gets \adv(pk,c,h_1,h_2)$
+    }
+    \quad
+    \fcodebox{
+    \underline{simplified $b = 1$ game}: \\
+    $pk,pk' \gets \pkspace$ \\
+    $(c,\star) \gets \Encap(pk')$ \\
+    $h_1 \gets \{0,1\}^n; h_2 \gets \{0,1\}^{2n}$ \\
+    $b^* \gets \adv(pk,c,h_1,h_2)$
+    }
+\]
+The two games are indistinguishable, due to the UNI-ANO property of the KEM scheme (\Cref{lem:uni-ano}). (The only difference is that here $\adv$ additionally sees $h_1,h_2$, which are not used anywhere in the game.)
+
+Finally, we add back $\adv$'s ability to choose an index $i$ and arrive at the game where the challenge bit $b = 1$:
+\[
+    \fcodebox{
+    \underline{simplified $b = 1$ game}: \\
+    $pk,pk' \gets \pkspace$ \\
+    $(c,\star) \gets \Encap(pk')$ \\
+    $h_1 \gets \{0,1\}^n; h_2 \gets \{0,1\}^{2n}$ \\
+    $b^* \gets \adv(pk,c,h_1,h_2)$
+    }
+    \quad
+    \fcodebox{
+    \underline{challenge bit $b = 1$}: \\
+    $pk',pk_1, \dots, pk_q \gets \pkspace$ \\
+    $i \gets \adv(pk_1, \dots, pk_q)$ \\
+    $(c,\star) \gets \Encap(pk')$ \\
+    $h_1 \gets \{0,1\}^n; h_2 \gets \{0,1\}^{2n}$ \\
+    $b^* \gets \adv(c,h_1,h_2)$
+    }
+\]
+An argument similar to the first game hop shows that $\Pr[b^* = 1]$ in the two games above are equal, completing the proof.
+\end{proof}
 \end{document} 
