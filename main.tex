@@ -277,6 +277,23 @@ A KEM scheme is \emph{robust (ROB)} if for any PPT adversary $\adv$, the probabi
 \]
 \end{definition}
 
+\subsection{Example: Diffie--Hellman KEM}
+It is interesting to see what cryptographic assumptions the various KEM properties are, in the well-known Diffie--Hellman KEM. This KEM scheme works in a finite cyclic group with (public) generator $g$ and order $q$ (not necessarily prime), and
+\begin{itemize}
+  \item $\Gen$ samples $x \gets \mathbb{Z}_q$, computes $X := g^x$, and outputs $(X,x)$.
+  \item $\Encap(X)$ samples $y \gets \mathbb{Z}_q$, computes $Y := g^y$ and $K := X^y$, and outputs $(Y,K)$.
+  \item $\Decap(x,Y)$ outputs $Y^x$.
+\end{itemize}
+(Note that the computation of the ciphertext $Y$ does not rely on the public key $X$; this is because in terms of key exchange, Diffie--Hellman is 1-simultaneous round, whereas KEM can model any 2-message-flow key exchange protocol.) The Diffie--Hellman KEM is perfectly correct, and $\mu_X = 1/q$. Furthermore, it satisfies various properties we have defined (below we always assume $x,y \gets \mathbb{Z}_q$):
+\begin{itemize}
+  \item UNI-PK says that $X = g^x$ is indistinguishable from uniformly random, which holds perfectly.
+  \item OW says that given $X = g^x, Y = g^y$ it is infeasible to compute $K = g^{xy}$, which is the computational Diffie--Hellman assumption.
+  \item OW-1PCA says that given $(X = g^x, Y = g^y)$ and an oracle that on input $(Y' \neq Y, K')$ checks if $K' = (Y')^x$, it is infeasible to compute $K = g^{xy}$. This is similar to, but not the same as, the one-query oracle Diffie--Hellman assumption \cite[Appendix~A.1]{EC:JanRoyXu25}, and can be reduced to CDH.
+  \item ANO says that $(X = g^x, Y = g^y)$ and $(X = g^x, Y' = g^{y'})$ for another $y' \gets \mathbb{Z}_q$ are indistinguishable, which holds perfectly. (This property holds perfectly for any KEM scheme where the ciphertext does not rely on the public key.) It of course holds perfectly even if the adversary is additionally given the plaintext-checking oracle.
+  \item WNM says that given $(X = g^x, Y = g^y)$ it is infeasible to come up with $Y^* \neq Y$ such that $X^y = (Y^*)^x$, which holds perfectly.
+  \item UNPRE says that it is infeasible to come up with $(Y^*,K^*)$ such that $K^* = (Y^*)^x$, which holds perfectly.
+\end{itemize}
+
 \subsection{UC Description of the OEKE Protocol}
 \label{sec:protocol-uc}
 We give a formal, UC-compatible description of the OEKE protocol in \Cref{fig:protocol-uc}. Note that UC PAKE considers the case that the two parties' passwords are different; therefore, we need to use different notations $\pw$ and $\pw'$ for the password of $P$ and $P'$, respectively.\footnote{\cite[Fig.4]{EPRINT:ArrBarJar25} uses $\pw$ for both parties' passwords, which is not the ``right'' protocol description in the UC setting.} We only describe the ``hash everything'' version of the protocol; in other variants one or more of $\pw$, $pk$, $(s,T)$ and $c$ can be removed from the inputs to $\Htag$.
