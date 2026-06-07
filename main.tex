@@ -106,7 +106,7 @@ Let $n$ be the security parameter; we assume that all algorithms take $1^n$ as a
 \paragraph{Pseudorandom public keys.}
 This property roughly says that an honestly generated public key is indistinguishable from uniformly random.
 \begin{definition}
-A KEM scheme has \emph{pseudorandom public keys (UNI-PK)} if for any PPT adversary $\adv$, $\Pr[b^* = 1]$ in the following two games are negligibly close:\footnote{The challenge bit $b$ is not actually used in the definition, but it will come in handy in the later security proofs.}
+A KEM scheme has \emph{pseudorandom public keys (UNI-PK)} if for any PPT adversary $\adv$, $\Pr[b^* = 1]$ in the following two games are negligibly close:\footnote{The challenge bit $b$ is not actually used in the definition, but it will come in handy in the later security proofs (we sometimes need concise names for these security games).}
 \[
     \fcodebox{
     \underline{challenge bit $b = 0$}: \\
@@ -173,7 +173,7 @@ The definition of \emph{anonymity under one plaintext-checking attack (ANO-1PCA)
 \end{definition}
 This property is the same as what's called ANO-PCA in \cite[Definition~4]{EPRINT:ArrBarJar25}, except that in our notion (1) the adversary can query its plaintext-checking oracle only once, and (2) the adversary is not given $pk'$ (whereas in their notion $pk'$ is generated and given to the adversary in both games).
 
-ANO-1PCA is needed again in the scenario where the OEKE adversary $\adv$ forwards the $P$-to-$P'$ message $(s,T)$ without modification, but then modifies the $P'$-to-$P$ message $(c,\tau')$. Consider $c$: in the real world $c$ is the result of $\Encap(pk)$ (assuming the two parties' passwords match), whereas in the ideal world the simulator does not know $pk$ at this point (it learns no information about $\pw$, so it cannot decrypt $(s,T)$ and learn $pk$) and has to simulate $c$ as the result of $\Encap(pk')$ for a fresh $pk'$. $\adv$ should not be able to tell these two cases apart (even after it learns $\pw$ later and uses it to decrypt $pk := \mathsf{2F}^{\text{-}1}(\pw,(s,T))$), which is ANO. 1PCA is needed for the same reason as in OW-1PCA.
+ANO-1PCA is needed again in the scenario where the OEKE adversary $\adv$ forwards the $P$-to-$P'$ message $(s,T)$ without modification, but then modifies the $P'$-to-$P$ message $(c,\tau')$. Consider $c$: in the real world $c$ is the result of $\Encap(pk)$ (assuming the two parties' passwords match), whereas in the ideal world the simulator does not know $pk$ at this point (it learns no information about $\pw$, so it cannot decrypt $(s,T)$ and learn $pk$) and has to simulate $c$ as the result of $\Encap(pk')$ for a fresh $pk'$. $\adv$ should not be able to tell these two cases apart (even after it learns $\pw$ later and uses it to find $pk := \mathsf{2F}^{\text{-}1}(\pw,(s,T))$), which is ANO. 1PCA is needed for the same reason as in OW-1PCA.
 
 \paragraph{Anonymity with uniform public keys and random oracles.}
 Finally, we define a highly tailored KEM property that is implied by the preceding more standard properties. This property is for facilitating the security proof of OEKE only; we do not expect it to be of independent interest.
@@ -213,7 +213,7 @@ The proof is deferred to \Cref{app:uni-ano-ro-proof}.
 
 \subsection{Additional KEM Properties Used in Other Versions}
 \paragraph{Weak non-malleability.}
-This property roughly says that given an honest tuple of $(pk,K,c)$, the adversary cannot feasibly find another valid $(pk,K,c^*)$ tuple (i.e., a new ciphertext that works for the same public key and the same key). This essentially requires that the adversary cannot merely change the format of the ciphertext without changing its actual content, which is a very weak property (in fact it is quite a stretch to even call it ``non-malleability'').
+This property roughly says that given an honest tuple of $(pk,K,c)$, the adversary cannot feasibly find another valid $(pk,K,c^*)$ tuple (i.e., a new ciphertext that works for the same public key and the same KEM key). This essentially requires that the adversary cannot merely change the format of the ciphertext without changing its actual content, which is a very weak property (in fact it is quite a stretch to even call it ``non-malleability'').
 \begin{definition}
 A KEM scheme is \emph{weakly non-malleable (WNM)} if for any PPT adversary $\adv$, the probability that $\adv$ wins the following game is negligible:
 \[
@@ -226,8 +226,10 @@ A KEM scheme is \emph{weakly non-malleable (WNM)} if for any PPT adversary $\adv
     }
 \]
 \end{definition}
-WEM is needed in OEKE varants where $c$ is removed from $\Htag$ inputs. Then we must prevent the OEKE adversary $\adv$ from forwarding the $P$-to-$P'$ message $(s,T)$ without modification, but then modifying the $P'$-to-$P$ message $(c,\tau')$ to some $(c^*,\tau)$ which makes $P$'s check pass. (If $c$ is included in $\Htag$ then $P$'s check will not pass unless $(\dots, c, \dots)$ and $(\dots, c^*, \dots)$ form a collision for $\Htag$.) This should not happen even after $\adv$ later learns $\pw$ and uses it to recover $pk$.
+WEM is needed in OEKE varants where $c$ is removed from $\Htag$ inputs. Then we must prevent the OEKE adversary $\adv$ from forwarding the $P$-to-$P'$ message $(s,T)$ without modification, but then modifying the $P'$-to-$P$ message $(c,\tau')$ to some $(c^*,\tau)$ which makes $P$'s check pass. (If $c$ is included in $\Htag$ then $P$'s check will not pass unless $(\dots, c, \dots)$ and $(\dots, c^*, \dots)$ form a collision for $\Htag$.) This should not happen even after $\adv$ later learns $\pw$ and uses it to find $pk := \mathsf{2F}^{\text{-}1}(\pw,(s,T))$.
 
+\paragraph{Unpredictability.}
+This property roughly says that an adversary $\adv$ cannot feasibly output a ciphertext/KEM key pair $(c^*,K^*)$ ``out of thin air'', such that $(pk,K^*,c^*)$ is a valid tuple for an honestly generated public key $pk$ that $\adv$ does not know.
 \begin{definition}
 A KEM scheme is \emph{unpredictable (UNPRE)} if for any PPT adversary $\adv$, the probability that $\adv$ wins the following game is negligible:
 \[
@@ -238,6 +240,17 @@ A KEM scheme is \emph{unpredictable (UNPRE)} if for any PPT adversary $\adv$, th
     }
 \]
 \end{definition}
+While UNPRE is a very weak property, it is not implied by other properties we have seen. For example, a (contrived) KEM scheme could have a ``special'' pair of ciphertext $c$ and KEM key $K$ such that $\Decap(sk,c) = K$ for any valid secret key $sk$; this does not necessarily violate any of the standard properties (in particular, OW is not violated since the probability that $\Encap(pk)$ hits $c$ might be negligible).
+
+UNPRE is needed in OEKE varants where $pk$ is removed from $\Htag$ inputs. If the OEKE adversary $\adv$ can come up with $c^*,K^*$ that break the UNPRE property, then it can compute $\tau^* := \Htag(\dots, K^*)$ and send $(c^*,\tau^*)$ to $P$. This causes $P$'s check to pass, and $P$ will output $SK := \Hkey(K^*)$, which $\adv$ can compute. If $\pw$ is also removed from $\Htag$ inputs then $\adv$ can compute $P$'s session key without knowing the password, which clearly breaks the security of OEKE. If $\pw$ is included in $\Htag$ then it seems that $\adv$ is not ``actually'' breaking the security of OEKE, but at least the UC simulator cannot tell that $\adv$ is performing this attack (it does not know $pk$), so it is unclear how the simulator should proceed in this case. (If $c$ is included in $\Htag$ then the attack above does not work, since $\adv$ cannot compute the correct $\tau^*$ without knowing $pk$.)
+
+\begin{remark}
+\cite{EPRINT:ArrBarJar25} seems to have noticed that some form of unpredictability is needed if $pk$ is removed from $\Htag$ inputs. \cite[Section~5]{EPRINT:ArrBarJar25} says:
+\begin{displayquote}
+  \emph{We note that, although it is tempting to remove $pk$ from the $\Htag$ input by arguing that $(\pw,[(s,T)])$ fix a single $pk$ following the IC intuition. However, this gives rise to cases in the proof where the adversary may try to break the protocol by delivering ciphertexts that are valid for all public keys. It is likely that these cases can be excluded by assuming additional properties on the KEM, but we choose not to do so.}
+\end{displayquote}
+However, it is unclear to us what ``ciphertexts that are valid for all public keys'' exactly means.
+\end{remark}
 
 \begin{definition}
 A KEM scheme is \emph{output key binding (KBIND)} if for any PPT adversary $\adv$, the probability that $\adv$ wins the following game is negligible:
@@ -1257,7 +1270,7 @@ Game 10 and Game 11 differ only if $\adv$ does not make an $H_2(\pw,T)$ query, b
 \begin{enumerate}
   \item Invoke $\env$. On $(\NewSession, sid, P, P', \pw, \text{``initiator''})$ from $\env$, sample $s \gets \{0,1\}^{3n}, T \gets \group$. Send $(s,T)$ to $\adv$.
   \item On $(\NewSession, sid, P', P, \pw', \text{``respondent''})$ from $\env$ and $(s^*,T^*)$ from $\adv$, run $P'$'s algorithm in Game 10 to compute $c$, $SK'$ and $\tau'$. Output $SK'$ to $\env$, and send $(c,\tau')$ to $\adv$.
-  \item On $(c^*,\tau^*)$ from $\adv$, if $\pw = \pw' \land (s^*,T^*) = (s,T) \land c^* = c$, abort. Otherwise find $\adv$'s $\Htag(\pw,s,T,K^*)$ query resulting in $\tau^*$. If there is none or more than one, abort. Otherwise output $(c^*,k^*)$.
+  \item On $(c^*,\tau^*)$ from $\adv$, if $\pw = \pw' \land (s^*,T^*) = (s,T) \land c^* = c$, abort. Otherwise find $\adv$'s $\Htag(\pw,s,T,K^*)$ query resulting in $\tau^*$. If there is none or more than one, abort. Otherwise output $(c^*,K^*)$.
   \item On $\adv$'s $H_2(\pw^*,T)$ query, if $\pw^* = \pw$, abort. Otherwise do what Game 10 specifies.
 \end{enumerate}
 
