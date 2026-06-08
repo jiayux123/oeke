@@ -1381,7 +1381,11 @@ $P'$ makes a single $\Htag$ query, on $(pk',s^*,T^*,K')$. If $(s^*,T^*) \neq (s,
   \item If $\pw = \pw' \land c^* \neq c$, then $\pw = \pw' \land (s^*,T^*) = (s,T)$, which implies that $pk = pk'$ by the definition of $pk$ and $pk'$. Then we can show that $\Pr[K = K']$ is negligible, via a reduction $\Adv_{\red_\text{WNM}}^\text{WNM}$ similar to that in the proof of \Cref{clm:htag2}. We have $\Pr[K = K'] \leq \Adv_{\red_\text{WNM}}^\text{WNM}$.
 \end{itemize}
 
-This yields the claim.
+If $pk \neq pk'$ or $K \neq K'$ then of course $P'$'s query is not $\Htag(pk,s,T,K)$. Overall, we have
+\[
+\Pr[P'\text{ queries }\Htag(pk,s,T,K)] \leq \Adv_{\red_\text{WNM}}^\text{WNM} + \frac{q_1+1}{|\group|},
+\]
+which yields the claim.
 \end{proof}
 The remaining argument is essentially identical to that in the old Game 2.
 
@@ -1486,9 +1490,9 @@ $P'$ makes a single $\Htag$ query, on $(s^*,T^*,K')$. If $(s^*,T^*) \neq (s,T)$,
   \item If $\pw = \pw' \land c^* \neq c$, then the argument in the proof of \Cref{clm:htag2} still holds, and $\Pr[K = K' \mid \pw = \pw' \land c^* \neq c] \leq (q_2+1)\Adv_{\red_\text{KBIND}}$.
 \end{itemize}
 
-Overall, we have
+If $K \neq K'$ then of course $P'$'s query is not $\Htag(s,T,K)$. Overall, we have
 \[
-\Pr[P'\text{ queries }\Htag(s,T,K)] \leq \Adv_{\red_\text{WNM}}^\text{WNM} + (q_2+1)\Adv_{\red_\text{KBIND}}^\text{KBIND},
+\Pr[P'\text{ queries }\Htag(s,T,K)] = \Pr[K = K'] \leq \Adv_{\red_\text{WNM}}^\text{WNM} + (q_2+1)\Adv_{\red_\text{KBIND}}^\text{KBIND},
 \]
 which yields the claim.
 \end{proof}
@@ -1568,6 +1572,32 @@ The only (more or less) essential difference lies in the {\color{red}red} text i
 
 \section{Security Analyses of Other Versions (II): Removing $(s,T)$ from the Hash}
 \label{app:no-st}
+\subsection{The ``Hash $\pw$, $pk$ and $c$'' Version}
+We start from the version where $\tau$ is defined as $\Htag(\pw,pk,c,K)$, i.e., only $(s,T)$ are removed from the hash compared with the ``hash everything'' version. Fortunately, in this variant only the proof of \Cref{clm:htag2} in Game 2 needs to (essentially) change, and the simulator and all other arguments can be reused. This is because \Cref{clm:htag2} still holds (except that \Cref{clm:htag2} holds perfectly in the ``hash everything'' version, whereas here we need to make a statistical argument), and by \Cref{tab:game-summary}, Game 2 is the only game in the entire security proof where we need $(s,T)$ to be included in $\Htag$ inputs.
+\begin{claim}
+\label{clm:htag5}
+In the case where $\pw \neq \pw' \lor ((s^*,T^*) = (s,T) \land c^* \neq c)$, the probability that $P'$ queries $\Htag(\pw,pk,c^*,K)$ is negligible.
+\end{claim}
+\begin{proof}
+$P'$ makes a single $\Htag$ query, on $(\pw',pk',c,K')$. If $\pw \neq \pw' \lor c^* \neq c$, then of course $P'$'s query is not $\Htag(\pw,pk,c^*,K)$. Now assume $\pw = \pw' \land c^* = c$. This implies that $(s^*,T^*) \neq (s,T)$ by the condition of this game. We have
+\begin{gather*}
+pk = \frac{T}{R} = \frac{T}{H_1(\pw,r)} = \frac{T}{H_1(\pw,s \oplus t)}= \frac{T}{H_1(\pw,s \oplus H_2(\pw,T))}, \\
+pk' = \frac{T^*}{R'} = \frac{T^*}{H_1(\pw,r')} = \frac{T^*}{H_1(\pw,s^* \oplus t')}= \frac{T^*}{H_1(\pw,s^* \oplus H_2(\pw,T^*))}.
+\end{gather*}
+There are three cases:
+\begin{itemize}
+  \item If $s^* \neq s \land T^* = T$, then $H_1(\pw,s \oplus H_2(\pw,T))$ and $H_1(\pw,s^* \oplus H_2(\pw,T^*))$ are independent of each other, so $\Pr[pk = pk'] = \Pr[H_1(\pw,s \oplus H_2(\pw,T)) = H_1(\pw,s^* \oplus H_2(\pw,T^*))] \leq (q_1+1)/|\group|$.
+  \item If $T^* \neq T \land s \oplus H_2(\pw,T) = s^* \oplus H_2(\pw,T^*)$, then $H_1(\pw,s \oplus H_2(\pw,T)) = H_1(\pw,s^* \oplus H_2(\pw,T^*))$, so $pk \neq pk'$.
+  \item If $T^* \neq T \land s \oplus H_2(\pw,T) \neq s^* \oplus H_2(\pw,T^*)$, then $H_1(\pw,s \oplus H_2(\pw,T))$ and $H_1(\pw,s^* \oplus H_2(\pw,T^*))$ are independent of each other, so $\Pr[pk = pk'] = \Pr[H_1(\pw,s \oplus H_2(\pw,T))/H_1(\pw,s^* \oplus H_2(\pw,T^*)) = T/T^*] \leq (q_1+\allowbreak1)/|\group|$.
+\end{itemize}
+
+If $pk \neq pk'$ then of course $P'$'s query is not $\Htag(\pw,pk,c^*,K)$. Overall, we have
+\[
+\Pr[P'\text{ queries }\Htag(\pw,pk,c^*,K)] \leq \Pr[pk = pk'] \leq \frac{q_1+1}{|\group|},
+\]
+which yields the claim.
+\end{proof}
+
 \subsection{The ``Hash $\pw$'' Version}
 \label{sec:hash-pw}
 We now turn to the variant where $pk$ is further removed from $\Htag$ inputs, i.e., $\tau$ is defined as $\Htag(\pw,K)$. \Cref{tab:game-summary} suggests that Games 2 and 11 in \Cref{sec:games} need to (essentially) change. In fact the simulator also needs to change quite a bit, which we will start from.
@@ -1648,7 +1678,12 @@ Note that \Cref{clm:htag} in Game 2 does not hold anymore, exactly due to what t
 
 Furthermore, in the case where $\pw = \pw' \land (s^*,T^*) \neq (s,T)$, do the same as above, except that we now find $\adv$ {\color{blue}\emph{or $P'$}}'s $\Htag(\pw,K^*)$ query resulting in $\tau^*$.
 
-The difference between the new Game 2 and the old one is that we now have two separate cases (which, combined, are identical to the case in the old Game 2): in the first case we proceed as in the old Game 2, whereas in the second case we cannot due to the ``attack'' in \Cref{fig:attack-no-pk}; instead, in the second case we need to include $P'$'s $\Htag$ query as if it were $\adv$'s.
+The difference between the new Game 2 and the old one is that we now have two separate cases:
+\begin{enumerate}
+   \item $\pw \neq \pw' \lor ((s^*,T^*) = (s,T) \land c^* \neq c)$;
+   \item $\pw = \pw' \land (s^*,T^*) \neq (s,T)$.
+\end{enumerate}
+These two cases combined yield $\neg(\pw = \pw' \land (s^*,T^*) = (s,T) \land c^* = c)$, which is identical to the case in the old Game 2. In case (1) we proceed as in the old Game 2, whereas in case (2) we cannot due to the ``attack'' in \Cref{fig:attack-no-pk}; instead, in case (2) we need to include $P'$'s $\Htag$ query as if it were $\adv$'s.
 
 \begin{claim}
 \label{clm:htag3}
@@ -1663,11 +1698,11 @@ The proof of this claim is essentially part of the proof of \Cref{clm:htag2}. $P
 
 This yields the claim. The remaining argument is essentially identical to that in the old Game 2.
 
-\medskip\noindent\emph{Games 3--4:} These two games deal with the case where $\pw = \pw' \land (s^*,T^*) = (s,T)$. This falls into the first case of Game 2, and in this case there is no difference between the old and new versions of Game 2. As such, the reductions still go through: they abort if $\pw = \pw' \land (s^*,T^*) = (s,T)$ does not hold, and if $\pw = \pw' \land (s^*,T^*) = (s,T)$, they can still simulate the games by checking $\adv$'s $\Htag$ queries. Crucially, the reductions do not need to check $P'$'s $\Htag$ query (which they cannot do), since in this case we have defined Game 2 so that it only checks $\adv$'s $\Htag$ queries.
+\medskip\noindent\emph{Games 3--4:} These two games deal with the case where $\pw = \pw' \land (s^*,T^*) = (s,T)$. This falls into case (1) in Game 2, and in this case there is no difference between the old and new versions of Game 2. As such, the reductions still go through: they abort if $\pw = \pw' \land (s^*,T^*) = (s,T)$ does not hold, and if $\pw = \pw' \land (s^*,T^*) = (s,T)$, they can still simulate the games by checking $\adv$'s $\Htag$ queries. Crucially, the reductions do not need to check $P'$'s $\Htag$ query (which they cannot do), since in this case we have defined Game 2 so that it only checks $\adv$'s $\Htag$ queries.
 
 \medskip\noindent\emph{Game 5:} This game involves a reduction to the UNI-PK property of the KEM scheme. The reduction works essentially because $sk'$ is not used anywhere in the game (so the reduction can embed its challenge as $pk'$ without knowing $sk'$), and this fact still holds even though we need to additionally check $P'$'s $\Htag$ queries in some cases now. So, this reduction still goes through.
 
-\medskip\noindent\emph{Games 6--8:} These three games deal with the case where $\pw \neq \pw' \land (s^*,T^*) = (s,T)$. This again falls into the first case of Game 2, so the reductions in Games 6 and 7 still go through; Game 8 involves a statistical argument which does not need to change either.
+\medskip\noindent\emph{Games 6--8:} These three games deal with the case where $\pw \neq \pw' \land (s^*,T^*) = (s,T)$. This again falls into case (1) in Game 2, so the reductions in Games 6 and 7 still go through; Game 8 involves a statistical argument which does not need to change either.
 
 \medskip\noindent\emph{Games 9--10:} These two games involve statistical arguments only, and they have nothing to do with whether the games need to check $P'$'s $\Htag$ queries.
 
@@ -1831,7 +1866,7 @@ The changes in game hops again need to start from Game 2. The structure of the p
 
 Furthermore, in the case where $\pw \neq \pw' \land (s^*,T^*) \neq (s,T) \land c^* = c$, do the same as above, except that we now find $\adv$ {\color{blue}\emph{or $P'$}}'s $\Htag(pk,K^*)$ query resulting in $\tau^*$.
 \begin{claim}
-\label{clm:htag3}
+\label{clm:htag5}
 Suppose the WNM property holds for the KEM scheme. In the first case above, the probability that $P'$ queries $\Htag(pk,K)$ is negligible.
 \end{claim}
 $P'$ makes a single $\Htag$ query, on $(pk',K')$. There are the following cases:
