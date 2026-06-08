@@ -1278,7 +1278,7 @@ Looking more closely, only \Cref{clm:htag} in Game 2 needs a new proof: the argu
 Suppose the WNM property holds for the KEM scheme. In the case where $\neg(\pw = \pw' \land (s^*,T^*) = (s,T) \land c^* = c)$, the probability that $P'$ queries $\Htag(\pw,pk,s,T,K)$ is negligible.
 \end{claim}
 \begin{proof}
-$P'$ makes a single $\Htag$ query, on $(\pw',pk',s,T,K')$. If $\pw \neq \pw' \lor (s^*,T^*) \neq (s,T)$, then of course $P'$'s query is not $\Htag(\pw,pk,s,T,K)$. Now assume $\pw = \pw' \land (s^*,T^*) = (s,T)$. This implies that $pk = pk'$ by the definitions of $pk$ and $pk'$, and $c^* \neq c$ by the condition of this game. We now upper-bound $\Pr[K = K']$. Recall that $K$ is defined as $\Decap(sk,c^*)$, so $\Pr[K = K'] = \Pr[\Decap(sk,c^*) = K']$. We upper-bound this probability via a reduction $\red_\text{WNM}$ to the WNM property of the KEM scheme:
+$P'$ makes a single $\Htag$ query, on $(\pw',pk',s,T,K')$. If $\pw \neq \pw' \lor (s^*,T^*) \neq (s,T)$, then of course $P'$'s query is not $\Htag(\pw,pk,s,T,K)$. Now assume $\pw = \pw' \land (s^*,T^*) = (s,T)$. This implies $pk = pk'$ by the definitions of $pk$ and $pk'$, and $c^* \neq c$ by the condition of the claim. We now upper-bound $\Pr[K = K']$. Recall that $K$ is defined as $\Decap(sk,c^*)$, so $\Pr[K = K'] = \Pr[\Decap(sk,c^*) = K']$. We upper-bound this probability via a reduction $\red_\text{WNM}$ to the WNM property of the KEM scheme:
 
 \medskip\noindent\textbf{\underline{Reduction $\red_\mathrm{WNM}$}:}
 
@@ -1370,7 +1370,7 @@ The following claim replaces \Cref{clm:htag} in the ``hash everything'' version:
 Suppose the WNM property holds for the KEM scheme. In the case where $\neg(\pw = \pw' \land (s^*,T^*) = (s,T) \land c^* = c)$, the probability that $P'$ queries $\Htag(pk,s,T,K)$ is negligible.
 \end{claim}
 \begin{proof}
-$P'$ makes a single $\Htag$ query, on $(pk',s^*,T^*,K')$. If $(s^*,T^*) \neq (s,T)$, then of course $P'$'s query is not $\Htag(pk,s,T,K)$. Now assume $(s^*,T^*) = (s,T)$, which implies $\pw \neq \pw' \lor c^* \neq c$ by the condition of the game.
+$P'$ makes a single $\Htag$ query, on $(pk',s^*,T^*,K')$. If $(s^*,T^*) \neq (s,T)$, then of course $P'$'s query is not $\Htag(pk,s,T,K)$. Now assume $(s^*,T^*) = (s,T)$, which implies $\pw \neq \pw' \lor c^* \neq c$ by the condition of the claim.
 \begin{itemize}
     \item If $\pw \neq \pw'$, we have
       \begin{gather*}
@@ -1461,7 +1461,7 @@ The following claim replaces \Cref{clm:htag} in the ``hash everything'' version:
 Suppose the WNM and KBIND properties hold for the KEM scheme. In the case where $\neg(\pw = \pw' \land (s^*,T^*) = (s,T) \land c^* = c)$, the probability that $P'$ queries $\Htag(s,T,K)$ is negligible.
 \end{claim}
 \begin{proof}
-$P'$ makes a single $\Htag$ query, on $(s^*,T^*,K')$. If $(s^*,T^*) \neq (s,T)$, then of course $P'$'s query is not $\Htag(s,T,K)$. Now assume $(s^*,T^*) = (s,T)$, which implies $\pw \neq \pw' \lor c^* \neq c$ by the condition of the game.
+$P'$ makes a single $\Htag$ query, on $(s^*,T^*,K')$. If $(s^*,T^*) \neq (s,T)$, then of course $P'$'s query is not $\Htag(s,T,K)$. Now assume $(s^*,T^*) = (s,T)$, which implies $\pw \neq \pw' \lor c^* \neq c$ by the condition of the claim.
 \begin{itemize}
   \item If $\pw \neq \pw'$, by the proof of \Cref{clm:htag2}, $pk$ and $pk'$ are independent of each other (where $pk$ is honestly generated and $pk'$ is uniformly random). This suggests that we should upper-bound $\Pr[K = K'] = \Pr[\Decap(sk,c^*) = K']$ via a reduction $\red_\text{KBIND}$ to the KBIND property of the KEM scheme:
       \vspace{6pt} \\ % force \medskip in itemize environment
@@ -1572,28 +1572,32 @@ The only (more or less) essential difference lies in the {\color{red}red} text i
 
 \section{Security Analyses of Other Versions (II): Removing $(s,T)$ from the Hash}
 \label{app:no-st}
-\subsection{The ``Hash $\pw$, $pk$ and $c$'' Version}
-We start from the version where $\tau$ is defined as $\Htag(\pw,pk,c,K)$, i.e., only $(s,T)$ are removed from the hash compared with the ``hash everything'' version. Fortunately, in this variant only the proof of \Cref{clm:htag2} in Game 2 needs to (essentially) change, and the simulator and all other arguments can be reused. This is because \Cref{clm:htag2} still holds (except that \Cref{clm:htag2} holds perfectly in the ``hash everything'' version, whereas here we need to make a statistical argument), and by \Cref{tab:game-summary}, Game 2 is the only game in the entire security proof where we need $(s,T)$ to be included in $\Htag$ inputs.
+\subsection{The ``Hash $\pw$ and $pk$'' Version}
+We start from the version where $\tau$ is defined as $\Htag(\pw,pk,K)$, i.e., $(s,T)$ and $c$ are removed from the hash compared with the ``hash everything'' version. Fortunately, in this variant only the proof of \Cref{clm:htag2} in Game 2 needs to (essentially) change, and the simulator and all other arguments can be reused. This is because \Cref{clm:htag2} still holds (except that \Cref{clm:htag2} holds perfectly in the ``hash everything'' version, whereas here there is a negligible error probability), and by \Cref{tab:game-summary}, Game 2 is the only game in the entire security proof where we need $(s,T)$ or $c$ to be included in $\Htag$ inputs.
 \begin{claim}
 \label{clm:htag5}
-In the case where $\pw \neq \pw' \lor ((s^*,T^*) = (s,T) \land c^* \neq c)$, the probability that $P'$ queries $\Htag(\pw,pk,c^*,K)$ is negligible.
+In the case where $\pw \neq \pw' \lor ((s^*,T^*) = (s,T) \land c^* \neq c)$, the probability that $P'$ queries $\Htag(\pw,pk,K)$ is negligible.
 \end{claim}
 \begin{proof}
-$P'$ makes a single $\Htag$ query, on $(\pw',pk',c,K')$. If $\pw \neq \pw' \lor c^* \neq c$, then of course $P'$'s query is not $\Htag(\pw,pk,c^*,K)$. Now assume $\pw = \pw' \land c^* = c$. This implies that $(s^*,T^*) \neq (s,T)$ by the condition of this game. We have
-\begin{gather*}
-pk = \frac{T}{R} = \frac{T}{H_1(\pw,r)} = \frac{T}{H_1(\pw,s \oplus t)}= \frac{T}{H_1(\pw,s \oplus H_2(\pw,T))}, \\
-pk' = \frac{T^*}{R'} = \frac{T^*}{H_1(\pw,r')} = \frac{T^*}{H_1(\pw,s^* \oplus t')}= \frac{T^*}{H_1(\pw,s^* \oplus H_2(\pw,T^*))}.
-\end{gather*}
-There are three cases:
+$P'$ makes a single $\Htag$ query, on $(\pw',pk',K')$. If $\pw \neq \pw'$, then of course $P'$'s query is not $\Htag(\pw,pk,K)$. Now assume $\pw = \pw'$. This implies $(s^*,T^*) \neq (s,T) \lor c^* \neq c$ by the condition of the claim.
 \begin{itemize}
-  \item If $s^* \neq s \land T^* = T$, then $H_1(\pw,s \oplus H_2(\pw,T))$ and $H_1(\pw,s^* \oplus H_2(\pw,T^*))$ are independent of each other, so $\Pr[pk = pk'] = \Pr[H_1(\pw,s \oplus H_2(\pw,T)) = H_1(\pw,s^* \oplus H_2(\pw,T^*))] \leq (q_1+1)/|\group|$.
-  \item If $T^* \neq T \land s \oplus H_2(\pw,T) = s^* \oplus H_2(\pw,T^*)$, then $H_1(\pw,s \oplus H_2(\pw,T)) = H_1(\pw,s^* \oplus H_2(\pw,T^*))$, so $pk \neq pk'$.
-  \item If $T^* \neq T \land s \oplus H_2(\pw,T) \neq s^* \oplus H_2(\pw,T^*)$, then $H_1(\pw,s \oplus H_2(\pw,T))$ and $H_1(\pw,s^* \oplus H_2(\pw,T^*))$ are independent of each other, so $\Pr[pk = pk'] = \Pr[H_1(\pw,s \oplus H_2(\pw,T))/H_1(\pw,s^* \oplus H_2(\pw,T^*)) = T/T^*] \leq (q_1+\allowbreak1)/|\group|$.
+  \item If $(s^*,T^*) \neq (s,T)$, we have
+      \begin{gather*}
+      pk = \frac{T}{R} = \frac{T}{H_1(\pw,r)} = \frac{T}{H_1(\pw,s \oplus t)}= \frac{T}{H_1(\pw,s \oplus H_2(\pw,T))}, \\
+      pk' = \frac{T^*}{R'} = \frac{T^*}{H_1(\pw,r')} = \frac{T^*}{H_1(\pw,s^* \oplus t')}= \frac{T^*}{H_1(\pw,s^* \oplus H_2(\pw,T^*))}.
+      \end{gather*}
+      There are three cases:
+      \begin{itemize}
+        \item If $s^* \neq s \land T^* = T$, then $H_1(\pw,s \oplus H_2(\pw,T))$ and $H_1(\pw,s^* \oplus H_2(\pw,\allowbreak T^*))$ are independent of each other, so $\Pr[pk = pk'] = \Pr[H_1(\pw,s \oplus \allowbreak H_2(\pw,T)) = H_1(\pw,s^* \oplus H_2(\pw,T^*))] \leq (q_1+1)/|\group|$.
+        \item If $T^* \neq T \land s \oplus H_2(\pw,T) = s^* \oplus H_2(\pw,T^*)$, then $H_1(\pw,s \oplus H_2(\pw,T)) = H_1(\pw,s^* \oplus H_2(\pw,T^*))$, so $pk \neq pk'$.
+        \item If $T^* \neq T \land s \oplus H_2(\pw,T) \neq s^* \oplus H_2(\pw,T^*)$, then $H_1(\pw,s \oplus H_2(\pw,T))$ and $H_1(\pw,s^* \oplus H_2(\pw,T^*))$ are independent of each other, so $\Pr[pk = pk'] = \Pr[H_1(\pw,s \oplus H_2(\pw,T))/H_1(\pw,s^* \oplus H_2(\pw,T^*)) = T/T^*] \leq (q_1+\allowbreak1)/|\group|$.
+      \end{itemize}
+  \item If $(s^*,T^*) = (s,T) \land c^* \neq c$, then $\pw = \pw' \land (s^*,T^*) = (s,T)$, which implies that $pk = pk'$ by the definition of $pk$ and $pk'$. Then we can show that $\Pr[K = K']$ is negligible, via a reduction $\Adv_{\red_\text{WNM}}^\text{WNM}$ similar to that in the proof of \Cref{clm:htag2}. We have $\Pr[K = K'] \leq \Adv_{\red_\text{WNM}}^\text{WNM}$.
 \end{itemize}
 
-If $pk \neq pk'$ then of course $P'$'s query is not $\Htag(\pw,pk,c^*,K)$. Overall, we have
+If $pk \neq pk'$ or $K \neq K'$ then of course $P'$'s query is not $\Htag(\pw,pk,K)$. Overall, we have
 \[
-\Pr[P'\text{ queries }\Htag(\pw,pk,c^*,K)] \leq \Pr[pk = pk'] \leq \frac{q_1+1}{|\group|},
+\Pr[P'\text{ queries }\Htag(\pw,pk,c^*,K)] \leq \Adv_{\red_\text{WNM}}^\text{WNM} + \frac{q_1+1}{|\group|},
 \]
 which yields the claim.
 \end{proof}
