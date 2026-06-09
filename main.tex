@@ -1573,41 +1573,88 @@ The only (more or less) essential difference lies in the {\color{red}red} text i
 \section{Security Analyses of Other Versions (II): Removing $(s,T)$ from the Hash}
 \label{app:no-st}
 \subsection{The ``Hash $\pw$ and $pk$'' Version}
-We start from the version where $\tau$ is defined as $\Htag(\pw,pk,K)$, i.e., $(s,T)$ and $c$ are removed from the hash compared with the ``hash everything'' version. Fortunately, in this variant only the proof of \Cref{clm:htag2} in Game 2 needs to (essentially) change, and the simulator and all other arguments can be reused. This is because \Cref{clm:htag2} still holds (except that \Cref{clm:htag2} holds perfectly in the ``hash everything'' version, whereas here there is a negligible error probability), and by \Cref{tab:game-summary}, Game 2 is the only game in the entire security proof where we need $(s,T)$ or $c$ to be included in $\Htag$ inputs.
-\begin{claim}
-\label{clm:htag5}
-In the case where $\pw \neq \pw' \lor ((s^*,T^*) = (s,T) \land c^* \neq c)$, the probability that $P'$ queries $\Htag(\pw,pk,K)$ is negligible.
-\end{claim}
-\begin{proof}
-$P'$ makes a single $\Htag$ query, on $(\pw',pk',K')$. If $\pw \neq \pw'$, then of course $P'$'s query is not $\Htag(\pw,pk,K)$. Now assume $\pw = \pw'$. This implies $(s^*,T^*) \neq (s,T) \lor c^* \neq c$ by the condition of the claim.
-\begin{itemize}
-  \item If $(s^*,T^*) \neq (s,T)$, we have
-      \begin{gather*}
-      pk = \frac{T}{R} = \frac{T}{H_1(\pw,r)} = \frac{T}{H_1(\pw,s \oplus t)}= \frac{T}{H_1(\pw,s \oplus H_2(\pw,T))}, \\
-      pk' = \frac{T^*}{R'} = \frac{T^*}{H_1(\pw,r')} = \frac{T^*}{H_1(\pw,s^* \oplus t')}= \frac{T^*}{H_1(\pw,s^* \oplus H_2(\pw,T^*))}.
-      \end{gather*}
-      There are three cases:
-      \begin{itemize}
-        \item If $s^* \neq s \land T^* = T$, then $H_1(\pw,s \oplus H_2(\pw,T))$ and $H_1(\pw,s^* \oplus H_2(\pw,\allowbreak T^*))$ are independent of each other, so $\Pr[pk = pk'] = \Pr[H_1(\pw,s \oplus \allowbreak H_2(\pw,T)) = H_1(\pw,s^* \oplus H_2(\pw,T^*))] \leq (q_1+1)/|\group|$.
-        \item If $T^* \neq T \land s \oplus H_2(\pw,T) = s^* \oplus H_2(\pw,T^*)$, then $H_1(\pw,s \oplus H_2(\pw,T)) = H_1(\pw,s^* \oplus H_2(\pw,T^*))$, so $pk \neq pk'$.
-        \item If $T^* \neq T \land s \oplus H_2(\pw,T) \neq s^* \oplus H_2(\pw,T^*)$, then $H_1(\pw,s \oplus H_2(\pw,T))$ and $H_1(\pw,s^* \oplus H_2(\pw,T^*))$ are independent of each other, so $\Pr[pk = pk'] = \Pr[H_1(\pw,s \oplus H_2(\pw,T))/H_1(\pw,s^* \oplus H_2(\pw,T^*)) = T/T^*] \leq (q_1+\allowbreak1)/|\group|$.
-      \end{itemize}
-  \item If $(s^*,T^*) = (s,T) \land c^* \neq c$, then $\pw = \pw' \land (s^*,T^*) = (s,T)$, which implies $pk = pk'$ by the definition of $pk$ and $pk'$. Then we can show that $\Pr[K = K']$ is negligible, via a reduction $\Adv_{\red_\text{WNM}}^\text{WNM}$ similar to that in the proof of \Cref{clm:htag2}. We have $\Pr[K = K'] \leq \Adv_{\red_\text{WNM}}^\text{WNM}$.
-\end{itemize}
+We start from the version where $\tau$ is defined as $\Htag(\pw,pk,K)$, i.e., $(s,T)$ and $c$ are removed from the hash compared with the ``hash everything'' version. This would best be compared with the protocol (and its security proof) in \Cref{sec:hash-pw-st}, where $\tau$ is defined as $\Htag(\pw,pk,s,T,K)$. Removing $(s,T)$ from the hash introduces a new case that the simulator must take into consideration, which we start from.
 
-If $pk \neq pk'$ or $K \neq K'$ then of course $P'$'s query is not $\Htag(\pw,pk,K)$. Overall, we have
-\[
-\Pr[P'\text{ queries }\Htag(\pw,pk,c^*,K)] \leq \Adv_{\red_\text{WNM}}^\text{WNM} + \frac{q_1+1}{|\group|},
-\]
-which yields the claim.
-\end{proof}
+\subsubsection{Changes to the Simulator}
+The new situation emerges when the adversary $\adv$ decrypts the $P$-to-$P'$ message $(s,T)$ to recover $pk := \mathsf{2F}^{\text{-}1}(\pw,(s,T))$, and then re-encrypts the same $pk$ under the same $\pw'$ to get $(s^*,T^*) \gets \mathsf{2F}(\pw,pk)$. Note that unlike IC, \emph{the $\mathsf{2F}$ encryption is randomized}, so $\adv$'s re-encryption likely results in a different $(s^*,T^*) \neq (s,T)$. Then $\adv$ sends $(s^*,T^*)$ to $P'$, and forwards the $P'$-to-$P$ message $(c,\tau')$ without modification. We show this whole process in \Cref{fig:attack-no-st}.
+
+\begin{figure}[H]
+\pseudocodeblock{
+P(\pw) \< \< \adv \< \< P'(\pw) \\ 
+\< \sendmessageright*[1.5cm]{s,T} \< \< \< \\
+\< \< pk := \mathsf{2F}^{\text{-}1}(\pw,(s,T)) \< \< \\
+\< \< (s^*,T^*) \gets \mathsf{2F}(\pw,pk) \< \< \\
+\< \< \<\sendmessageright*[1.5cm]{s^*,T^*} \< \\
+\< \sendmessageleft*[1.5cm]{c,\tau'} \< \< \sendmessageleft*[1.5cm]{c,\tau'} \< \< \\
+\text{output }SK' \< \< \< \< \text{output }SK'
+}
+\caption{New ``attack'' on the ``hash $\pw$ and $pk$'' version}
+\label{fig:attack-no-st}
+\end{figure}
+
+One can intuitively see that this does not constitute an actual attack, since the only thing $\adv$ achieves is to modify some protocol messages and cause $P$ and $P'$ to output the same session key --- which $\adv$ \emph{cannot} compute.\footnote{If anything, such an $\adv$ is ``dumber'' than an adversary who performs a regular online attack, since $\adv$ who knows the correct password could have learned the two parties' session keys but wastes such an opportunity.} What $\adv$ essentially does is to run the $\mathsf{2F}$ encryption process using a fresh randomness, yielding another $(s^*,T^*)$ which has the same effect on the $P'$ side as the honest $(s,T)$; in this way, $\adv$ is ``effectively'' passive while actually modifying the $P$-to-$P'$ message. (We stress again that this ``attack'' critically relies on $\mathsf{2F}$ being randomized, and does not work anymore if we replace it with an IC. However, all subsequent ``attacks'' --- in the setting where we further remove $\pw$ and/or $pk$ from $\Htag$ inputs --- work even with IC.)
+
+This example vividly shows why removing $(s,T)$ from the hash does not require more properties of the underlying KEM scheme, but complicates the security proof. Since this ``attack'' requires $\adv$ to decrypt and re-encrypt via some RO queries, the simulator can catch $\adv$ doing so (and can extract the password along the way), and no additional properties on the KEM level are needed. Still, this scenario is not covered by the previous simulator, and the simulator has to create a new case dedicated to this specific scenario. In more detail, the scenario in \Cref{fig:attack-no-st} should be simulated as follows: When $\adv$ decrypts $(s,T)$ under $\pw$, the simulator $\sim$ records $\langle\pw,pk,sk\rangle$ (although there might be a large number of such decryption attempts, and $\sim$ does not know which is the ``right'' one at this point). Then when $\adv$ sends $(s^*,T^*)$ to $P'$, $\sim$ extracts the ``right'' $\pw$, which allows $\sim$ to compromise $P'$'s session. Later, when $\adv$ sends $(c^*,\tau')$, $\sim$ can tell that $\adv$ is performing the aforementioned ``attack'', and can use the same $\pw$ to compromise $P$'s session.
+
+\begin{remark}
+Looking ahead, all subsequent ``attacks'' follow a similar pattern:
+\begin{itemize}
+  \item In the first protocol message, $\adv$ decrypts $(s,T)$ and re-encrypts to some other $(s^*,T^*)$, and
+  \item In the second protocol message, $\adv$ forwards $\tau'$ (but may or may not modify $c$).
+\end{itemize}
+If we include $(s,T)$ in $\Htag$ inputs, this will immediately result in $P$ rejecting, since $P$'s check will fail. However, without $(s,T)$ in the hash, we have to take this scenario into account. The difference from what's in this section is that if we additionally remove $\pw$ and/or $pk$ from the hash, then $\adv$ can re-encrypt the same $pk$ under another $\pw'$, and/or re-encrypt another $pk^*$ under the same $\pw$. Hence, \Cref{fig:attack-no-st} is a special case of all subsequent ``attacks''.
+\end{remark}
+
+We show the new simulator in \Cref{fig:oeke-sim-hash-pw-pk}. (Only the steps after receiving $(c^*,\tau^*)$ are included.)
+
+\begin{figure}[H]
+\begin{framed}
+\begin{small}
+\underline{$P$'s session key}
+
+\medskip
+On $(c^*,\tau^*)$ from $\func$, simulate $P$'s output as follows:
+\begin{enumerate}
+  \item If $(s^*,T^*) = (s,T) \land (c^*,\tau^*) = (c,\tau')$, send $(\NewKey, sid, P', 0^n)$ to $\func$. \textcolor[gray]{0.5}{// $\adv$ is passive}
+  {\color{blue}\item If $(s^*,T^*) \neq (s,T) \land (c^*,\tau^*) = (c,\tau')$, and there has been a $(\TestPwd, sid, P', \pw')$ command to $\func$ resulting in ``correct guess'' (i.e., $\sim$ previously entered step 2(b)(ii) in \Cref{fig:oeke-sim2}), there must be a $pk'$ and an $SK'$ defined at that time. 
+      \begin{enumerate}
+        \item Retrieve record $\langle\pw',pk',\star\rangle$. If there is no such record, go to step 3.
+        \item Send $(\TestPwd, sid, P, \pw^*)$ to $\func$.
+            \begin{enumerate}
+              \item If $\func$ replies with ``wrong guess'', send $(\NewKey, sid, P, 0^n)$ to $\func$.
+              \item If $\func$ replies with ``correct guess'', send $(\NewKey, sid, P, SK')$ to $\func$.
+            \end{enumerate}
+      \end{enumerate}
+  }
+  \item Otherwise find $\adv$'s {\color{blue}$\Htag(\pw^*,pk^*,K^*)$} query resulting in $\tau^*$.
+      \begin{enumerate}
+        \item If there is no such query or more than one such query, send $(\TestPwd, sid, P, \bot)$ and then $(\NewKey, sid, P, 0^n)$ to $\func$.
+        \item If there is exactly one such query, retrieve record $\langle\pw^*,\star,sk^*\rangle$. If there is no such record, send $(\TestPwd, sid, P, \bot)$ and then $(\NewKey, sid, P, 0^n)$ to $\func$.
+        \item Compute $K := \Decap(sk^*,c^*)$. If $K^* \neq K$, send $(\TestPwd, sid, P', \bot)$ and then $(\NewKey, sid, P, 0^n)$ to $\func$.
+        \item Send $(\TestPwd, sid, P, \pw')$ to $\func$.
+            \begin{enumerate}
+              \item If $\func$ replies with ``wrong guess'', send $(\NewKey, sid, P, 0^n)$ to $\func$.
+              \item If $\func$ replies with ``correct guess'', compute $SK := \Hkey(K)$ and send $(\NewKey, sid, P, SK)$ to $\func$.
+            \end{enumerate}
+      \end{enumerate}
+\end{enumerate}
+\end{small}
+\end{framed}
+\caption{UC simulator $\sim$ for the ``hash $\pw$ and $pk$'' variant of OEKE. Only the paragraph that needs essential change (shown in {\color{blue}blue}) is included}
+\label{fig:oeke-sim-hash-pw-pk}
+\end{figure}
+
+\subsubsection{Changes in Game Hops}
+Note that \Cref{clm:htag} in Game 2 does not hold anymore, exactly due to what the adversary can do in \Cref{fig:attack-no-pk} ($P$ does not reject even though $\adv$ is not passive and $\adv$ makes no $\Htag$ query whatsoever). As such, Game 2 needs to change essentially. Since Game 2 is almost at the beginning of the sequence of games, this affects some subsequent games and we need to proceed carefully. The trick is to isolate the specific case of the new ``attack'', i.e., the case that makes \Cref{clm:htag} fail; in this case we need to additionally check $P'$'s $\Htag$ query, whereas in all other cases we can proceed as before. In this way we minimize the affect of the change in Game 2.
+
+We start from describing the new Game 2. Most of the subsequent argument is clerical work verifying that the previous argument still goes through; the parts that need to essentially change are shown in {\color{blue}blue}.
 
 \paragraph{The ``hash $\pw$, $pk$ and $c$'' version.}
 If we define $\tau$ as $\Htag(\pw,pk,c,K)$, then the second bullet of the proof of \Cref{clm:htag5} is not needed, and the protocol can be proven secure without the WNM property of the KEM scheme (i.e., under the same assumptions as in the ``hash everything'' version).
 
 \subsection{The ``Hash $\pw$'' Version}
 \label{sec:hash-pw}
-We now consider the variant where $pk$ is further removed from $\Htag$ inputs, i.e., $\tau$ is defined as $\Htag(\pw,K)$. This would best be compared with the protocol (and its security proof) in \Cref{sec:hash-pw-st}, where $\tau$ is defined as $\Htag(\pw,s,T,K)$. Removing $(s,T)$ from the hash introduces a new case that the simulator must take into consideration, which we start from.
+We now consider the variant where $pk$ is further removed from $\Htag$ inputs, i.e., $\tau$ is defined as $\Htag(\pw,K)$. This would best be compared with the protocol (and its security proof) in \Cref{sec:hash-pw-pk-st}, where $\tau$ is defined as $\Htag(\pw,pk,s,T,K)$. Removing $(s,T)$ from the hash introduces a new case that the simulator must take into consideration, which we start from.
 
 \subsubsection{Changes to the Simulator}
 The new situation emerges when the adversary $\adv$ modifies the $P$-to-$P'$ message $(s,T)$ to some other $(s^*,T^*)$, and then when it receives the $P'$-to-$P$ message $(c,\tau')$, $\adv$ modifies $c$ but forwards $\tau'$. In this case, $\adv$ can force the two parties' session keys to be the same --- without making \emph{any} $\Htag$ query! The easiest way to see this is to work out a concrete version for OEKE based on the Diffie--Hellman KEM, which we show in \Cref{fig:attack-no-pk}.
