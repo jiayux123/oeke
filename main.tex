@@ -1278,7 +1278,9 @@ Looking more closely, only \Cref{clm:htag} in Game 2 needs a new proof: the argu
 Suppose the WNM property holds for the KEM scheme. In the case where $\neg(\pw = \pw' \land (s^*,T^*) = (s,T) \land c^* = c)$, the probability that $P'$ queries $\Htag(\pw,pk,s,T,K)$ is negligible.
 \end{claim}
 \begin{proof}
-$P'$ makes a single $\Htag$ query, on $(\pw',pk',s,T,K')$. If $\pw \neq \pw' \lor (s^*,T^*) \neq (s,T)$, then of course $P'$'s query is not $\Htag(\pw,pk,s,T,K)$. Now assume $\pw = \pw' \land (s^*,T^*) = (s,T)$. This implies $pk = pk'$ by the definitions of $pk$ and $pk'$, and $c^* \neq c$ by the condition of the claim. We now upper-bound $\Pr[K = K']$. Recall that $K$ is defined as $\Decap(sk,c^*)$, so $\Pr[K = K'] = \Pr[\Decap(sk,c^*) = K']$. We upper-bound this probability via a reduction $\red_\text{WNM}$ to the WNM property of the KEM scheme:
+$P'$ makes a single $\Htag$ query, on $(\pw',pk',s,T,K')$. If $\pw \neq \pw' \lor (s^*,T^*) \neq (s,T)$, then of course $P'$'s query is not $\Htag(\pw,pk,s,T,K)$. Now assume $\pw = \pw' \land (s^*,T^*) = (s,T)$. This implies $pk = pk'$ by the definitions of $pk$ and $pk'$, and $c^* \neq c$ by the condition of the claim.
+
+We now upper-bound $\Pr[K = K']$. Recall that $K$ is defined as $\Decap(sk,c^*)$, so $\Pr[K = K'] = \Pr[\Decap(sk,c^*) = K']$. We upper-bound this probability via a reduction $\red_\text{WNM}$ to the WNM property of the KEM scheme:
 
 \medskip\noindent\textbf{\underline{Reduction $\red_\mathrm{WNM}$}:}
 
@@ -1594,7 +1596,7 @@ P(\pw) \< \< \adv \< \< P'(\pw) \\
 
 One can intuitively see that this does not constitute an actual attack, since the only thing $\adv$ achieves is to modify some protocol messages and cause $P$ and $P'$ to output the same session key --- which $\adv$ \emph{cannot} compute.\footnote{If anything, such an $\adv$ is ``dumber'' than an adversary who performs a regular online attack, since $\adv$ who knows the correct password could have learned the two parties' session keys but wastes such an opportunity.} What $\adv$ essentially does is to run the $\mathsf{2F}$ encryption process using a fresh randomness, yielding another $(s^*,T^*)$ which has the same effect on the $P'$ side as the honest $(s,T)$; in this way, $\adv$ is ``effectively'' passive while actually modifying the $P$-to-$P'$ message. (We stress again that this ``attack'' critically relies on $\mathsf{2F}$ being randomized, and does not work anymore if we replace it with an IC. However, all subsequent ``attacks'' --- in the setting where we further remove $\pw$ and/or $pk$ from $\Htag$ inputs --- work even with IC.)
 
-This example vividly shows why removing $(s,T)$ from the hash does not require more properties of the underlying KEM scheme, but complicates the security proof. Since this ``attack'' requires $\adv$ to decrypt and re-encrypt via some RO queries, the simulator can catch $\adv$ doing so (and can extract the password along the way), and no additional properties on the KEM level are needed. Still, this scenario is not covered by the previous simulator, and the simulator has to create a new case dedicated to this specific scenario. In more detail, the scenario in \Cref{fig:attack-no-st} should be simulated as follows: When $\adv$ decrypts $(s,T)$ under $\pw$, the simulator $\sim$ records $\langle\pw,pk,sk\rangle$ (although there might be a large number of such decryption attempts, and $\sim$ does not know which is the ``right'' one at this point). Then when $\adv$ sends $(s^*,T^*)$ to $P'$, $\sim$ extracts the ``right'' $\pw$, which allows $\sim$ to compromise $P'$'s session. Later, when $\adv$ sends $(c^*,\tau')$, $\sim$ can tell that $\adv$ is performing the aforementioned ``attack'', and can use the same $\pw$ to compromise $P$'s session.
+This example vividly demonstrates why removing $(s,T)$ from the hash does not require more properties of the underlying KEM scheme, but complicates the security proof. Since this ``attack'' requires $\adv$ to decrypt and re-encrypt via some RO queries, the simulator can catch $\adv$ doing so (and can extract the password along the way), and no additional properties on the KEM level are needed. Still, this scenario is not covered by the previous simulator, and the simulator has to create a new case dedicated to this specific scenario. In more detail, the scenario in \Cref{fig:attack-no-st} should be simulated as follows: When $\adv$ decrypts $(s,T)$ under $\pw$, the simulator $\sim$ records $\langle\pw,pk,sk\rangle$ (although there might be a large number of such decryption attempts, and $\sim$ does not know which is the ``right'' one at this point). Then when $\adv$ sends $(s^*,T^*)$ to $P'$, $\sim$ extracts the ``right'' $\pw$, which allows $\sim$ to compromise $P'$'s session. Later, when $\adv$ sends $(c^*,\tau')$, $\sim$ can tell that $\adv$ is performing the aforementioned ``attack'', and can use the same $\pw$ to compromise $P$'s session.
 
 \begin{remark}
 Looking ahead, all subsequent ``attacks'' follow a similar pattern:
@@ -1648,6 +1650,55 @@ On $(c^*,\tau^*)$ from $\func$, simulate $P$'s output as follows:
 Note that \Cref{clm:htag} in Game 2 does not hold anymore, exactly due to what the adversary can do in \Cref{fig:attack-no-pk} ($P$ does not reject even though $\adv$ is not passive and $\adv$ makes no $\Htag$ query whatsoever). As such, Game 2 needs to change essentially. Since Game 2 is almost at the beginning of the sequence of games, this affects some subsequent games and we need to proceed carefully. The trick is to isolate the specific case of the new ``attack'', i.e., the case that makes \Cref{clm:htag} fail; in this case we need to additionally check $P'$'s $\Htag$ query, whereas in all other cases we can proceed as before. In this way we minimize the affect of the change in Game 2.
 
 We start from describing the new Game 2. Most of the subsequent argument is clerical work verifying that the previous argument still goes through; the parts that need to essentially change are shown in {\color{blue}blue}.
+
+\medskip\noindent\emph{Game 2:} In the case where {\color{blue}$\pw \neq \pw' \lor c^* \neq c$}, find $\adv$'s $\Htag(\pw,pk,K^*)$ query resulting in $\tau^*$. If there is none or more than one, set $SK := \bot$. If there is a unique such query, do the following:
+\begin{itemize}
+  \item If $K^* = K$, set $SK := \Hkey(K)$ (i.e., there is no change from Game 1).
+  \item If $K^* \neq K$, set $SK := \bot$.
+\end{itemize}
+
+Furthermore, in the case where $\pw = \pw' \land (s^*,T^*) \neq (s,T) \land c^* = c$, do the same as above, except that we now find $\adv$ {\color{blue}\emph{or $P'$}}'s $\Htag(\pw,pk,K^*)$ query resulting in $\tau^*$.
+
+{\color{blue}The difference between the new Game 2 and the old one is that we now have two separate cases:
+\begin{enumerate}
+  \item $\pw \neq \pw' \lor c^* \neq c$;
+  \item $\pw = \pw' \land (s^*,T^*) \neq (s,T) \land c^* = c$.
+\end{enumerate}
+}
+These two cases combined yield $\neg(\pw = \pw' \land (s^*,T^*) = (s,T) \land c^* = c)$, which is identical to the case in the old Game 2 (i.e., they cover all situations other than the one addressed in Game 1). In case (1) we proceed as in the old Game 2, whereas {\color{blue}in case (2) we cannot due to the ``attack'' in \Cref{fig:attack-no-st}; instead, in case (2) we need to include $P'$'s $\Htag$ query as if it were $\adv$'s}.
+\begin{claim}
+\label{clm:htag5}
+Suppose the WNM property holds for the KEM scheme. In case (1) above, the probability that $P'$ queries $\Htag(\pw,pk,K)$ is negligible.
+\end{claim}
+\begin{proof}
+$P'$ makes a single $\Htag$ query, on $(\pw',pk',K')$. If $\pw \neq \pw'$, then of course $P'$'s query is not $\Htag(\pw,pk,K)$. Now assume $\pw = \pw'$. This implies $c^* \neq c$ by the condition of the claim.
+
+We now claim that $pk = pk' \land K = K'$ happens with negligible probability. Suppose $pk = pk'$. Then we can reduce the event $K = K'$ to the WNM property of the KEM scheme, via a reduction $\Adv_{\red_\text{WNM}}^\text{WNM}$ similar to that in the proof of \Cref{clm:htag2}. We have $\Pr[pk = pk' \land K = K'] \leq \Adv_{\red_\text{WNM}}^\text{WNM}$.
+
+If $pk \neq pk'$ or $K \neq K'$ then of course $P'$'s query is not $\Htag(pk,K)$. We have
+\[
+\Pr[P'\text{ queries }\Htag(\pw,pk,K)] \leq \Adv_{\red_\text{WNM}}^\text{WNM},
+\]
+which yields the claim.
+\end{proof}
+The remaining argument is essentially identical to that in the old Game 2.
+
+\medskip
+For subsequent games, if they only involve case (1) in Game 2 then they do not need to change, since the new Game 2 does not make any change in this case. However, if a game involves case (2) then some changes need to be made, since the new Game 2 additionally checks $P'$'s $\Htag$ queries, which a reduction might not be able to do.
+
+\medskip\noindent\emph{Games 3--4:} These two games deal with the case where $\pw = \pw' \land (s^*,T^*) = (s,T)$. This falls into either the case in Game 1 (if $c^* = c$) or case (1) in Game 2 (if $c^* \neq c$); either way, it does not enter case (2) in Game 2, so the reductions still go through: they abort if $\pw = \pw' \land (s^*,T^*) = (s,T)$ does not hold, and if $\pw = \pw' \land (s^*,T^*) = (s,T)$, they can still simulate the games by checking $\adv$'s $\Htag$ queries. Crucially, the reductions do not need to check $P'$'s $\Htag$ query (which they cannot do), since in this case we have defined Game 2 so that it only checks $\adv$'s $\Htag$ queries.
+
+\medskip\noindent\emph{Game 5:} This game involves a reduction to the UNI-PK property of the KEM scheme. The reduction works essentially because $sk'$ is not used anywhere in the game (so the reduction can embed its challenge as $pk'$ without knowing $sk'$), and this fact still holds even though we need to additionally check $P'$'s $\Htag$ queries in some cases now. So, this reduction still goes through.
+
+\medskip\noindent\emph{Games 6--8:} These three games deal with the case where $\pw \neq \pw' \land (s^*,T^*) = (s,T)$. This falls into case (1) in Game 2, so the reductions in Games 6 and 7 still go through; Game 8 involves a statistical argument which does not need to change either.
+
+\medskip\noindent\emph{Games 9--10:} These two games involve statistical arguments only, and they have nothing to do with whether the games need to check $P'$'s $\Htag$ queries.
+
+\medskip\noindent\emph{Game 11:} This game hop goes through for essentially the same reason as in \Cref{sec:games}. The difference is that now Game 10 and Game 11 differ if $\adv$ does not make an $H_2(\pw,T)$ query, but $\adv$ \emph{{\color{blue}or $P'$}} makes an $\Htag(\pw,pk,K^*)$ query resulting in $\tau^*$. However, $pk$ is freshly generated by $P$, independent of \emph{both} $\adv$ and $P'$'s views. Thus, the distinguishing advantage between Game 10 and Game 11 is still upper-bounded by $p_\text{guess}(pk)$.
+
+\medskip\noindent\emph{Game 12:} This game should read as follows now: In the case where $\pw = \pw' \land (s^*,T^*) = (s,T) \land c^* = c \land \tau^* \neq \tau'$, do what's in the {\color{blue}$\pw \neq \pw' \lor c^* \neq c$ case (i.e., case (1) in Game 2)}.
+
+This game only involves case (1) in Game 2, i.e., it checks $\adv$'s $\Htag$ queries \emph{but does not check $P'$'s $\Htag$ query}. Therefore, this game hop has nothing to do with what's different in the new Game 2, and the previous argument still goes through.
 
 \paragraph{The ``hash $\pw$, $pk$ and $c$'' version.}
 If we define $\tau$ as $\Htag(\pw,pk,c,K)$, then the second bullet of the proof of \Cref{clm:htag5} is not needed, and the protocol can be proven secure without the WNM property of the KEM scheme (i.e., under the same assumptions as in the ``hash everything'' version).
