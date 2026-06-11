@@ -501,7 +501,7 @@ On $(c^*,\tau^*)$ from $\func$, simulate $P$'s output as follows:
   \item Otherwise find $\adv$'s $\Htag(\pw^*,pk^*,s,T,c^*,K^*)$ query resulting in $\tau^*$.
       \begin{enumerate}
         \item If there is no such query or more than one such query, send $(\TestPwd, sid, P', \bot)$ and then $(\NewKey, sid, P', 0^n)$ to $\func$.
-        \item If there is exactly one such query, retrieve record $\langle\pw^*,\star,sk^*\rangle$. If there is no such record, send $(\TestPwd, sid, P', \bot)$ and then $(\NewKey, sid, P', 0^n)$ to $\func$.
+        \item If there is exactly one such query, retrieve record $\langle\pw^*,pk^*,sk^*\rangle$. If there is no such record, send $(\TestPwd, sid, P', \bot)$ and then $(\NewKey, sid, P', 0^n)$ to $\func$.
         \item Compute $K := \Decap(sk^*,c^*)$. If $K^* \neq K$, send $(\TestPwd, sid, P', \bot)$ and then $(\NewKey, sid, P', 0^n)$ to $\func$.
         \item Send $(\TestPwd, sid, P', \pw^*)$ to $\func$.
             \begin{enumerate}
@@ -530,7 +530,7 @@ Our simulator is, by and large, the same as the one in \cite[Fig.5~and~6]{EPRINT
 
 \subsection{Game-Hop Argument}
 \label{sec:games}
-We now prove that for any PPT environment $\env$, the simulator $\sim$ in \Cref{sec:sim} generates an ideal-world view indistinguishable from $\env$'s real-world view. The sequence of games starts from the real world (Game 0) and ends in the ideal world (Game 17). We assume that $\adv$ makes $q_1,q_2,\qkey,\qtag$ queries to ROs $H_1,H_2,\Hkey,\Htag$, respectively. By \Cref{lem:uni-ano-ro}, we may additionally assume that the $(q_1+1)(q_2+1)$-UNI-ANO-RO property holds for the KEM scheme. For two adjacent games $i$ and $i+1$, let $\Dist_\env^{i,i+1}$ be $\env$'s distinguishing advantage between them.
+We now prove that for any PPT environment $\env$, the simulator $\sim$ in \Cref{sec:sim} generates an ideal-world view indistinguishable from $\env$'s real-world view. The sequence of games starts from the real world (Game 0) and ends in the ideal world (Game 17). We assume that $\adv$ makes up to $q_1,q_2,\qkey,\qtag$ queries to ROs $H_1,H_2,\Hkey,\Htag$, respectively. By \Cref{lem:uni-ano-ro}, we may additionally assume that the $(q_1+1)(q_2+1)$-UNI-ANO-RO property holds for the KEM scheme. For two adjacent games $i$ and $i+1$, let $\Dist_\env^{i,i+1}$ be $\env$'s distinguishing advantage between them.
 
 A game-by-game comparison with the proof in \cite[Section~5]{EPRINT:ArrBarJar25} is shown in \emph{{\color{red}red}}, with the parts that critically rely on certain items being included as inputs to $\Htag$ \emph{{\color{red}\ul{underlined}}}.
 
@@ -962,7 +962,11 @@ In Game 11 $SK$ is outright set to $\bot$, whereas here it is treated the same a
 \medskip\noindent\emph{Game 13:} In the case where $\neg(\pw = \pw' \land (s^*,T^*) = (s,T) \land (c^*,\tau^*) = (c,\tau))$, find $\adv$'s $\Htag(\pw^*,pk^*,s,T,c^*,K^*)$ query resulting in $\tau^*$. (The difference is that Game 12 only goes over all of $\adv$'s queries in the form of $\Htag(\pw,pk,s,T,c^*,\star)$, whereas this game goes over all of $\adv$'s queries in the form of $\Htag(\star,\star,s,T,c^*,\star)$.) If there is none or more than one, set $SK := \bot$. Otherwise there is a unique such $\Htag(\pw^*,pk^*,s,T,c^*,K^*)$ query, and
 \begin{itemize}
   \item If $\pw^* \neq \pw$, set $SK := \bot$.
-  \item If $\pw^* = \pw$, there is no change from Game 12. (In particular, the check of the $\langle\pw,\star,\star\rangle$ record introduced in Game 11 is moved here.)
+  \item If $\pw^* = \pw$, there is no change from Game 12. That is, the game runs the following procedure:
+      \begin{enumerate}
+        \item Retrieve record $\langle\pw,pk,sk\rangle$. If there is no such record, or if $pk^* \neq pk$, set $SK := \bot$.\footnote{The rule ``If there is no $\langle\pw,pk,sk\rangle$ record, set $SK := \bot$'' was introduced in Game 11. We check if $pk^* = pk$ because in Game 12 $pk$ in the record (line 23 of \Cref{fig:intermediate-game}) and in $\adv$'s $\Htag$ query (line 31 of \Cref{fig:intermediate-game}) have to match each other; in other words, if $\adv$'s $\Htag$ query is on $(\pw,pk^*,s,T,c^*,\star)$ for some $pk^* \neq pk$, then Game 12 sets $SK := \bot$. Therefore, here we need to explicitly perform the $pk^* \stackrel{?}{=} pk$ check in order to be consistent with Game 12.}
+        \item Compute $K := \Decap(sk,c^*)$. If $K^* = K$, set $SK := \Hkey(K)$; otherwise set $SK := \bot$.
+      \end{enumerate}
 \end{itemize}
 
 If $\adv$ makes no $\Htag(\star,\star,s,T,c^*,\star)$ query resulting in $\tau^*$, then in particular $\adv$ makes no $\Htag(\pw,pk,s,T,c^*,\star)$ query resulting in $\tau^*$, so both Game 12 and Game 13 set $SK := \bot$. The probability that $\adv$ makes two different $\Htag(\star,\star,s,T,c^*,\star)$ queries both resulting in $\tau^*$ is upper-bounded by $\qtag(\qtag-1)/2^{2n+1}$. Now suppose $\adv$ makes a unique $\Htag(\pw^*,pk^*,s,T,c^*,K^*)$ query resulting in $\tau^*$:
@@ -1013,7 +1017,7 @@ The aborting condition is met only in the following three cases:
       \[
       H_2(\pw^*,T) \oplus t^* = H_2((\pw^*)',T) \oplus (t^*)'
       \]
-      (so $\adv$ can set $s^*$ to be $s \oplus H_2(\pw^*,T) \oplus t^*$). Note that all four values in the equation are determined by three (different) $H_2$ queries $H_2(\pw^*,T)$, $H_2((\pw^*)',T)$ and $H_2(\pw^*,T^*)$ (they are different since $T^* \neq T$); by an argument similar to above, the probability of this case is upper-bounded by $q_2(q_2-1)(q_2-2)/2^{3n}$.
+      (so $\adv$ can set $s^*$ to be $s \oplus H_2(\pw^*,T) \oplus t^*$). Note that all four values in the equation are determined by three (different) $H_2$ queries $H_2(\pw^*,T)$, $H_2((\pw^*)',T)$ and $H_2(\pw^*,T^*)$ (they are different since $T^* \neq T$ as argued above); by an argument similar to above, the probability of this case is upper-bounded by $q_2(q_2-1)(q_2-2)/2^{3n}$.
   \item There is a collision between type (1) and type (2), i.e., there are $r^*,t^*,(\pw^*)',\allowbreak(t^*)'$ such that
       \[
       r^* \oplus t^* = s \oplus H_2((\pw^*)',T) \oplus (t^*)'
@@ -1188,7 +1192,7 @@ s \gets \{0,1\}^{3n}; T \gets \group \< \< \< \< \\
 \t \t SK := \bot \\
 \t \text{if }\pw^* \neq \pw \< \< \< \< \\
 \t \t SK := \bot \\
-\t \text{retrieve }\langle\pw^*,\star,sk^*\rangle\text{ record} \< \< \< \< \\
+\t \text{retrieve }\langle\pw^*,pk^*,sk^*\rangle\text{ record} \< \< \< \< \\
 \t \text{if none} \< \< \< \< \\
 \t \t SK := \bot \< \< \< \< \\
 \t K := \Decap(sk^*,c^*) \< \< \< \< \\
