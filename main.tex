@@ -1579,6 +1579,7 @@ The only (more or less) essential difference lies in the {\color{red}red} text i
 \section{Security Analyses of Other Versions (II): Removing $(s,T)$ from the Hash}
 \label{app:no-st}
 \subsection{The ``Hash $\pw$ and $pk$'' Version}
+\label{app:hash-pw-pk}
 We start from the version where $\tau$ is defined as $\Htag(\pw,pk,K)$, i.e., $(s,T)$ and $c$ are removed from the hash compared with the ``hash everything'' version. This would best be compared with the protocol (and its security proof) in \Cref{sec:hash-pw-st}, where $\tau$ is defined as $\Htag(\pw,pk,s,T,K)$. Removing $(s,T)$ from the hash introduces a new case that the simulator must take into consideration, which we start from.
 
 \subsubsection{Changes to the Simulator}
@@ -1798,10 +1799,10 @@ If we define $\tau$ as $\Htag(\pw,pk,c,K)$, then the second bullet of the proof 
 
 \subsection{The ``Hash $\pw$'' Version}
 \label{sec:hash-pw}
-We now consider the variant where $pk$ is further removed from $\Htag$ inputs, i.e., $\tau$ is defined as $\Htag(\pw,K)$. This would best be compared with the protocol (and its security proof) in \Cref{sec:hash-pw-pk-st}, where $\tau$ is defined as $\Htag(\pw,pk,s,T,K)$. Removing $(s,T)$ from the hash introduces a new case that the simulator must take into consideration, which we start from.
+We now consider the variant where $pk$ is further removed from $\Htag$ inputs, i.e., $\tau$ is defined as $\Htag(\pw,K)$. This would best be compared with the protocol (and its security proof) in \Cref{sec:hash-pw-st}, where $\tau$ is defined as $\Htag(\pw,s,T,K)$; as well as the protocol (and its security proof) in \Cref{app:hash-pw-pk}, where $\tau$ is defined as $\Htag(\pw,pk,K)$. As we have seen in \Cref{app:hash-pw-pk}, removing $(s,T)$ from the hash introduces a new ``re-encryption'' case that the simulator must take into consideration. After further removing $pk$, there is a more general ``attack'' we need to take into account, which we start from.
 
 \subsubsection{Changes to the Simulator}
-The new situation emerges when the adversary $\adv$ modifies the $P$-to-$P'$ message $(s,T)$ to some other $(s^*,T^*)$, and then when it receives the $P'$-to-$P$ message $(c,\tau')$, $\adv$ modifies $c$ but forwards $\tau'$. In this case, $\adv$ can force the two parties' session keys to be the same --- without making \emph{any} $\Htag$ query! The easiest way to see this is to work out a concrete version for OEKE based on the Diffie--Hellman KEM, which we show in \Cref{fig:attack-no-pk}.
+The easiest way to see the new, more general ``attack'' is to work out a concrete version for OEKE based on the Diffie--Hellman KEM, which we show in \Cref{fig:attack-no-pk}.
 
 \begin{figure}[H]
 \pseudocodeblock[codesize=\scriptsize]{
@@ -1814,13 +1815,15 @@ P(\pw) \< \< \adv \< \< P'(\pw) \\
 \text{output} \< \< \< \< \text{output} \\
 \Hkey((Y^2)^x) = \Hkey(g^{2xy}) \< \< \< \< \Hkey((X^2)^y) = \Hkey(g^{2xy})
 }
-\caption{New ``attack'' on the ``hash $\pw$'' version}
+\caption{New ``attack'' on the ``hash $\pw$'' version, using OEKE based on Diffie--Hellman KEM}
 \label{fig:attack-no-pk}
 \end{figure}
 
-In this attack, the two honest parties' passwords $\pw$ are the same. Assuming $\adv$ knows it, it can decrypt $P$'s message to recover $X = g^x$, and then re-encrypt $X^2$ under the same $\pw$; this causes $P'$ to output $SK' = \Hkey(g^{2xy})$ and send $(Y = g^y, \tau' = \Htag(\pw,g^{2xy}))$. Then $\adv$ sends $(Y^2,\tau')$ to $P$, causing $P$'s check to pass and $P$ will also output $\Hkey(g^{2xy})$. (This is not an issue if $pk$ is included in $\Htag$, since $P$ would compute $\tau = \Htag(\dots,Y^2,\dots) \neq \Htag(\dots,Y,\dots) = \tau'$ unless there is a collision in $\Htag$, and its check $\tau^* \stackrel{?}{=} \tau$ would fail.)
+In this ``attack'', the two honest parties' passwords $\pw$ are the same. Assuming $\adv$ knows it, it can decrypt $P$'s message to recover $X = g^x$, and then re-encrypt $X^2$ under the same $\pw$; this causes $P'$ to output $SK' = \Hkey(g^{2xy})$ and send $(Y = g^y, \tau' = \Htag(\pw,g^{2xy}))$. Then $\adv$ sends $(Y^2,\tau')$ to $P$, causing $P$'s check to pass and $P$ will also output $\Hkey(g^{2xy})$. (This is not an issue if $pk$ is included in $\Htag$, since $P$ would compute $\tau = \Htag(\dots,Y^2,\dots) \neq \Htag(\dots,Y,\dots) = \tau'$ unless there is a collision in $\Htag$, and its check $\tau^* \stackrel{?}{=} \tau$ would fail.). Of course, $X^2$ can be replaced by any function of $X$ that $\adv$ can compute.
 
-In fact, it is a stretch to call this an attack, since the only thing $\adv$ does is to modify some protocol messages and cause $P$ and $P'$ to output the same session key --- which $\adv$ \emph{cannot} compute. Still, this scenario is not covered by the previous simulator. It should be simulated as follows: When $\adv$ decrypts $(s,T)$ under $\pw$, $\sim$ records $\langle\pw,pk,sk\rangle$ (although there might be a large number of such decryption attempts, and $\sim$ does not know which is the ``right'' one at this point). Then when $\adv$ sends $(s^*,T^*)$ to $P'$, $\sim$ extracts $\pw$, which allows $\sim$ to retrieve the ``right'' record $\langle\pw,pk,sk\rangle$; $\sim$ also computes $K'$ while simulating the $P'$ side. Later, when $\adv$ sends $(c^*,\tau')$, $\sim$ can tell if $\adv$ is performing the aforementioned attack by checking if $\Decap(sk,c^*) = K'$.
+In general, $\adv$ can decrypt $(s,T)$ to recover $pk := \mathsf{2F}^{\text{-}1}(\pw,(s,T))$, then re-encrypt some $pk'$ of $\adv$'s choise under the same $\pw'$ to get $(s^*,T^*) \gets \mathsf{2F}(\pw,pk')$, and finally forward $\tau'$ but manipulate $c^*$ so that $P$'s check will pass. The ``attack'' in \Cref{app:hash-pw-pk} is the special case where $pk' = pk$; there, including $pk$ in $\Htag$ inputs forces $\adv$ not to change $pk$.
+
+This scenario should be simulated as follows: When $\adv$ decrypts $(s,T)$ under $\pw$, $\sim$ records $\langle\pw,pk,sk\rangle$ (although there might be a large number of such decryption attempts, and $\sim$ does not know which is the ``right'' one at this point). Then when $\adv$ sends $(s^*,T^*)$ to $P'$, $\sim$ extracts $\pw$, which allows $\sim$ to retrieve the ``right'' record $\langle\pw,pk,sk\rangle$; $\sim$ also computes $K'$ while simulating the $P'$ side. Later, when $\adv$ sends $(c^*,\tau')$, $\sim$ can tell if $\adv$ is performing the aforementioned attack by checking if $\Decap(sk,c^*) = K'$.
 
 We show the new simulator in \Cref{fig:oeke-sim-hash-pw}. (Only the steps after receiving $(c^*,\tau^*)$ are included.)
 
@@ -1835,11 +1838,11 @@ On $(c^*,\tau^*)$ from $\func$, simulate $P$'s output as follows:
   \item If $(s^*,T^*) = (s,T) \land (c^*,\tau^*) = (c,\tau')$, send $(\NewKey, sid, P, 0^n)$ to $\func$. \textcolor[gray]{0.5}{// $\adv$ is passive}
   {\color{blue}\item If $(s^*,T^*) \neq (s,T) \land \tau^* = \tau'$, and there has been a $(\TestPwd, sid, P, \pw')$ command to $\func$ resulting in ``correct guess'' (i.e., $\sim$ previously entered step 2(b)(ii) in \Cref{fig:oeke-sim2}), there must be a $K'$ and an $SK'$ defined at that time.
       \begin{enumerate}
-        \item Retrieve record $\langle\pw',\star,sk\rangle$. If there is no such record, go to step 3.
-        \item Compute $K := \Decap(sk,c^*)$. If $K \neq K'$, go to step 3.
+        \item Retrieve record $\langle\pw',\star,sk\rangle$. If there is no such record, go to step 3. \quad \textcolor[gray]{0.5}{// $\adv$ does not decrypt $pk := \mathsf{2F}^{\text{-}1}(\pw,(s,T))$}
+        \item Compute $K := \Decap(sk,c^*)$. If $K \neq K'$, go to step 3. \quad \textcolor[gray]{0.5}{// $\adv$ sends an ``incorrect'' $c^*$}
         \item Send $(\TestPwd, sid, P, \pw')$ to $\func$.
             \begin{enumerate}
-              \item If $\func$ replies with ``wrong guess'', send $(\NewKey, sid, P, 0^n)$ to $\func$.
+              \item If $\func$ replies with ``wrong guess'', send $(\NewKey, sid, P, 0^n)$ to $\func$. \quad \textcolor[gray]{0.5}{// $P$ and $P'$'s passwords are different}
               \item If $\func$ replies with ``correct guess'', send $(\NewKey, sid, P, SK')$ to $\func$.
             \end{enumerate}
       \end{enumerate}
@@ -2010,7 +2013,7 @@ This exactly matches step 2 of the simulator in \Cref{fig:oeke-sim-hash-pw}, so 
 If we define $\tau$ as $\Htag(\pw,c,K)$, then the second bullet of the proof of \Cref{clm:htag6} is not needed, and the protocol can be proven secure under the UNPRE property of the KEM scheme (without the WNM property).
 
 \subsection{The ``Hash $pk$'' Version}
-We now consider the variant where $\pw$, but not $pk$, is further removed from $\Htag$ inputs, i.e., $\tau$ is defined as $\Htag(pk,K)$. This would best be compared with the protocol (and its security proof) in \Cref{sec:hash-pk-st}, where $\tau$ is defined as $\Htag(pk,s,T,K)$. Again there is a new scenario that requires additional care from the simulator, so we start from the changes to the simulator.
+We now consider the variant where $\pw$, but not $pk$, is further removed from $\Htag$ inputs, i.e., $\tau$ is defined as $\Htag(pk,K)$. This would best be compared with the protocol (and its security proof) in \Cref{sec:hash-pk-st}, where $\tau$ is defined as $\Htag(pk,s,T,K)$; as well as the protocol (and its security proof) in \Cref{app:no-st}, where $\tau$ is defined as $\Htag(pk,s,T,K)$. Again there is a new scenario that requires additional care from the simulator, so we start from the changes to the simulator.
 
 \subsubsection{Changes to the Simulator}
 Similar to \Cref{sec:hash-pw}, once we remove $pk$ from $\Htag$, the adversary $\adv$ can force the two parties' session keys to be the same without performing a ``real'' attack. However, this time the two parties' passwords may or may not be the same (and $\adv$ needs to know both of them), and $\adv$ should forward both $c$ and $\tau'$ from $P'$ without modification. We show this scenario in \Cref{fig:attack-no-pw}.
