@@ -497,7 +497,7 @@ On $(\NewSession, sid, P', P, \text{``respondent''})$ from $\func$ and $(s^*,T^*
 \medskip
 On $(c^*,\tau^*)$ from $\func$, simulate $P$'s output as follows:
 \begin{enumerate}
-  \item If $(s^*,T^*) = (s,T) \land (c^*,\tau^*) = (c,\tau')$, send $(\NewKey, sid, P', 0^n)$ to $\func$. \textcolor[gray]{0.5}{// $\adv$ is passive}
+  \item If $(s^*,T^*) = (s,T) \land (c^*,\tau^*) = (c,\tau')$, send $(\NewKey, sid, P', 0^n)$ to $\func$. \quad \textcolor[gray]{0.5}{// $\adv$ is passive}
   \item Otherwise find $\adv$'s $\Htag(\pw^*,pk^*,s,T,c^*,K^*)$ query resulting in $\tau^*$.
       \begin{enumerate}
         \item If there is no such query or more than one such query, send $(\TestPwd, sid, P', \bot)$ and then $(\NewKey, sid, P', 0^n)$ to $\func$.
@@ -1348,7 +1348,7 @@ We show the new simulator in \Cref{fig:oeke-sim-hash-pk-st}. (Only the steps aft
 \medskip
 On $(c^*,\tau^*)$ from $\func$, simulate $P$'s output as follows:
 \begin{enumerate}
-  \item If $(s^*,T^*) = (s,T) \land (c^*,\tau^*) = (c,\tau')$, send $(\NewKey, sid, P', 0^n)$ to $\func$. \textcolor[gray]{0.5}{// $\adv$ is passive}
+  \item If $(s^*,T^*) = (s,T) \land (c^*,\tau^*) = (c,\tau')$, send $(\NewKey, sid, P', 0^n)$ to $\func$. \quad \textcolor[gray]{0.5}{// $\adv$ is passive}
   \item Otherwise find $\adv$'s {\color{blue}$\Htag(pk^*,s,T,K^*)$} query resulting in $\tau^*$.
       \begin{enumerate}
         \item If there is no such query or more than one such query, send $(\TestPwd, sid, P, \bot)$ and then $(\NewKey, sid, P, 0^n)$ to $\func$.
@@ -1440,7 +1440,7 @@ When $\pw$ is removed from $\Htag$ inputs in \Cref{sec:hash-pk-st}, the simulato
 \medskip
 On $(c^*,\tau^*)$ from $\func$, simulate $P$'s output as follows:
 \begin{enumerate}
-  \item If $(s^*,T^*) = (s,T) \land (c^*,\tau^*) = (c,\tau')$, send $(\NewKey, sid, P', 0^n)$ to $\func$. \textcolor[gray]{0.5}{// $\adv$ is passive}
+  \item If $(s^*,T^*) = (s,T) \land (c^*,\tau^*) = (c,\tau')$, send $(\NewKey, sid, P', 0^n)$ to $\func$. \quad \textcolor[gray]{0.5}{// $\adv$ is passive}
   \item Otherwise find $\adv$'s {\color{blue}$\Htag(s,T,K^*)$} query resulting in $\tau^*$.
       \begin{enumerate}
         \item If there is no such query or more than one such query, send $(\TestPwd, sid, P, \bot)$ and then $(\NewKey, sid, P, 0^n)$ to $\func$.
@@ -1621,14 +1621,14 @@ We show the new simulator in \Cref{fig:oeke-sim-hash-pw-pk}. (Only the steps aft
 \medskip
 On $(c^*,\tau^*)$ from $\func$, simulate $P$'s output as follows:
 \begin{enumerate}
-  \item If $(s^*,T^*) = (s,T) \land (c^*,\tau^*) = (c,\tau')$, send $(\NewKey, sid, P', 0^n)$ to $\func$. \textcolor[gray]{0.5}{// $\adv$ is passive}
+  \item If $(s^*,T^*) = (s,T) \land (c^*,\tau^*) = (c,\tau')$, send $(\NewKey, sid, P', 0^n)$ to $\func$. \quad \textcolor[gray]{0.5}{// $\adv$ is passive}
   {\color{blue}\item If $(s^*,T^*) \neq (s,T) \land (c^*,\tau^*) = (c,\tau')$, and there has been a $(\TestPwd, sid, P', \pw')$ command to $\func$ resulting in ``correct guess'' (i.e., $\sim$ previously entered step 2(b)(ii) in \Cref{fig:oeke-sim2}), there must be a $pk'$ and an $SK'$ defined at that time. 
       \begin{enumerate}
-        \item Retrieve record $\langle\pw',pk,\star\rangle$. If there is no such record, send $(\TestPwd, sid, P, \bot)$ and then $(\NewKey, sid, P, 0^n)$ to $\func$. \textcolor[gray]{0.5}{// $\adv$ does not decrypt $pk := \mathsf{2F}^{\text{-}1}(\pw,(s,T))$}
-        \item If $pk \neq pk'$, send $(\TestPwd, sid, P, \bot)$ and then $(\NewKey, sid, P, 0^n)$ to $\func$. \textcolor[gray]{0.5}{// $\adv$ decrypts $(s,T)$ and gets $pk$, but then re-encrypts $(s^*,T^*) \gets \mathsf{2F}(\pw,pk')$ for another $pk'$}
+        \item Retrieve record $\langle\pw',pk,\star\rangle$. If there is no such record, send $(\TestPwd, sid, P, \bot)$ and then $(\NewKey, sid, P, 0^n)$ to $\func$. \quad \textcolor[gray]{0.5}{// $\adv$ does not decrypt $pk := \mathsf{2F}^{\text{-}1}(\pw,(s,T))$}
+        \item If $pk \neq pk'$, send $(\TestPwd, sid, P, \bot)$ and then $(\NewKey, sid, P, 0^n)$ to $\func$. \quad \textcolor[gray]{0.5}{// $\adv$ decrypts $(s,T)$ and gets $pk$, but then re-encrypts $(s^*,T^*) \gets \mathsf{2F}(\pw,pk')$ for another $pk'$}
         \item Send $(\TestPwd, sid, P, \pw')$ to $\func$.
             \begin{enumerate}
-              \item If $\func$ replies with ``wrong guess'', send $(\NewKey, sid, P, 0^n)$ to $\func$. \textcolor[gray]{0.5}{// $P$ and $P'$'s passwords are different}
+              \item If $\func$ replies with ``wrong guess'', send $(\NewKey, sid, P, 0^n)$ to $\func$. \quad \textcolor[gray]{0.5}{// $P$ and $P'$'s passwords are different}
               \item If $\func$ replies with ``correct guess'', send $(\NewKey, sid, P, SK')$ to $\func$.
             \end{enumerate}
       \end{enumerate}
