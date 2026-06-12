@@ -215,7 +215,7 @@ The proof is deferred to \Cref{app:uni-ano-ro-proof}.
 \subsection{Additional KEM Properties Used in Other Versions}
 \label{sec:kem-additional}
 \paragraph{Weak non-malleability.}
-This property roughly says that given an honest tuple of $(pk,K,c)$, the adversary cannot feasibly find another valid $(pk,K,c^*)$ tuple (i.e., a new ciphertext that works for the same public key and the same KEM key). This essentially requires that the adversary cannot merely change the format of the ciphertext without changing its actual content, which is a very weak property (in fact it is quite a stretch to even call it ``non-malleability'').
+This property roughly says that given an honest tuple of $(pk,K,c)$, the adversary cannot feasibly find another valid $(pk,K,c^*)$ tuple (i.e., a new ciphertext that works for the same public key and the same KEM key). This essentially requires that the adversary cannot merely change the \emph{format} of the ciphertext without changing its actual content, which is a very weak property (in fact it is quite a stretch to even call it ``non-malleability'').
 \begin{definition}
 A KEM scheme is \emph{weakly non-malleable (WNM)} if for any PPT adversary $\adv$, the probability that $\adv$ wins the following game is negligible:
 \[
@@ -964,7 +964,7 @@ In Game 11 $SK$ is outright set to $\bot$, whereas here it is treated the same a
   \item If $\pw^* \neq \pw$, set $SK := \bot$.
   \item If $\pw^* = \pw$, there is no change from Game 12. That is, the game runs the following procedure:
       \begin{enumerate}
-        \item Retrieve record $\langle\pw,pk,sk\rangle$. If there is no such record, or if $pk^* \neq pk$, set $SK := \bot$.\footnote{The rule ``If there is no $\langle\pw,pk,sk\rangle$ record, set $SK := \bot$'' was introduced in Game 11. We check if $pk^* = pk$ because in Game 12 $pk$ in the record (line 23 of \Cref{fig:intermediate-game}) and in $\adv$'s $\Htag$ query (line 31 of \Cref{fig:intermediate-game}) have to match each other; in other words, if $\adv$'s $\Htag$ query is on $(\pw,pk^*,s,T,c^*,\star)$ for some $pk^* \neq pk$, then Game 12 sets $SK := \bot$. Therefore, here we need to explicitly perform the $pk^* \stackrel{?}{=} pk$ check in order to be consistent with Game 12.}
+        \item Retrieve record $\langle\pw,pk,sk\rangle$. If there is no such record, or if $pk^* \neq pk$, set $SK := \bot$.\footnote{\label{fn:pk-consistency}The rule ``If there is no $\langle\pw,pk,sk\rangle$ record, set $SK := \bot$'' was introduced in Game 11. We check if $pk^* = pk$ because in Game 12 $pk$ in the record (line 23 of \Cref{fig:intermediate-game}) and in $\adv$'s $\Htag$ query (line 31 of \Cref{fig:intermediate-game}) have to match each other; in other words, if $\adv$'s $\Htag$ query is on $(\pw,pk^*,s,T,c^*,\star)$ for some $pk^* \neq pk$, then Game 12 sets $SK := \bot$. Therefore, here we need to explicitly perform the $pk^* \stackrel{?}{=} pk$ check in order to be consistent with Game 12. In other OEKE variants where $pk$ is removed from $\Htag$ inputs, this check needs to be removed as well (since $pk^*$ is not well-defined anymore).}
         \item Compute $K := \Decap(sk,c^*)$. If $K^* = K$, set $SK := \Hkey(K)$; otherwise set $SK := \bot$.
       \end{enumerate}
 \end{itemize}
@@ -1146,9 +1146,9 @@ We summarize the changes since Game 11 (i.e., after \Cref{fig:intermediate-game}
         \item If $\neg((s^*,T^*) = (s,T) \land (c^*,\tau^*) = (c,\tau'))$ (i.e., $\adv$ is not passive), Game 17 retrieves two records:
             \begin{itemize}
               \item $\adv$'s $\Htag(\pw^*,pk^*,s,T,c^*,K^*)$ query resulting in $\tau^*$. If there is none or more than one, or if there is a unique such query with $\pw^* \neq \pw$, Game 17 sets $SK := \bot$.
-              \item $\langle\pw^*,\star,sk^*\rangle$ record stored when $\adv$ queries $H_2(\pw^*,T)$. If there is none, Game 17 sets $SK := \bot$.
+              \item $\langle\pw^*,pk^*,sk^*\rangle$ record stored when $\adv$ queries $H_2(\pw^*,T)$. If there is none, Game 17 sets $SK := \bot$.
             \end{itemize}
-            (Note that $\pw^*$ in these two records has to match each other.) After that, Game 17 checks if $K^* = \Decap(sk^*,c^*)$, and computes $SK$ using $K^*$ or sets $SK := \bot$ accordingly. [changed in Games 11, 12, 13]
+            (Note that $\pw^*$ and $pk^*$ in these two records have to match each other.) After that, Game 17 checks if $K^* = \Decap(sk^*,c^*)$, and computes $SK$ using $K^*$ or sets $SK := \bot$ accordingly. [changed in Games 11, 12, 13]
        \end{enumerate}
 \end{enumerate}
 
@@ -1296,7 +1296,7 @@ On input $(pk,c)$,
   \item On $(c^*,\tau^*)$ from $\adv$, if $c^* = c$, abort. Otherwise output $c^*$.
 \end{enumerate}
 
-The definition of $\red_\text{WNM}$ ensures that $\Decap(sk,c) = K'$. If $\adv$ sends $c^*$ such that $ \Decap(sk,c^*) = K'$, then $\red_\text{WNM}$ wins the WNM game. Thus,
+The definition of $\red_\text{WNM}$ ensures that $\Decap(sk,c) = K'$. If $\adv$ sends $c^*$ such that $\Decap(sk,c^*) = K'$, then $\red_\text{WNM}$ wins the WNM game. Thus,
 \[
 \Pr[\Decap(sk,c^*) = K'] \leq \Adv_{\red_\text{WNM}}^\text{WNM}.
 \]
@@ -1307,7 +1307,7 @@ If $\Decap(sk,c) \neq K'$, i.e., $K \neq K'$, then of course $P'$'s query is not
 \label{sec:hash-pw-st}
 We now turn to the variant where $pk$ is further removed from $\Htag$ inputs, i.e., $\tau$ is defined as $\Htag(\pw,s,T,K)$. \Cref{tab:game-summary} suggests that the argument under Game 11 in \Cref{sec:games} need to (essentially) change. (Of course, since $c$ is also removed from $\Htag$, the change in \Cref{sec:hash-pw-pk-st} also needs to be made.) Below we repeat Game 11 and make the new argument.
 
-\medskip\noindent\emph{Game 11:} In the case where $\neg(\pw = \pw' \land (s^*,T^*) = (s,T) \land c^* = c)$, if there is no $\langle\pw,\star,\star\rangle$ record, set $SK := \bot$ (i.e., replace the {\color{brown}brown} text in \Cref{fig:intermediate-game} with ``$SK := \bot$'').
+\medskip\noindent\emph{Game 11:} In the case where $\neg(\pw = \pw' \land (s^*,T^*) = (s,T) \land c^* = c)$, if there is no $\langle\pw,pk,sk\rangle$ record, set $SK := \bot$ (i.e., replace the {\color{brown}brown} text in \Cref{fig:intermediate-game} with ``$SK := \bot$'').
 
 Game 10 and Game 11 differ only if $\adv$ does not make an $H_2(\pw,T)$ query, but makes an $\Htag(\pw,s,T,K^*)$ query resulting in $\tau^*$, where $K^* = \Decap(sk,c^*)$ for a freshly generated $sk$. We upper-bound this probability via a reduction $\red_\text{UNPRE}$ to the UNPRE property of the KEM scheme:
 
@@ -1410,7 +1410,7 @@ If $\adv$ makes no $\Htag(\star,s,T,\star)$ query resulting in $\tau^*$, then in
 \begin{itemize}
   \item We first upper-bound the probability that there is more than one $\langle\pw^*,pk^*,\allowbreak sk^*\rangle$ record for the same $pk^*$. Note that in each such record, $(pk^*,\star) \gets \Gen$ is freshly generated, so the probability that there is a collision in $pk^*$ is upper-bounded by ${q_2 \choose 2} \cdot p_\text{guess}(pk)$ (recall that there is a $\langle\pw^*,pk^*,sk^*\rangle$ record for each $H_2(\pw^*,T)$ query).
   \item If there is no $\langle\pw^*,pk^*,sk^*\rangle$ record, then both Game 12 and Game 13 set $SK := \bot$.
-  \item Next, suppose there is a unique $\langle\pw^*,pk^*,sk^*\rangle$ record, but $\pw^* \neq \pw$. If there is no $\langle\pw,pk,sk\rangle$ record, then both Game 12 and Game 13 set $SK := \bot$. If there is a $\langle\pw,pk,sk\rangle$ record, then $(pk,\star) \gets \Gen$ is freshly generated, so $\Pr[pk = pk^*] \leq q_2 \cdot p_\text{guess}(pk)$; and if $pk \neq pk^*$, then $\adv$ does not make an $\Htag(\pw,s,T,pk)$ query resulting in $\tau^*$ (because there is only one $\Htag$ query resulting in $\tau^*$, and it is on $pk^*$), so again both Game 12 and Game 13 set $SK := \bot$.
+  \item Next, suppose there is a unique $\langle\pw^*,pk^*,sk^*\rangle$ record, but $\pw^* \neq \pw$. If there is no $\langle\pw,pk,sk\rangle$ record, then both Game 12 and Game 13 set $SK := \bot$. If there is a $\langle\pw,pk,sk\rangle$ record, then $(pk,\star) \gets \Gen$ is freshly generated, so $\Pr[pk^* = pk] \leq q_2 \cdot p_\text{guess}(pk)$; and if $pk^* \neq pk$, then $\adv$ does not make an $\Htag(\pw,s,T,pk)$ query resulting in $\tau^*$ (because there is only one $\Htag$ query resulting in $\tau^*$, and it is on $pk^*$), so again both Game 12 and Game 13 set $SK := \bot$.
   \item Finally, if there is a unique $\langle\pw^*,pk^*,sk^*\rangle$ record, and $\pw^* = \pw$, then Game 13 just runs $P$'s algorithm in Game 12, so these two games are identical.
 \end{itemize}
 
