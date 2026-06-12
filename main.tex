@@ -1598,7 +1598,7 @@ P(\pw) \< \< \adv \< \< P'(\pw) \\
 \label{fig:attack-no-st}
 \end{figure}
 
-One can intuitively see that this does not constitute an actual attack, since the only thing $\adv$ achieves is to modify some protocol messages and cause $P$ and $P'$ to output the same session key --- which $\adv$ \emph{cannot} compute.\footnote{If anything, such an $\adv$ is ``dumber'' than an adversary who performs a regular online attack, since $\adv$ who knows the correct password could have learned the two parties' session keys but wastes such an opportunity.} What $\adv$ essentially does is to run the $\mathsf{2F}$ encryption process using a fresh randomness, yielding another $(s^*,T^*)$ which has the same effect on the $P'$ side as the honest $(s,T)$; in this way, $\adv$ is ``effectively'' passive while actually modifying the $P$-to-$P'$ message. (We stress again that this ``attack'' critically relies on $\mathsf{2F}$ being randomized, and does not work anymore if we replace it with an IC. However, all subsequent ``attacks'' --- in the setting where we further remove $\pw$ and/or $pk$ from $\Htag$ inputs --- work even with IC.)
+One can intuitively tell that this does not constitute an actual attack, since the only thing $\adv$ achieves is to modify some protocol messages and cause $P$ and $P'$ to output the same session key --- which $\adv$ \emph{cannot} compute.\footnote{If anything, such an $\adv$ is ``dumber'' than an adversary who performs a regular online attack, since $\adv$ who knows the correct password could have learned the two parties' session keys but wastes such an opportunity.} What $\adv$ essentially does is to run the $\mathsf{2F}$ encryption process using a fresh randomness, yielding another $(s^*,T^*)$ which has the same effect on the $P'$ side as the honest $(s,T)$; in this way, $\adv$ is ``effectively'' passive while actually modifying the $P$-to-$P'$ message. (We stress again that this ``attack'' critically relies on $\mathsf{2F}$ being randomized, and does not work anymore if we replace it with an IC. However, all subsequent ``attacks'' --- in the setting where we further remove $\pw$ and/or $pk$ from $\Htag$ inputs --- work even with IC.)
 
 This example vividly demonstrates why removing $(s,T)$ from the hash does not require more properties of the underlying KEM scheme, but complicates the security proof. Since this ``attack'' requires $\adv$ to decrypt and re-encrypt via some RO queries, the simulator can catch $\adv$ doing so (and can extract the password along the way), and no additional properties on the KEM level are needed. Still, this scenario is not covered by the previous simulator, and the simulator has to create a new case dedicated to this specific scenario. In more detail, the scenario in \Cref{fig:attack-no-st} should be simulated as follows: When $\adv$ decrypts $(s,T)$ under $\pw$, the simulator $\sim$ records $\langle\pw,pk,sk\rangle$ (although there might be a large number of such decryption attempts, and $\sim$ does not know which is the ``right'' one at this point). Then when $\adv$ sends $(s^*,T^*)$ to $P'$, $\sim$ extracts the ``right'' $\pw$, which allows $\sim$ to compromise $P'$'s session. Later, when $\adv$ sends $(c^*,\tau')$, $\sim$ can tell that $\adv$ is performing the aforementioned ``attack'', and can use the same $\pw$ to compromise $P$'s session.
 
@@ -1722,7 +1722,7 @@ The previous statistical argument is based on ruling out collisions in $\Htag$. 
 {\color{blue}
 \medskip\noindent\emph{New Game I:} Now that $(\pw')^*$ --- the password guess extracted from $(s^*,T^*)$ --- is defined (in Game 15), we can finally add (part of) what's in step 2 of \Cref{fig:oeke-sim-hash-pw-pk}. Concretely, we change the game as follows:
 
-In the case where $(s^*,T^*) \neq (s,T) \land (\pw')^* = \pw = \pw' \land (c^*,\tau^*) = (c,\tau')$, there is a record $\langle\pw,pk,\star\rangle$, and $pk = pk'$, set $SK := \Hkey(K')$. (In some sense this is the most crucial new game, as it covers the scenario in \Cref{fig:attack-no-st} --- which is why we need to make all these changes to begin with. It also corresponds to step 2(c)(ii) in the simulator in \Cref{fig:oeke-sim-hash-pw-pk}. We will deal with step 2(b) and 2(c)(i) in new Game III later.)
+In the case where $(s^*,T^*) \neq (s,T) \land (\pw')^* = \pw = \pw' \land (c^*,\tau^*) = (c,\tau')$, there is a record $\langle\pw,pk,\star\rangle$, and $pk = pk'$, set $SK := \Hkey(K')$. (In some sense this is the most crucial new game, as it covers the scenario in \Cref{fig:attack-no-st} --- which is why we need to make all these changes to begin with. It also corresponds to step 2(c)(ii) in the simulator in \Cref{fig:oeke-sim-hash-pw-pk}. We will deal with step 2(c)(i) in new Game III later. Note that in step 2(a) and 2(b), Game 13 already outright sets $SK := \bot$ --- cf. Game 13 in \Cref{sec:games} --- so the current game is already identical to the ideal world in these two cases.)
 
 Since $\pw = \pw' \land (s^*,T^*) \neq (s,T) \land (c^*,\tau^*) = (c,\tau')$, Game 16 finds $\adv$ or $P'$'s $\Htag$ query resulting in $\tau^*$ (see the description of Game 13). $P'$ makes a single query to $\Htag$, on input $(\pw',pk',K')$; and the query result is $\tau' = \tau^*$. Therefore, Game 16 finds this query, and does the following (again see the description of Game 13):
 \begin{enumerate}
@@ -1765,6 +1765,33 @@ The remaining case is that $(\pw')^* = \pw' \land \tau^* = \tau'$, there is a re
 \[
 \Dist_\env^{\text{newI},\text{newII}} \leq p_\text{guess}(pk).
 \]}
+
+\noindent\emph{Game 17:} Note that after new Game II, we never try to find $P'$'s $\Htag$ query anymore: in some cases we try to find $\adv$'s $\Htag$ query, and in other cases we outright set $SK$ to be a certain value or $\bot$. Therefore, the reduction still goes through (it can simulate the $P$ side honestly).\footnote{New Games I and II --- which drop $P'$'s $\Htag$ query from the check --- have to be inserted before Game 17, since the reduction in Game 17 cannot check $P'$'s $\Htag$ query (the query is $\Htag(\pw',pk',K')$, and the reduction does not know $K'$).}
+
+{\color{blue}
+\medskip\noindent\emph{New Game III:}
+In the case where $(s^*,T^*) \neq (s,T) \land (\pw')^* = \pw' \neq \pw \land (c^*,\tau^*) = (c,\tau')$, there is a record $\langle\pw,pk,\star\rangle$, and $pk = pk'$, set $SK := \bot$. (This corresponds to step 2(c)(i) in \Cref{fig:oeke-sim-hash-pw-pk}.)
+
+In this case Game 17 tries to find $\adv$'s (unique) $\Htag(\pw^*,pk^*,K^*)$ query resulting in $\tau^*$, and checks if $\pw^* = \pw$ (see Game 13). But $\tau^* = \tau' = \Htag(\pw',pk',K')$, so Game 17 sets $SK := \bot$ because it either fails to find $\adv$'s $\Htag(\pw',pk',K')$ query, or it finds such a query but then sets $SK := \bot$ because $\pw^* = \pw' \neq \pw$. Either way, Game 17 matches new Game III which outright sets $SK := \bot$. We have
+\[
+\Dist_\env^{17,\text{newIII}} = 0.
+\]
+
+\paragraph{Summary.}
+We have made the following essential changes to the games:
+\begin{enumerate}
+  \item In the case where $\pw = \pw' \land (s^*,T^*) \neq (s,T) \land c^* = c$ (case (2) in Game 2), Game 2 tries to find $P'$'s $\Htag$ query resulting in $\tau^*$ (in addition to $\adv$'s query).
+  \item In the case where $(s^*,T^*) \neq (s,T) \land (\pw')^* = \pw = \pw' \land \tau^* = \tau'$, there is a record $\langle\pw,pk,\star\rangle$, and $pk = pk'$, new Game I outright sets $SK := \Hkey(K')$ (without trying to find any $\Htag$ query by $\adv$ or $P'$).
+  \item In the case where $\pw = \pw' \land (s^*,T^*) \neq (s,T) \land c^* = c$, new Game II drops the check on $P'$'s $\Htag$ query introduced in Game 2 (except in new Game I's condition, where all checks on $\Htag$ queries have already been dropped).
+  \item In the case where $(s^*,T^*) \neq (s,T) \land (\pw')^* = \pw' \neq \pw \land \tau^* = \tau'$, there is a record $\langle\pw,pk,\star\rangle$, and $pk = pk'$, new Game III outright sets $SK := \bot$.
+\end{enumerate}
+
+Items (1) and (3) introduce the check on $P'$'s $\Htag$ query and then drop it, so there is no net change there. To see the net change, we only need to combine items (2) and (4), which say that in the case where $(s^*,T^*) \neq (s,T) \land (\pw')^* = \pw' \land \tau^* = \tau'$, there is a record $\langle\pw,pk,\star\rangle$, and $pk = pk'$,
+\begin{itemize}
+  \item If $(\pw')^* = \pw$, then we set $SK := \Hkey(K')$ [item (2)].
+  \item If $(\pw')^* \neq \pw$, then we set $SK := \bot$ [item (4)].
+\end{itemize}
+This exactly matches step 2 of the simulator in \Cref{fig:oeke-sim-hash-pw}, so new Game III is identical to the ideal world.} This completes the proof.
 
 \paragraph{The ``hash $\pw$, $pk$ and $c$'' version.}
 If we define $\tau$ as $\Htag(\pw,pk,c,K)$, then the second bullet of the proof of \Cref{clm:htag5} is not needed, and the protocol can be proven secure without the WNM property of the KEM scheme (i.e., under the same assumptions as in the ``hash everything'' version).
