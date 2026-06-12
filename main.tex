@@ -1686,7 +1686,7 @@ If $pk \neq pk'$ or $K \neq K'$ then of course $P'$'s query is not $\Htag(\pw,pk
 \]
 which yields the claim.
 \end{proof}
-The remaining argument is essentially identical to that in the old Game 2.
+The remaining argument is essentially identical to that under the old Game 2.
 
 \medskip
 For subsequent games, if they only involve case (1) in Game 2 then they do not need to change, since the new Game 2 does not make any change in this case. However, if a game involves case (2) then some changes need to be made, since the new Game 2 additionally checks $P'$'s $\Htag$ queries, which a reduction might not be able to do.
@@ -1705,15 +1705,15 @@ For subsequent games, if they only involve case (1) in Game 2 then they do not n
 
 This game only involves case (1) in Game 2, i.e., it checks $\adv$'s $\Htag$ queries \emph{but does not check $P'$'s $\Htag$ query}. Therefore, this game hop has nothing to do with what's different in the new Game 2, and the previous argument still goes through.
 
-\medskip\noindent\emph{Game 13:} This game should now extract $\pw^*$ from $\adv$ {\color{blue}\emph{or $P'$}}'s $\Htag$ query, if case (2) in Game 2 happens and $\adv$ also forwards $\tau'$ from $P'$ to $P$ without modification. For completeness, we include a full description of the game.
+\medskip\noindent\emph{Game 13:} This game should now extract $\pw^*$ from $\adv$ {\color{blue}\emph{or $P'$}}'s $\Htag$ query, if case (2) in Game 2 happens. For completeness, we include a full description of the game.
 
-In the case where {\color{blue}$\pw \neq \pw' \lor (s^*,T^*) = (s,T) \lor (c^*,\tau^*) \neq (c,\tau')$ yet $\neg(\pw = \pw' \land (s^*,T^*) = (s,T) \land (c^*,\tau^*) = (c,\tau'))$}, find $\adv$'s $\Htag(\pw^*,pk^*,K^*)$ query resulting in $\tau^*$. If there is none or more than one, set $SK := \bot$. Otherwise there is a unique such $\Htag(\pw^*,pk^*,K^*)$ query, and
+In the case where {\color{blue}$\pw \neq \pw' \lor c^* \neq c \lor (\pw = \pw' \land (s^*,T^*) = (s,T) \land c^* = c \land \tau^* \neq \tau')$}, find $\adv$'s $\Htag(\pw^*,pk^*,K^*)$ query resulting in $\tau^*$. If there is none or more than one, set $SK := \bot$. Otherwise there is a unique such $\Htag(\pw^*,pk^*,K^*)$ query, and
 \begin{itemize}
   \item If $\pw^* \neq \pw$, set $SK := \bot$.
   \item If $\pw^* = \pw$, there is no change from Game 12.
 \end{itemize}
 
-Furthermore, in the case where $\pw = \pw' \land (s^*,T^*) \neq (s,T) \land (c^*,\tau^*) = (c,\tau')$, do the same as above, except that we now find $\adv$ {\color{blue}\emph{or $P'$}}'s $\Htag(\pw^*,pk^*,K^*)$ query resulting in $\tau^*$.
+Furthermore, in the case where $\pw = \pw' \land (s^*,T^*) \neq (s,T) \land c^* = c$ (i.e., case (2) in Game 2), do the same as above, except that we now find $\adv$ {\color{blue}\emph{or $P'$}}'s $\Htag(\pw^*,pk^*,K^*)$ query resulting in $\tau^*$.
 
 The previous statistical argument is based on ruling out collisions in $\Htag$. Here we can still rule out such collisions, except that the probability of a collision is $\qtag(\qtag+1)/2$ rather than $\qtag(\qtag-1)/2$ (since we may additionally count the $\Htag$ query by $P'$). The rest of the argument does not change.
 
@@ -1724,7 +1724,7 @@ The previous statistical argument is based on ruling out collisions in $\Htag$. 
 
 In the case where $(s^*,T^*) \neq (s,T) \land (\pw')^* = \pw = \pw' \land (c^*,\tau^*) = (c,\tau')$, there is a record $\langle\pw,pk,\star\rangle$, and $pk = pk'$, set $SK := \Hkey(K')$. (In some sense this is the most crucial new game, as it covers the scenario in \Cref{fig:attack-no-st} --- which is why we need to make all these changes to begin with. It also corresponds to step 2(c)(ii) in the simulator in \Cref{fig:oeke-sim-hash-pw-pk}. We will deal with step 2(b) and 2(c)(i) in new Game III later.)
 
-Since $\pw = \pw' \land (s^*,T^*) \neq (s,T) \land (c^*,\tau^*) = (c,\tau')$, Game 16 finds $\adv$ or $P'$'s $\Htag$ query resulting in $\tau^*$ (see the description of Game 13). $P'$ makes a singe query to $\Htag$, on input $(\pw',pk',K')$; and the query result is $\tau' = \tau^*$. Therefore, Game 16 finds this query, and does the following (again see the description of Game 13):
+Since $\pw = \pw' \land (s^*,T^*) \neq (s,T) \land (c^*,\tau^*) = (c,\tau')$, Game 16 finds $\adv$ or $P'$'s $\Htag$ query resulting in $\tau^*$ (see the description of Game 13). $P'$ makes a single query to $\Htag$, on input $(\pw',pk',K')$; and the query result is $\tau' = \tau^*$. Therefore, Game 16 finds this query, and does the following (again see the description of Game 13):
 \begin{enumerate}
   \item Check if $\pw' = \pw$, which is indeed the case.
   \item Retrieve the $\langle\pw,pk,sk\rangle$ record (as what Game 11 dictates).
@@ -1734,7 +1734,7 @@ Since $\pw = \pw' \land (s^*,T^*) \neq (s,T) \land (c^*,\tau^*) = (c,\tau')$, Ga
       c^* = c, \\
       K = \Decap(sk,c^*)\text{ on the }P\text{ side},
       \end{gather*}
-      furthermore $pk = pk'$ (due to the condition of the game) and $(pk,sk)$ are an honestly generated KEM public/secret key pair (due to step 2 above), so by the correctness of the KEM scheme, the $K' \stackrel{?}{=} K$ check passes except with probability $\varepsilon_\text{correctness}$.
+      furthermore $pk = pk'$ (per the condition of the game) and $(pk,sk)$ are an honestly generated KEM public/secret key pair (per step 2 above), so by the correctness of the KEM scheme, the $K' \stackrel{?}{=} K$ check passes except with probability $\varepsilon_\text{correctness}$.
   \item Set $SK := \Hkey(K) (= \Hkey(K') = SK')$.
 \end{enumerate}
 This entire process in Game 16 eventually results in setting $SK := SK'$ except with probability $\varepsilon_\text{correctness}$, which exactly matches the new game. Thus, there is no difference. We have
@@ -1742,6 +1742,29 @@ This entire process in Game 16 eventually results in setting $SK := SK'$ except 
 \Dist_\env^{16,\text{newI}} \leq \varepsilon_\text{correctness}.
 \]
 }
+
+In case (2) in Game 2, we have to check both $\adv$ and $P'$'s $\Htag$ queries, exactly because of the special scenario in new Game I (i.e., in \Cref{fig:attack-no-st}). Now that this case has been singled out and dealt with, we can remove the check of $P'$'s $\Htag$ queries.
+
+{\color{blue}
+\medskip
+\noindent\emph{New Game II:} In the case where $\pw = \pw' \land (s^*,T^*) \neq (s,T) \land c^* = c$ (i.e., case (2) in Game 2), we find $\adv$ \emph{or $P'$}'s $\Htag(\pw^*,pk^*,K^*)$ query resulting in $\tau^*$ --- except that in new Game I's condition, new Game I already shortcuts it to $SK := \Hkey(K')$ without trying to find any $\Htag$ query. In this game, we do not check $P'$'s $\Htag$ query anymore, and only check $\adv$'s $\Htag$ query.
+
+There are the following cases:
+\begin{itemize}
+  \item If $\tau^* \neq \tau'$, then of course $P'$'s $\Htag$ query does not result in $\tau^*$ (it results in $\tau'$), so we can safely drop $P'$'s $\Htag$ query from the check.
+  \item If $\tau^* = \tau'$, but there is no $\langle\pw,pk,\star\rangle$ record, then both new Game I and new Game II outright set $SK := \bot$, regardless of $\Htag$ queries by $\adv$ or $P'$. Thus, the two games are identical.
+  \item If $(\pw')^* \neq \pw' \land \tau^* = \tau'$, and there is a record $\langle\pw,pk,\star\rangle$, then $P'$'s $\Htag(\pw',pk',K')$ query results in $\tau^*$, and we need to argue that this query can be dropped from the check.
+      \begin{itemize}
+        \item If $\adv$ queries $\Htag(\pw',pk',K')$, then new Game II still finds this query, so new Game I and new Game II are identical.
+        \item If $\adv$ does not query $\Htag(\pw',pk',K')$, then new Game II sets $SK := \bot$. We argue that new Game I also sets $SK := \bot$ except with negligible probability. New Game I finds $P'$'s $\Htag(\pw',pk',K')$ query, and sets $SK := \bot$ if $pk \neq pk'$. But note that $pk$ is freshly generated when $\adv$ queries $H_2(\pw',T)$ --- in particular, it is independent of the $P'$ side where $pk'$ is computed ---, so $\Pr[pk = pk'] \leq p_\text{guess}(pk)$.
+      \end{itemize}
+  \item If $(\pw')^* = \pw' \land \tau^* = \tau'$, there is a record $\langle\pw,pk,\star\rangle$, but $pk \neq pk'$, then new Game I finds $P'$'s $\Htag(\pw',pk',K')$ query and then sets $SK := \bot$ because $pk \neq pk'$, and new Game II also sets $SK := \bot$ because it either fails to find $\adv$'s $\Htag(\pw',pk',K')$ query, or it finds such a query but then sets $SK := \bot$ because $pk \neq pk'$. Thus, the two games are identical.
+\end{itemize}
+
+The remaining case is that $(\pw')^* = \pw' \land \tau^* = \tau'$, there is a record $\langle\pw,pk,\star\rangle$, and $pk = pk'$. This is exactly the condition in new Game I, in which case we do not make any change in new Game II. Overall, we conclude that
+\[
+\Dist_\env^{\text{newI},\text{newII}} \leq p_\text{guess}(pk).
+\]}
 
 \paragraph{The ``hash $\pw$, $pk$ and $c$'' version.}
 If we define $\tau$ as $\Htag(\pw,pk,c,K)$, then the second bullet of the proof of \Cref{clm:htag5} is not needed, and the protocol can be proven secure without the WNM property of the KEM scheme (i.e., under the same assumptions as in the ``hash everything'' version).
