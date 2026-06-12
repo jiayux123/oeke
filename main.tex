@@ -1653,6 +1653,7 @@ On $(c^*,\tau^*)$ from $\func$, simulate $P$'s output as follows:
 \end{figure}
 
 \subsubsection{Changes in Game Hops}
+\label{app:game-hops-hash-pw-pk}
 Note that \Cref{clm:htag} in Game 2 does not hold anymore, exactly due to what the adversary can do in \Cref{fig:attack-no-pk} ($P$ does not reject even though $\adv$ is not passive and $\adv$ makes no $\Htag$ query whatsoever). As such, Game 2 needs to change essentially. Since Game 2 is almost at the beginning of the sequence of games, this affects some subsequent games and we need to proceed carefully. The trick is to isolate the specific case of the new ``attack'', i.e., the case that makes \Cref{clm:htag} fail; in this case we need to additionally check $P'$'s $\Htag$ query, whereas in all other cases we can proceed as before. In this way we minimize the affect of the change in Game 2.
 
 We start from describing the new Game 2. Most of the subsequent argument is clerical work verifying that the previous argument still goes through; the parts that need to essentially change are shown in {\color{blue}blue}.
@@ -1867,7 +1868,7 @@ On $(c^*,\tau^*)$ from $\func$, simulate $P$'s output as follows:
 
 \subsubsection{Changes in Game Hops}
 \label{sec:new-games}
-Note that \Cref{clm:htag} in Game 2 does not hold anymore, exactly due to what the adversary can do in \Cref{fig:attack-no-pk} ($P$ does not reject even though $\adv$ makes no $\Htag$ query whatsoever). As such, Game 2 needs to change essentially. Since Game 2 is almost at the beginning of the sequence of games, this affects some subsequent games and we need to proceed carefully. (Most of it is clerical work verifying that the previous argument still goes through; the parts that need to change essentially are shown in {\color{blue}blue}.) We start from describing the new Game 2.
+The new security proof has a very similar structure to that in \Cref{app:game-hops-hash-pw-pk}: split Game 2 into two cases and additionally check $P'$'s $\Htag$ queries in the second case; verify that all of Games 3--16 still go through; insert new Games I and II between Game 16 and Game 17; verify that Game 17 still goes through; insert new Game III after Game 17. Below we omit Games 3--17 and only describe Game 2 and the three new games.
 
 \medskip\noindent\emph{Game 2:} In the case where {\color{blue}$\pw \neq \pw' \lor ((s^*,T^*) = (s,T) \land c^* \neq c)$}, find $\adv$'s $\Htag(\pw,K^*)$ query resulting in $\tau^*$. If there is none or more than one, set $SK := \bot$. If there is a unique such query, do the following:
 \begin{itemize}
@@ -1899,42 +1900,6 @@ The proof of this claim is essentially part of the proof of \Cref{clm:htag2}. $P
 This yields the claim.
 \end{proof}
 The remaining argument is essentially identical to that in the old Game 2.
-
-\medskip
-For subsequent games, if they only involve case (1) in Game 2 then they do not need to change, since the new Game 2 does not make any change in this case. However, if a game involves case (2) then some changes need to be made, since the new Game 2 additionally checks $P'$'s $\Htag$ queries, which a reduction might not be able to do.
-
-\medskip\noindent\emph{Games 3--4:} These two games deal with the case where $\pw = \pw' \land (s^*,T^*) = (s,T)$. This falls into case (1) in Game 2, so the reductions still go through: they abort if $\pw = \pw' \land (s^*,T^*) = (s,T)$ does not hold, and if $\pw = \pw' \land (s^*,T^*) = (s,T)$, they can still simulate the games by checking $\adv$'s $\Htag$ queries. Crucially, the reductions do not need to check $P'$'s $\Htag$ query (which they cannot do), since in this case we have defined Game 2 so that it only checks $\adv$'s $\Htag$ queries.
-
-\medskip\noindent\emph{Game 5:} This game involves a reduction to the UNI-PK property of the KEM scheme. The reduction works essentially because $sk'$ is not used anywhere in the game (so the reduction can embed its challenge as $pk'$ without knowing $sk'$), and this fact still holds even though we need to additionally check $P'$'s $\Htag$ queries in some cases now. So, this reduction still goes through.
-
-\medskip\noindent\emph{Games 6--8:} These three games deal with the case where $\pw \neq \pw' \land (s^*,T^*) = (s,T)$. This again falls into case (1) in Game 2, so the reductions in Games 6 and 7 still go through; Game 8 involves a statistical argument which does not need to change either.
-
-\medskip\noindent\emph{Games 9--10:} These two games involve statistical arguments only, and they have nothing to do with whether the games need to check $P'$'s $\Htag$ queries.
-
-\medskip\noindent\emph{Game 11:} This game should read as follows now: In the case where {\color{blue}$\pw \neq \pw' \lor ((s^*,T^*) = (s,T) \land c^* \neq c)$ (i.e., case (1) in Game 2)}, if there is no $\langle\pw,\star,\star\rangle$ record, set $SK := \bot$. In case (1) we do not check $P'$'s $\Htag$ queries, so the reduction to the UNPRE property of the KEM scheme still goes through.
-
-\medskip
-\noindent\emph{Game 12:} This game should read as follows now: In the case where $\pw = \pw' \land (s^*,T^*) = (s,T) \land c^* = c \land \tau^* \neq \tau'$, do what's in the {\color{blue}$\pw \neq \pw' \lor ((s^*,T^*) = (s,T) \land c^* \neq c)$ case (i.e., case (1) in Game 2)}. That is, first find the $\langle\pw,\star,\star\rangle$ record, then find $\adv$'s $\Htag(\pw,K^*)$ query resulting in $\tau^*$. If there is none or more than one, set $SK := \bot$. If there is a unique such query, do the following:
-\begin{itemize}
-  \item If $K^* = K$, set $SK := \Hkey(K)$.
-  \item If $K^* \neq K$, set $SK := \bot$.
-\end{itemize}
-
-This game only involves case (1) in Game 2, i.e., it checks $\adv$'s $\Htag$ queries \emph{but does not check $P'$'s $\Htag$ query}. Therefore, this game hop has nothing to do with what's different in the new Game 2, and the previous argument still goes through.
-
-\medskip\noindent\emph{Game 13:} This game should now extract $\pw^*$ from $\adv$ {\color{blue}\emph{or $P'$}}'s $\Htag$ query, in case (2) in Game 2. For completeness, we include a full description of the game.
-
-In the case where {\color{blue}$\pw \neq \pw' \lor ((s^*,T^*) = (s,T) \land (c^*,\tau^*) \neq (c,\tau'))$}, find $\adv$'s $\Htag(\pw^*,K^*)$ query resulting in $\tau^*$. If there is none or more than one, set $SK := \bot$. Otherwise there is a unique such $\Htag(\pw^*,K^*)$ query, and
-\begin{itemize}
-  \item If $\pw^* \neq \pw$, set $SK := \bot$.
-  \item If $\pw^* = \pw$, run the remaining part of $P'$'s algorithm except that we now use $\pw^*$ instead of $\pw$ --- that is, if there is no $\langle\pw^*,pk^*,sk^*\rangle$ record then set $SK := \bot$; otherwise compute $K := \Decap(sk^*,c^*)$, and if $K^* = K$ then set $SK := \Hkey(K)$, otherwise set $SK := \bot$.
-\end{itemize}
-
-Furthermore, in the case where $\pw = \pw' \land (s^*,T^*) \neq (s,T)$ (i.e., case (2) in Game 2), do the same as above, except that we now find $\adv$ {\color{blue}\emph{or $P'$}}'s $\Htag(\pw^*,K^*)$ query resulting in $\tau^*$.
-
-The previous statistical argument is based on ruling out collisions in $\Htag$. Here we can still rule out such collisions, except that the probability of a collision is $\qtag(\qtag+1)/2$ rather than $\qtag(\qtag-1)/2$ (since we may additionally count the $\Htag$ query by $P'$). The rest of the argument does not change.
-
-\medskip\noindent\emph{Games 14--16:} The statistical arguments for these three games do not need to change.
 
 {\color{blue}
 \medskip\noindent\emph{New Game I:} Now that $(\pw')^*$ --- the password guess extracted from $(s^*,T^*)$ --- is defined (in Game 15), we can finally add (part of) what's in step 2 of \Cref{fig:oeke-sim-hash-pw}. Concretely, we change the game as follows:
