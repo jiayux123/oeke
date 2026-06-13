@@ -103,7 +103,35 @@
 \section{Preliminaries and Technical Overview}
 \label{sec:prelim}
 Let $n$ be the security parameter; we assume that all algorithms take $1^n$ as an input, and do not explicitly write it.
+
+\paragraph{Key Encapsulation Mechanisms (KEMs).}
+A \emph{Key Encapsulation Mechanism (KEM)} scheme consists of three algorithms:
+\begin{itemize}
+  \item The \emph{key generation} algorithm $\Gen$ outputs a public/secret key pair $(pk,sk)$. We write $(pk,sk) \gets \Gen$, and use $\pkspace$ to denote the space of the public key $pk$.
+  \item The \emph{encapsulation} algorithm $\Encap$ takes as input a public key $pk$, and outputs a ciphertext $c$ and a KEM key $K$. We write $(c,K) \gets \Encap(pk)$.
+  \item The (deterministic) \emph{decapsulation} algorithm $\Decap$ takes as input a secret key $sk$ and a ciphertext $c$, and outputs a KEM key $K$. We write $K := \Decap(sk,c)$ or $\Decap(sk,c) = K$.
+\end{itemize}
+
+We require two schematic properties for a KEM scheme:
+\begin{itemize}
+  \item \emph{Correctness:} For $(pk,sk) \gets \Gen$, $(c,K) \gets \Encap(pk)$, and $K' := \Decap(sk,\allowbreak c)$, we have
+      \[
+      \Pr[K = K'] \geq 1-\varepsilon_\text{correctness},
+      \]
+      where $\varepsilon_\text{correctness}$ is negligible.
+  \item \emph{High min-entropy:} For any $pk' \in \pkspace$, we have
+      \[
+      \Pr[pk = pk' : (pk,\star) \gets \Gen] \leq p_\text{guess},
+      \]
+      where $p_\text{guess}$ is negligible. In other words, a (computationally unbounded) adversary has negligible probability of guessing an honestly generated public key correctly.
+\end{itemize}
+
+The high min-entropy property implies that for $q$ honestly generated public keys, the probability that at least two of them are equal is upper-bounded by ${q \choose 2} \cdot p_\text{guess}$.
+
+The most commonly seen security property in the KEM literature is security under chosen-ciphertext attacks (CCA, or IND-CCA), but the KEM scheme in OEKE needs other properties. The ``hash everything'' version of OEKE only requires some relatively standard properties for the underlying KEM scheme, which we define in \Cref{sec:kem-standard}. The variants where certain items are removed from the hash require non-standard properties, which we define in \Cref{sec:kem-additional}.
+
 \subsection{KEM Properties Used in the ``Hash Everything'' Version}
+\label{sec:kem-standard}
 \paragraph{Pseudorandom public keys.}
 This property roughly says that an honestly generated public key is indistinguishable from uniformly random.
 \begin{definition}
@@ -292,7 +320,10 @@ A KEM scheme is \emph{robust (ROB)} if for any PPT adversary $\adv$, the probabi
 \end{definition}
 Robustness has been studied in the context of public-key encryption schemes \cite{TCC:AbdBelNev10} and authenticated encryption schemes \cite{ToSC:FarOrlRos17}. In these prior works, robustness requires that the adversary cannot feasibly come up with a ciphertext that is \emph{valid} under two public keys. Here we only need the adversary not to come up with a ciphertext that decapsulates to the \emph{same} KEM key, which is a much weaker property.
 
-ROB is needed in OEKE varants where $\pw$ and $pk$ are \emph{both} removed from $\Htag$ inputs. This is to prevent the following attack: The OEKE adversary $\adv$ completely disregards $P'$, and on $(s,T)$ from $P$, $\adv$ chooses two password guesses $\pw_1^*,\pw_2^*$ and computes $pk_1^* := \mathsf{2F}^{\text{-}1}(\pw_1^*,(s,T)), pk_2^* := \mathsf{2F}^{\text{-}1}(\pw_2^*,(s,T))$. If $\adv$ can find $(c^*,K^*)$ that breaks the ROB property for $pk_1^*,pk_2^*$, it then sends $(c^*,\tau^* = \Htag(s,T,c^*,K^*))$ to $P$. As long as one of $\pw_1^*,\pw_2^*$ is equal to $P$'s password $\pw$, $P$'s check will pass and $\adv$ can compute $P$'s session key $SK = \Hkey(K^*)$. In this way $\adv$ can make two password guesses per session, which is not allowed by PAKE security. (If either $\pw$ or $pk$ is included in $\Htag$ then the attack above does not work, since $\adv$ needs to commit to a single $(\pw^*,pk^*)$ pair while sending $\tau^*$, unless $\adv$ finds a collision in $\Htag$.)
+ROB is needed in OEKE variants where $\pw$ and $pk$ are \emph{both} removed from $\Htag$ inputs. This is to prevent the following attack: The OEKE adversary $\adv$ completely disregards $P'$, and on $(s,T)$ from $P$, $\adv$ chooses two password guesses $\pw_1^*,\pw_2^*$ and computes $pk_1^* := \mathsf{2F}^{\text{-}1}(\pw_1^*,(s,T)), pk_2^* := \mathsf{2F}^{\text{-}1}(\pw_2^*,(s,T))$. If $\adv$ can find $(c^*,K^*)$ that breaks the ROB property for $pk_1^*,pk_2^*$, it then sends $(c^*,\tau^* = \Htag(s,T,c^*,K^*))$ to $P$. As long as one of $\pw_1^*,\pw_2^*$ is equal to $P$'s password $\pw$, $P$'s check will pass and $\adv$ can compute $P$'s session key $SK = \Hkey(K^*)$. In this way $\adv$ can make two password guesses per session, which is not allowed by PAKE security. (If either $\pw$ or $pk$ is included in $\Htag$ then the attack above does not work, since $\adv$ needs to commit to a single $(\pw^*,pk^*)$ pair while sending $\tau^*$, unless $\adv$ finds a collision in $\Htag$.)
+
+\medskip
+It is unclear whether our new KEM properties are of independent interest. Some of them, such as ROB, appear natural enough; while properties such as KBIND look highly tailored (especially since in KBIND one of the public keys is generated honestly, and the other is sampled uniformly at random). Either way, we do not know of any other applications of these properties yet.
 
 \paragraph{What about removing $(s,T)$ from $\Htag$ inputs?}
 Note that all of the KEM properties above are needed in a certain OEKE variant where one or more of $\pw,pk,c$ are removed from $\Htag$ inputs; we never mentioned removing $(s,T)$. Roughly speaking, including $(s,T)$ in $\Htag$ inputs forces the adversary $\adv$ to forward $(s,T)$ to $P'$ without modification if it later wants to forward $\tau'$ to $P$ without modification; removing $(s,T)$ allows $\adv$ to modify $(s,T)$ to some other $(s^*,T^*)$ and later forward $\tau'$, while still making $P$'s check pass. However, it turns out that all these additional scenarios require $\adv$ to know the correct password of $P'$, which can be extracted by the simulator, so they are not ``real'' attacks (although they complicate the security proofs a lot) and do not require additional KEM properties. We refer to \Cref{app:no-st} for more details. 
@@ -943,13 +974,13 @@ s \gets \{0,1\}^{3n}; T \gets \group \< \< \< \< \\
 
 \medskip\noindent\emph{Game 11:} In the case where $\neg(\pw = \pw' \land (s^*,T^*) = (s,T) \land c^* = c)$, if there is no $\langle\pw,pk,sk\rangle$ record, set $SK := \bot$ (i.e., replace the {\color{brown}brown} text in \Cref{fig:intermediate-game} with ``$SK := \bot$'').
 
-Game 10 and Game 11 differ only if $\adv$ does not make an $H_2(\pw,T)$ query, but makes an $\Htag(\pw,pk,s,T,c^*,K^*)$ query resulting in $\tau^*$ (for $c^*,K^*,\tau^*$ of $\adv$'s choice and $pk$ generated in the {\color{brown}brown} text). This in particular requires $\adv$ to know $pk$, which is freshly generated by $\Gen$. Therefore, the probability that (even a computationally unbounded) $\adv$ can predict $pk$ is upper-bounded by $p_\text{guess}(pk)$. We have
+Game 10 and Game 11 differ only if $\adv$ does not make an $H_2(\pw,T)$ query, but makes an $\Htag(\pw,pk,s,T,c^*,K^*)$ query resulting in $\tau^*$ (for $c^*,K^*,\tau^*$ of $\adv$'s choice and $pk$ generated in the {\color{brown}brown} text). This in particular requires $\adv$ to know $pk$, which is freshly generated by $\Gen$. Therefore, the probability that (even a computationally unbounded) $\adv$ can predict $pk$ is upper-bounded by $p_\text{guess}$. We have
 \[
-\Dist_\env^{10,11} \leq p_\text{guess}(pk).
+\Dist_\env^{10,11} \leq p_\text{guess}.
 \]
 
 \emph{{\color{red}The game above corresponds to game $\mathsf{G}_{15}$ in \cite{EPRINT:ArrBarJar25}. \cite{EPRINT:ArrBarJar25} does not include the condition $\neg(\pw = \pw' \land (s^*,T^*) = (s,T) \land c^* = c)$, i.e., it appears that this game rewrites what our Game 1 does, which is incorrect. \\
-\indent \cite{EPRINT:ArrBarJar25} uses the notation $H_\infty(pk : (pk,\star) \gets \Gen)$ instead of $p_\text{guess}(pk)$, without explaining what it means. By default it is the min-entropy of $pk$, namely $-\log p_\text{guess}(pk)$ (which is a value greater than $1$). But this is clearly not what \cite{EPRINT:ArrBarJar25} means. \\
+\indent \cite{EPRINT:ArrBarJar25} uses the notation $H_\infty(pk : (pk,\star) \gets \Gen)$ instead of $p_\text{guess}$, without explaining what it means. By default it is the min-entropy of $pk$, namely $-\log p_\text{guess}$ (which is a value greater than $1$). But this is clearly not what \cite{EPRINT:ArrBarJar25} means. \\
 \indent\ul{The argument in this game critically relies on $pk$ being included in $\Htag$ inputs.}
 }}
 
@@ -1411,15 +1442,15 @@ We first state the new Game 13, and then make the argument.
 
 If $\adv$ makes no $\Htag(\star,s,T,\star)$ query resulting in $\tau^*$, then in particular $\adv$ makes no $\Htag(pk,s,T,\star)$ query resulting in $\tau^*$, so both Game 12 and Game 13 set $SK := \bot$. The probability that $\adv$ makes two different $\Htag(\star,s,T,\star)$ queries both resulting in $\tau^*$ is upper-bounded by $\qtag(\qtag-1)/2^{2n+1}$. (This part does not change from the argument under the old Game 13.) Below we assume that $\adv$ makes a unique $\Htag(pk^*,s,T,K^*)$ query resulting in $\tau^*$:
 \begin{itemize}
-  \item We first upper-bound the probability that there is more than one $\langle\pw^*,pk^*,\allowbreak sk^*\rangle$ record for the same $pk^*$. Note that in each such record, $(pk^*,\star) \gets \Gen$ is freshly generated, so the probability that there is a collision in $pk^*$ is upper-bounded by ${q_2 \choose 2} \cdot p_\text{guess}(pk)$ (recall that there is a $\langle\pw^*,pk^*,sk^*\rangle$ record for each $H_2(\pw^*,T)$ query).
+  \item We first upper-bound the probability that there is more than one $\langle\pw^*,pk^*,\allowbreak sk^*\rangle$ record for the same $pk^*$. Note that in each such record, $(pk^*,\star) \gets \Gen$ is freshly generated, so the probability that there is a collision in $pk^*$ is upper-bounded by ${q_2 \choose 2} \cdot p_\text{guess}$ (recall that there is a $\langle\pw^*,pk^*,sk^*\rangle$ record for each $H_2(\pw^*,T)$ query).
   \item If there is no $\langle\pw^*,pk^*,sk^*\rangle$ record, then both Game 12 and Game 13 set $SK := \bot$.
-  \item Next, suppose there is a unique $\langle\pw^*,pk^*,sk^*\rangle$ record, but $\pw^* \neq \pw$. If there is no $\langle\pw,pk,sk\rangle$ record, then both Game 12 and Game 13 set $SK := \bot$. If there is a $\langle\pw,pk,sk\rangle$ record, then $(pk,\star) \gets \Gen$ is freshly generated, so $\Pr[pk^* = pk] \leq q_2 \cdot p_\text{guess}(pk)$; and if $pk^* \neq pk$, then $\adv$ does not make an $\Htag(\pw,s,T,pk)$ query resulting in $\tau^*$ (because there is only one $\Htag$ query resulting in $\tau^*$, and it is on $pk^*$), so again both Game 12 and Game 13 set $SK := \bot$.
+  \item Next, suppose there is a unique $\langle\pw^*,pk^*,sk^*\rangle$ record, but $\pw^* \neq \pw$. If there is no $\langle\pw,pk,sk\rangle$ record, then both Game 12 and Game 13 set $SK := \bot$. If there is a $\langle\pw,pk,sk\rangle$ record, then $(pk,\star) \gets \Gen$ is freshly generated, so $\Pr[pk^* = pk] \leq q_2 \cdot p_\text{guess}$; and if $pk^* \neq pk$, then $\adv$ does not make an $\Htag(\pw,s,T,pk)$ query resulting in $\tau^*$ (because there is only one $\Htag$ query resulting in $\tau^*$, and it is on $pk^*$), so again both Game 12 and Game 13 set $SK := \bot$.
   \item Finally, if there is a unique $\langle\pw^*,pk^*,sk^*\rangle$ record, and $\pw^* = \pw$, then Game 13 just runs $P$'s algorithm in Game 12, so these two games are identical.
 \end{itemize}
 
 In sum, we have
 \[
-\Dist_\env^{12,13} \leq \frac{q_2(q_2+1)}{2}\cdot p_\text{guess}(pk) + \frac{\qtag(\qtag-1)}{2^{2n+1}}.
+\Dist_\env^{12,13} \leq \frac{q_2(q_2+1)}{2}\cdot p_\text{guess} + \frac{\qtag(\qtag-1)}{2^{2n+1}}.
 \]
 
 Overall, we conclude that the ``hash $pk$ and $(s,T)$'' version is secure under the WNM property of the KEM scheme.
@@ -1704,7 +1735,7 @@ For subsequent games, if they only involve case (1) in Game 2 then they do not n
 
 \medskip\noindent\emph{Games 9--10:} These two games involve statistical arguments only, and they have nothing to do with whether the games need to check $P'$'s $\Htag$ queries.
 
-\medskip\noindent\emph{Game 11:} This game hop goes through for essentially the same reason as in \Cref{sec:games}. The difference is that now Game 10 and Game 11 differ if $\adv$ does not make an $H_2(\pw,T)$ query, but $\adv$ \emph{{\color{blue}or $P'$}} makes an $\Htag(\pw,pk,K^*)$ query resulting in $\tau^*$. However, $pk$ is freshly generated by $P$, independent of \emph{both} $\adv$ and $P'$'s views. Thus, the distinguishing advantage between Game 10 and Game 11 is still upper-bounded by $p_\text{guess}(pk)$.
+\medskip\noindent\emph{Game 11:} This game hop goes through for essentially the same reason as in \Cref{sec:games}. The difference is that now Game 10 and Game 11 differ if $\adv$ does not make an $H_2(\pw,T)$ query, but $\adv$ \emph{{\color{blue}or $P'$}} makes an $\Htag(\pw,pk,K^*)$ query resulting in $\tau^*$. However, $pk$ is freshly generated by $P$, independent of \emph{both} $\adv$ and $P'$'s views. Thus, the distinguishing advantage between Game 10 and Game 11 is still upper-bounded by $p_\text{guess}$.
 
 \medskip\noindent\emph{Game 12:} This game should read as follows now: In the case where $\pw = \pw' \land (s^*,T^*) = (s,T) \land c^* = c \land \tau^* \neq \tau'$, do what's in the {\color{blue}$\pw \neq \pw' \lor c^* \neq c$ case (i.e., case (1) in Game 2)}.
 
@@ -1761,14 +1792,14 @@ There are the following cases:
   \item If $(\pw')^* \neq \pw' \land \tau^* = \tau'$, and there is a record $\langle\pw,pk,\star\rangle$, then $P'$'s $\Htag(\pw',pk',K')$ query results in $\tau^*$, and we need to argue that this query can be dropped from the check.
       \begin{itemize}
         \item If $\adv$ queries $\Htag(\pw',pk',K')$, then new Game II still finds this query, so new Game I and new Game II are identical.
-        \item If $\adv$ does not query $\Htag(\pw',pk',K')$, then new Game II sets $SK := \bot$. We argue that new Game I also sets $SK := \bot$ except with negligible probability. New Game I finds $P'$'s $\Htag(\pw',pk',K')$ query, and sets $SK := \bot$ if $pk \neq pk'$. But note that $pk$ is freshly generated when $\adv$ queries $H_2(\pw',T)$ --- in particular, it is independent of the $P'$ side where $pk'$ is computed ---, so $\Pr[pk = pk'] \leq p_\text{guess}(pk)$.
+        \item If $\adv$ does not query $\Htag(\pw',pk',K')$, then new Game II sets $SK := \bot$. We argue that new Game I also sets $SK := \bot$ except with negligible probability. New Game I finds $P'$'s $\Htag(\pw',pk',K')$ query, and sets $SK := \bot$ if $pk \neq pk'$. But note that $pk$ is freshly generated when $\adv$ queries $H_2(\pw',T)$ --- in particular, it is independent of the $P'$ side where $pk'$ is computed ---, so $\Pr[pk = pk'] \leq p_\text{guess}$.
       \end{itemize}
   \item If $(\pw')^* = \pw' \land \tau^* = \tau'$, there is a record $\langle\pw,pk,\star\rangle$, but $pk \neq pk'$, then new Game I finds $P'$'s $\Htag(\pw',pk',K')$ query and then sets $SK := \bot$ because $pk \neq pk'$, and new Game II also sets $SK := \bot$ because it either fails to find $\adv$'s $\Htag(\pw',pk',K')$ query, or it finds such a query but then sets $SK := \bot$ because $pk \neq pk'$. Thus, the two games are identical.
 \end{itemize}
 
 The remaining case is that $(\pw')^* = \pw' \land \tau^* = \tau'$, there is a record $\langle\pw,pk,\star\rangle$, and $pk = pk'$. This is exactly the condition in new Game I, in which case we do not make any change in new Game II. Overall, we conclude that
 \[
-\Dist_\env^{\text{newI},\text{newII}} \leq p_\text{guess}(pk).
+\Dist_\env^{\text{newI},\text{newII}} \leq p_\text{guess}.
 \]}
 
 \noindent\emph{Game 17:} Note that after new Game II, we never try to find $P'$'s $\Htag$ query anymore: in some cases we try to find $\adv$'s $\Htag$ query, and in other cases we outright set $SK$ to be a certain value or $\bot$. Therefore, the reduction still goes through (it can simulate the $P$ side honestly).\footnote{New Games I and II --- which drop $P'$'s $\Htag$ query from the check --- have to be inserted before Game 17, since the reduction in Game 17 cannot check $P'$'s $\Htag$ query (the query is $\Htag(\pw',pk',K')$, and the reduction does not know $K'$).}
@@ -2080,7 +2111,7 @@ For subsequent games, if they only involve case (1) in Game 2 then they do not n
 
 \medskip\noindent\emph{Games 9--10:} These two games involve statistical arguments only, and they have nothing to do with whether the games need to check $P'$'s $\Htag$ queries.
 
-\medskip\noindent\emph{Game 11:} This game hop goes through for essentially the same reason as in \Cref{sec:games}. The difference is that now Game 10 and Game 11 differ if $\adv$ does not make an $H_2(\pw,T)$ query, but $\adv$ \emph{{\color{blue}or $P'$}} makes an $\Htag(pk,K^*)$ query resulting in $\tau^*$. However, $pk$ is freshly generated by $P$, independent of \emph{both} $\adv$ and $P'$'s views. Thus, the distinguishing advantage between Game 10 and Game 11 is still upper-bounded by $p_\text{guess}(pk)$.
+\medskip\noindent\emph{Game 11:} This game hop goes through for essentially the same reason as in \Cref{sec:games}. The difference is that now Game 10 and Game 11 differ if $\adv$ does not make an $H_2(\pw,T)$ query, but $\adv$ \emph{{\color{blue}or $P'$}} makes an $\Htag(pk,K^*)$ query resulting in $\tau^*$. However, $pk$ is freshly generated by $P$, independent of \emph{both} $\adv$ and $P'$'s views. Thus, the distinguishing advantage between Game 10 and Game 11 is still upper-bounded by $p_\text{guess}$.
 
 \medskip\noindent\emph{Game 12:} This game should read as follows now: In the case where $\pw = \pw' \land (s^*,T^*) = (s,T) \land c^* = c \land \tau^* \neq \tau'$, do what's in the {\color{blue}$\pw = \pw' \lor (s^*,T^*) = (s,T) \lor c^* \neq c$ case (i.e., case (1) in Game 2)}. That is, first find the $\langle\star,pk,\star\rangle$ record, then find $\adv$'s $\Htag(pk,K^*)$ query resulting in $\tau^*$. If there is none or more than one, set $SK := \bot$. If there is a unique such query, do the following:
 \begin{itemize}
@@ -2109,9 +2140,9 @@ The previous statistical argument is based on ruling out collisions in $\Htag$. 
 {\color{blue}
 \medskip\noindent\emph{New game I:} Now that $(\pw')^*$ --- the password guess extracted from $(s^*,T^*)$ --- is defined (in Game 15), we can finally add (part of) what's in step 2 of \Cref{fig:oeke-sim-hash-pk}. In this game we first add the aborting condition. Concretely, in the case where $(\pw')^* = \pw' \land (s^*,T^*) \neq (s,T) \land (c^*,\tau^*) = (c,\tau')$, there must be a $pk'$ defined on the $P'$ side. If there is more than one record $\langle\pw^*,pk',\star\rangle$, abort. (This corresponds to step 2(a) in the simulator in \Cref{fig:oeke-sim-hash-pk}.)
 
-In each $\langle\pw^*,pk^*,\star\rangle$ record, $(pk^*,\star) \gets \Gen$ is freshly generated, so the probability that one of these $pk^*$ happens to be equal to $pk'$ is upper-bounded by $q_2 \cdot p_\text{guess}(pk)$ (recall that there is a $\langle\pw^*,pk^*,sk^*\rangle$ record for each $H_2(\pw^*,T)$ query). We have
+In each $\langle\pw^*,pk^*,\star\rangle$ record, $(pk^*,\star) \gets \Gen$ is freshly generated, so the probability that one of these $pk^*$ happens to be equal to $pk'$ is upper-bounded by $q_2 \cdot p_\text{guess}$ (recall that there is a $\langle\pw^*,pk^*,sk^*\rangle$ record for each $H_2(\pw^*,T)$ query). We have
 \[
-\Dist_\env^{16,\text{newI}} \leq q_2 \cdot p_\text{guess}(pk).
+\Dist_\env^{16,\text{newI}} \leq q_2 \cdot p_\text{guess}.
 \]
 
 \medskip\noindent\emph{New game II:} Again in the case where $(\pw')^* = \pw' \land (s^*,T^*) \neq (s,T) \land (c^*,\tau^*) = (c,\tau')$, if there is a unique record $\langle\pw^*,pk',\star\rangle$, and $\pw^* = \pw$, set $SK := \Hkey(K')$. (In some sense this is the most crucial new game, as it covers the scenario in \Cref{fig:attack-no-pw} --- which is why we need to make all these changes to begin with. It also corresponds to step 2(b)(ii) in the simulator in \Cref{fig:oeke-sim-hash-pk}. We will deal with step 2(b)(i) later.)
