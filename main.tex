@@ -335,7 +335,7 @@ It is instructive to see what cryptographic assumptions the various KEM properti
   \item $\Encap(X)$ samples $y \gets \mathbb{Z}_q$, computes $Y := g^y$ and $K := X^y$, and outputs $(Y,K)$.
   \item $\Decap(x,Y)$ outputs $Y^x$.
 \end{itemize}
-(Note that the computation of the ciphertext $Y$ does not rely on the public key $X$; in terms of key exchange, Diffie--Hellman is 1-simultaneous round, whereas KEM can model any 2-message-flow key exchange protocol.) The Diffie--Hellman KEM is perfectly correct, and $p_\text{guess}(X) = 1/q$. Furthermore, it satisfies various properties we have defined (below we always assume $x,y \gets \mathbb{Z}_q$):
+(Note that the computation of the ciphertext $Y$ does not rely on the public key $X$; in terms of key exchange, Diffie--Hellman is 1-simultaneous round, whereas KEM can model any 2-message-flow key exchange protocol.) The Diffie--Hellman KEM is perfectly correct (i.e., $\varepsilon_\text{correctness} = 0$), and $p_\text{guess} = 1/q$. Furthermore, it satisfies various properties we have defined (below we always assume $x,y \gets \mathbb{Z}_q$):
 \begin{itemize}
   \item UNI-PK says that $X = g^x$ is indistinguishable from uniformly random, which holds perfectly.
   \item OW says that given $(X = g^x, Y = g^y)$ it is infeasible to compute $K = g^{xy}$, which is the Computational Diffie--Hellman (CDH) assumption.
