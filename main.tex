@@ -2018,6 +2018,7 @@ This exactly matches step 2 of the simulator in \Cref{fig:oeke-sim-hash-pw}, so 
 If we define $\tau$ as $\Htag(\pw,c,K)$, then the second bullet of the proof of \Cref{clm:htag6} is not needed, and the protocol can be proven secure under the UNPRE property of the KEM scheme (without the WNM property).
 
 \subsection{The ``Hash $pk$'' Version}
+\label{sec:hash-pk}
 We now consider the variant where $\pw$, but not $pk$, is further removed from $\Htag$ inputs, i.e., $\tau$ is defined as $\Htag(pk,K)$. This would best be compared with the protocol (and its security proof) in \Cref{sec:hash-pk-st}, where $\tau$ is defined as $\Htag(pk,s,T,K)$; as well as the protocol (and its security proof) in \Cref{app:no-st}, where $\tau$ is defined as $\Htag(pk,s,T,K)$. Again there is a new scenario that requires additional care from the simulator, so we start from the changes to the simulator.
 
 \subsubsection{Changes to the Simulator}
@@ -2245,6 +2246,31 @@ Overall, the net changes are that in the case where $(\pw')^* = \pw' \land (s^*,
   \item If $(\pw')^* \neq \pw$, then we set $SK := \bot$.
 \end{itemize}
 This exactly matches step 2 of \Cref{fig:oeke-sim-hash-pk}, so new Game 3 is identical to the ideal world.} This completes the proof.
+
+\subsection{The ``Hash Nothing But $K$'' Version}
+\label{sec:hash-nothing}
+
+The last variant we consider is that both $\pw$ and $pk$ (as well as $c$) are removed from $\Htag$ inputs, i.e., $\tau$ is defined as the ``bare'' $\Htag(K)$. There is an even more general ``attack'' against this version that the simulator must take into consideration, which we start from.
+
+\subsubsection{Changes to the Simulator}
+We show the new situation in \Cref{fig:attack-no-pw-pk}, using the specific OEKE with Diffie--Hellman KEM.
+
+\begin{figure}[H]
+\pseudocodeblock[codesize=\scriptsize]{
+P(\pw) \< \< \adv \< \< P'(\pw') \\ 
+\< \sendmessageright*[1.5cm]{s,T} \< \< \< \\
+\< \< X := \mathsf{2F}^{\text{-}1}(\pw,(s,T)) \< \< \\
+\< \< (s^*,T^*) \gets \mathsf{2F}(\pw',X^2) \< \< \\
+\< \< \<\sendmessageright*[1.5cm]{s^*,T^*} \< \\
+\< \sendmessageleft*[1.5cm]{Y^2,\tau'} \< \< \sendmessageleft*[1.5cm]{Y,\tau'} \< \< \\
+\text{output} \< \< \< \< \text{output} \\
+\Hkey((Y^2)^x) = \Hkey(g^{2xy}) \< \< \< \< \Hkey((X^2)^y) = \Hkey(g^{2xy})
+}
+\caption{New ``attack'' on the ``hash $\pw$'' version, using OEKE based on Diffie--Hellman KEM}
+\label{fig:attack-no-pw-pk}
+\end{figure}
+
+In this ``attack'', the two parties' passwords may or may not be the same or different. Assuming $\adv$ knows both, it can decrypt $P$’s message to recover $X = g^x$, and then re-encrypt $X^2$ under $pw'$; this causes $P'$ to output $SK' = \Hkey(g^{2xy})$ and send $(Y = g^y, \tau' = \Htag(g^{2xy}))$. Then $\adv$ sends $(Y^2,\tau')$ to $P$, causing $P$'s check to pass and $P$ will also output $\Hkey(g^{2xy})$. This is a combination of the ``attacks'' in both \Cref{sec:hash-pw} (where $\adv$ can change $pk$ but not $\pw$ during re-encryption) and \Cref{sec:hash-pk} (where $\adv$ can change $\pw$ but not $pk$ during re-encryption); here, since neither $\pw$ nor $pk$ is included in $\Htag$ inputs, $\adv$ can change \emph{both} of them.
 
 \section{Proof of \Cref{lem:uni-ano-ro}}
 \label{app:uni-ano-ro-proof}
