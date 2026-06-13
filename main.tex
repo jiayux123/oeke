@@ -114,7 +114,7 @@ A \emph{Key Encapsulation Mechanism (KEM)} scheme consists of three algorithms:
   \item The (deterministic) \emph{decapsulation} algorithm $\Decap$ takes as input a secret key $sk$ and a ciphertext $c$, and outputs a KEM key $K$. We write $K := \Decap(sk,c)$ or $\Decap(sk,c) = K$.
 \end{itemize}
 
-We require two schematic properties for a KEM scheme:
+We require two syntactic properties for a KEM scheme:
 \begin{itemize}
   \item \emph{Correctness:} For $(pk,sk) \gets \Gen$, $(c,K) \gets \Encap(pk)$, and $K' := \Decap(sk,\allowbreak c)$, we have
       \[
@@ -125,12 +125,12 @@ We require two schematic properties for a KEM scheme:
       \[
       \Pr[pk = pk' : (pk,\star) \gets \Gen] \leq p_\text{guess},
       \]
-      where $p_\text{guess}$ is negligible. In other words, a (computationally unbounded) adversary has negligible probability of guessing an honestly generated public key correctly.
+      where $p_\text{guess}$ is negligible. In other words, a (computationally unbounded) adversary has negligible probability of guessing an honestly generated public key correctly. \\
+      The high min-entropy property implies that for $q$ honestly generated public keys, the probability that at least two of them are equal is upper-bounded by ${q \choose 2} \cdot p_\text{guess}$.
 \end{itemize}
+Whenever we refer to a KEM scheme below, we always assume these two properties and do not explicitly mention them.
 
-The high min-entropy property implies that for $q$ honestly generated public keys, the probability that at least two of them are equal is upper-bounded by ${q \choose 2} \cdot p_\text{guess}$.
-
-The most commonly seen security property in the KEM literature is security under chosen-ciphertext attacks (CCA, or IND-CCA), but the KEM scheme in OEKE needs other properties. The ``hash everything'' version of OEKE only requires some relatively standard properties for the underlying KEM scheme, which we define in \Cref{sec:kem-standard}. The variants where certain items are removed from the hash require non-standard properties, which we define in \Cref{sec:kem-additional}.
+The most commonly seen security property in the KEM literature is security under chosen-ciphertext attacks (CCA, or IND-CCA), but the KEM scheme in OEKE needs other properties. The ``hash everything'' version of OEKE only requires some relatively standard properties for the underlying KEM scheme, which we define in \Cref{sec:kem-standard}. The variants where certain items are removed from the hash require a number of non-standard properties, which we define in \Cref{sec:kem-additional}.
 
 \subsection{KEM Properties Used in the ``Hash Everything'' Version}
 \label{sec:kem-standard}
