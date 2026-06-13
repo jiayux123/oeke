@@ -1806,7 +1806,7 @@ pk' = \frac{T^*}{R'} = \frac{T^*}{H_1(\pw,r')} = \frac{T^*}{H_1(\pw,s^* \oplus t
   \item If $s^*\oplus H_2(\pw,T^*) = s \oplus H_2(\pw,T)$, then $(\pw')^*$ is set to $\pw$ in type (2);
   \item If the $H_1(\pw,s^*\allowbreak\oplus H_2(\pw,T^*))$ query is made before $\adv$'s $H_2(\pw,T^*)$ query, then $(\pw')^*$ is set to $\pw$ in type (1).
 \end{itemize}
-Since $(\pw')^* \neq \pw'$, the only possibility is that $\adv$ makes a \emph{fresh} $H_1(\pw,s^*\allowbreak\oplus H_2(\pw,T^*))$ query \emph{after} its $H_2(\pw,T^*)$ query, which causes $pk'$ to be independent of $pk$.
+Since $(\pw')^* \neq \pw'$, the only possibility is that $\adv$ makes a \emph{fresh} $H_1(\pw,s^*\allowbreak\oplus H_2(\pw,T^*))$ query \emph{after} its $H_2(\pw,T^*)$ query (in particular, after $T^*$ is fixed), which causes $pk'$ to be independent of $pk$.
 \end{proof}
 
 Going back to the game, there are the following cases:
@@ -1816,7 +1816,7 @@ Going back to the game, there are the following cases:
   \item If $(\pw')^* \neq \pw' \land \tau^* = \tau'$, and there is a record $\langle\pw,pk,\star\rangle$, then $P'$'s $\Htag(\pw',pk',K')$ query results in $\tau^*$, and we need to argue that this query can be dropped from the check.
       \begin{itemize}
         \item If $\adv$ queries $\Htag(\pw',pk',K')$, then new Game II still finds this query, so new Game I and new Game II are identical.
-        \item If $\adv$ does not query $\Htag(\pw',pk',K')$, then new Game II sets $SK := \bot$. We argue that new Game I also sets $SK := \bot$ except with negligible probability. New Game I finds $P'$'s $\Htag(\pw',pk',K')$ query, and sets $SK := \bot$ if $pk \neq pk'$. But $pk$ is independent of $pk'$ by \Cref{clm:pk-ind}, so $\Pr[pk = pk'] \leq p_\text{guess}$.
+        \item If $\adv$ does not query $\Htag(\pw',pk',K')$, then new Game II sets $SK := \bot$. We argue that new Game I also sets $SK := \bot$ except with negligible probability. New Game I finds $P'$'s $\Htag(\pw',pk',K')$ query, and sets $SK := \bot$ if $pk \neq pk'$. But $pk$ and $pk'$ are independent of each other by \Cref{clm:pk-ind}, so $\Pr[pk = pk'] \leq p_\text{guess}$.
       \end{itemize}
   \item If $(\pw')^* = \pw' \land \tau^* = \tau'$, there is a record $\langle\pw,pk,\star\rangle$, but $pk \neq pk'$, then new Game I finds $P'$'s $\Htag(\pw',pk',K')$ query and then sets $SK := \bot$ because $pk \neq pk'$, and new Game II also sets $SK := \bot$ because it either fails to find $\adv$'s $\Htag(\pw',pk',K')$ query, or it finds such a query but then sets $SK := \bot$ because $pk \neq pk'$. Thus, the two games are identical.
 \end{itemize}
