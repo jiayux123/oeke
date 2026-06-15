@@ -394,7 +394,7 @@ We define the UC PAKE with initiator-side explicit authentication functionality 
 \label{fig:pake-func}
 \end{figure}
 
-We refer the reader to \cite[Section~2.1]{EPRINT:Xu25} for an explanation of the standard UC PAKE functionality; here we only explain the differences (the {\color{blue}blue} text). The two protocol parties are called ``initiator'' and ``respondent''; the initiator sends the first protocol message, which the respondent waits for before it sends its own message. In order to match the OEKE protocol, our functionality achieves explicit authentication for the initiator side only; that is, if the initiator's algorithm does not result in a correct execution, it will output $\bot$ instead of an $n$-bit session key. There are three scenarios of an incorrect execution:
+We refer the reader to \cite[Section~2.1]{EPRINT:Xu25} for an explanation of the standard UC PAKE functionality; here we only explain the differences (the {\color{blue}blue} text). The two protocol parties are called ``initiator'' and ``respondent'': the initiator sends the first protocol message, which the respondent waits for before it sends its own message. In order to match the OEKE protocol, our functionality achieves explicit authentication for the initiator side only; that is, if the initiator's algorithm does not result in a correct execution, it will output $\bot$ instead of an $n$-bit session key. There are three scenarios of an incorrect execution:
 \begin{itemize}
   \item The man-in-the-middle adversary performs a failed online attack on the initiator (i.e., the initiator's session record is $\interrupted$).
   \item The adversary does not perform an online attack on the initiator (i.e., the initiator's session record is $\fresh$), but performs a (successful or failed) online attack on its counterparty.
@@ -1736,6 +1736,12 @@ On $(c^*,\tau^*)$ from $\func$, simulate $P$'s output as follows:
 \label{fig:oeke-sim-hash-pw-pk}
 \end{figure}
 
+\begin{remark}
+We briefly mention another possible simulation strategy. Referring to \Cref{fig:attack-no-st}, computing $pk := \mathsf{2F}^{\text{-}1}(\pw,(s,T))$ requires $\adv$ to query $H_2(\pw,T)$, at which time the simulator $\sim$ stores $\langle\pw,pk,sk\rangle$. Later when $\sim$ simulates the $P'$-to-$P$ message, it needs to compute $(c,K) \gets \Encap(pk)$ and $\tau' := \Htag(\pw,pk,K)$ (see step 2(b)(ii) of \Cref{fig:oeke-sim1}). Therefore, in \Cref{fig:oeke-sim-hash-pw-pk} we can remove step 2, and instead in step 3 find $\adv$ \emph{{\color{blue}or $\sim$ itself}}'s $\Htag(\pw^*,pk^*,K^*)$ query resulting in $\tau^*$, which will result in $\sim$ finding $\pw$ and sending $(\TestPwd, sid, P, \pw)$ to $\func$. This is essentially what the simulator in \cite{EC:JanRoyXu25} does, and yields a simpler simulator. We choose to present our simulator in the more complicated way because it explicitly highlights the ``attack'' in \Cref{fig:attack-no-st} and thus provides a clearer comparison with the ``hash everything'' version of the protocol.
+
+The same remark goes for subsequent simulators in this section.
+\end{remark}
+
 \subsubsection{Changes in Game Hops}
 \label{app:game-hops-hash-pw-pk}
 Note that \Cref{clm:htag} in Game 2 does not hold anymore, exactly due to what the adversary can do in \Cref{fig:attack-no-pk} ($P$ does not reject even though $\adv$ is not passive and $\adv$ makes no $\Htag$ query whatsoever). As such, Game 2 needs to change essentially. Since Game 2 is almost at the beginning of the sequence of games, this affects some subsequent games and we need to proceed carefully. The trick is to isolate the specific case of the new ``attack'', i.e., the case that makes \Cref{clm:htag} fail; in this case we need to additionally check $P'$'s $\Htag$ query, whereas in all other cases we can proceed as before. In this way we minimize the affect of the change in Game 2.
@@ -2068,7 +2074,7 @@ If we define $\tau$ as $\Htag(\pw,c,K)$, then \Cref{clm:htag6} unconditionally h
 
 \subsection{The ``Hash $pk$'' Version}
 \label{sec:hash-pk}
-We now consider the variant where $\pw$, but not $pk$, is further removed from $\Htag$ inputs, i.e., $\tau$ is defined as $\Htag(pk,K)$. This would best be compared with the protocol (and its security proof) in \Cref{sec:hash-pk-st}, where $\tau$ is defined as $\Htag(pk,s,T,K)$; as well as the protocol (and its security proof) in \Cref{app:no-st}, where $\tau$ is defined as $\Htag(pk,s,T,K)$. Again there is a new scenario that requires additional care from the simulator, so we start from the changes to the simulator.
+We now move on to the variant where $\pw$, but not $pk$, is further removed from $\Htag$ inputs, i.e., $\tau$ is defined as $\Htag(pk,K)$. This would best be compared with the protocol (and its security proof) in \Cref{sec:hash-pk-st}, where $\tau$ is defined as $\Htag(pk,s,T,K)$; as well as the protocol (and its security proof) in \Cref{app:hash-pw-pk}, where $\tau$ is defined as $\Htag(\pw,pk,K)$. Again there is a new scenario that requires additional care from the simulator, so we start from the changes to the simulator.
 
 \subsubsection{Changes to the Simulator}
 Similar to \Cref{sec:hash-pw}, once we remove $pk$ from $\Htag$, the adversary $\adv$ can force the two parties' session keys to be the same without performing a ``real'' attack. However, this time the two parties' passwords may or may not be the same (and $\adv$ needs to know both of them), and $\adv$ should forward both $c$ and $\tau'$ from $P'$ without modification. We show this scenario in \Cref{fig:attack-no-pw}.
@@ -2087,9 +2093,9 @@ P(\pw) \< \< \adv \< \< P'(\pw') \\
 \label{fig:attack-no-pw}
 \end{figure}
 
-In this ``attack'', the two parties' passwords $\pw$ and $\pw'$ may or may not be the same. Assuming $\adv$ knows both, it can decrypt $P$'s message to recover $pk$, and then re-encrypt $pk$ under $\pw'$\footnote{Note that unlike IC, here even if $\pw = \pw'$, decrypting $pk := \mathsf{2F}^{\text{-}1}(\pw,(s,T))$ and then re-encrypting $(s^*,T^*) := \mathsf{2F}(\pw,pk)$ will likely result in different $(s^*,T^*) \neq (s,T)$.}; this ensures that $P'$ will recover the same $pk$ as on the $P$ side, and use it to compute $c,K',\tau'$ (and eventually $SK'$). But then if $\adv$ forwards $(c,\tau')$ without any modification, $P$ will decapsulate $c$ to the same $K'$ (because it uses the same $pk$), and its session key will be the same as $SK'$ on the $P'$ side. (This is not an issue if $\pw$ is included in $\Htag$, since forwarding $\tau' = \Htag(\pw',\dots) \neq \Htag(\pw,\dots)$ to $P$ would make $P$'s check fail unless there is a collision in $\Htag$.)
+In this ``attack'', the two parties' passwords $\pw$ and $\pw'$ may or may not be the same. (The special case where $\pw = \pw'$ is the ``attack'' in \Cref{fig:attack-no-st}.) Assuming $\adv$ knows both, it can decrypt $P$'s message to recover $pk$, and then re-encrypt $pk$ under $\pw'$; this ensures that $P'$ will recover the same $pk$ as on the $P$ side, and use it to compute $c,K',\tau'$ (and eventually $SK'$). But then if $\adv$ forwards $(c,\tau')$ without any modification, $P$ will decapsulate $c$ to the same $K'$ (because it uses the same $pk$), and its session key will be the same as $SK'$ on the $P'$ side. (This is not an issue if $\pw$ is included in $\Htag$, since forwarding $\tau' = \Htag(\pw',\dots) \neq \Htag(\pw,\dots)$ to $P$ would make $P$'s check fail unless there is a collision in $\Htag$.)
 
-This is (again) a new situation not covered by the previous simulator. It should be simulated as follows: When $\adv$ decrypts $(s,T)$ under $\pw$, the simulator $\sim$ records $\langle\pw,pk,sk\rangle$ (although there might be a large number of such decryption attempts, and $\sim$ does not know which is the ``right'' one at this point). Then when $\adv$ sends $(s^*,T^*)$ to $P'$, $\sim$ extracts $\pw'$, \emph{which also gives a $pk'$}. Later, when $\adv$ forwards $(c,\tau')$, $\sim$ knows that $\adv$ is performing the aforementioned attack, and checks which $\langle\pw,pk,sk\rangle$ record matches $pk'$. In this way $\sim$ can extract the password guess $\pw$ on the $P$ side.
+This new situation should be simulated as follows: When $\adv$ decrypts $(s,T)$ under $\pw$, the simulator $\sim$ records $\langle\pw,pk,sk\rangle$ (although there might be a large number of such decryption attempts, and $\sim$ does not know which is the ``right'' one at this point). Then when $\adv$ sends $(s^*,T^*)$ to $P'$, $\sim$ extracts $\pw'$, \emph{which also gives a $pk'$}. Later, when $\adv$ forwards $(c,\tau')$, $\sim$ knows that $\adv$ is performing the aforementioned attack, and checks which $\langle\pw,pk,sk\rangle$ record matches $pk'$. In this way $\sim$ can extract the password guess $\pw$ on the $P$ side.
 
 We show the new simulator in \Cref{fig:oeke-sim-hash-pk}. (Only the steps after receiving $(c^*,\tau^*)$ are included.)
 
@@ -2131,10 +2137,7 @@ On $(c^*,\tau^*)$ from $\func$, simulate $P$'s output as follows:
 \end{figure}
 
 \subsubsection{Changes in Game Hops}
-The changes in game hops again need to start from Game 2. The structure of the proof is very similar to \Cref{sec:new-games}; however, for the sake of completeness we still include a proof on the same level of details as in \Cref{sec:new-games}. (This involves copying a large chunk of arguments verbatim from \Cref{sec:new-games}.)
-
-\medskip
-Similar to \Cref{sec:new-games}, in Game 2 we isolate a case where we need to additionally check $P'$'s $\Htag$ query.
+Again, we only describe Game 2 and the three new games.
 
 \medskip\noindent\emph{Game 2:} In the case where {\color{blue}$\pw = \pw' \lor (s^*,T^*) = (s,T) \lor c^* \neq c$} yet $\neg(\pw = \pw' \land (s^*,T^*) = (s,T) \land c^* = c)$ (i.e., excluding the condition of Game 1), find $\adv$'s $\Htag(pk,K^*)$ query resulting in $\tau^*$. If there is none or more than one, set $SK := \bot$. If there is a unique such query, do the following:
 \begin{itemize}
@@ -2173,43 +2176,6 @@ If $pk \neq pk'$ or $K \neq K'$ then of course $P'$'s query is not $\Htag(pk,K)$
 which  yields the claim.
 \end{proof}
 The remaining argument is essentially identical to that in the old Game 2.
-
-\medskip
-For subsequent games, if they only involve case (1) in Game 2 then they do not need to change, since the new Game 2 does not make any change in this case. However, if a game involves case (2) then some changes need to be made, since the new Game 2 additionally checks $P'$'s $\Htag$ queries, which a reduction might not be able to do.
-
-\medskip\noindent\emph{Games 3--4:} These two games deal with the case where $\pw = \pw' \land (s^*,T^*) = (s,T)$. This falls into case (1) in Game 2, so the reductions still go through: they abort if $\pw = \pw' \land (s^*,T^*) = (s,T)$ does not hold, and if $\pw = \pw' \land (s^*,T^*) = (s,T)$, they can still simulate the games by checking $\adv$'s $\Htag$ queries. Crucially, the reductions do not need to check $P'$'s $\Htag$ query (which they cannot do), since in this case we have defined Game 2 so that it only checks $\adv$'s $\Htag$ queries.
-
-\medskip\noindent\emph{Game 5:} This game involves a reduction to the UNI-PK property of the KEM scheme. The reduction works essentially because $sk'$ is not used anywhere in the game (so the reduction can embed its challenge as $pk'$ without knowing $sk'$), and this fact still holds even though we need to additionally check $P'$'s $\Htag$ queries in some cases now. So, this reduction still goes through.
-
-\medskip\noindent\emph{Games 6--8:} These three games deal with the case where $\pw \neq \pw' \land (s^*,T^*) = (s,T)$. This again falls into case (1) in Game 2, so the reductions in Games 6 and 7 still go through; Game 8 involves a statistical argument which does not need to change either.
-
-\medskip\noindent\emph{Games 9--10:} These two games involve statistical arguments only, and they have nothing to do with whether the games need to check $P'$'s $\Htag$ queries.
-
-\medskip\noindent\emph{Game 11:} This game hop goes through for essentially the same reason as in \Cref{sec:games}. The difference is that now Game 10 and Game 11 differ if $\adv$ does not make an $H_2(\pw,T)$ query, but $\adv$ \emph{{\color{blue}or $P'$}} makes an $\Htag(pk,K^*)$ query resulting in $\tau^*$. However, $pk$ is freshly generated by $P$, independent of \emph{both} $\adv$ and $P'$'s views. Thus, the distinguishing advantage between Game 10 and Game 11 is still upper-bounded by $p_\text{guess}$.
-
-\medskip\noindent\emph{Game 12:} This game should read as follows now: In the case where $\pw = \pw' \land (s^*,T^*) = (s,T) \land c^* = c \land \tau^* \neq \tau'$, do what's in the {\color{blue}$\pw = \pw' \lor (s^*,T^*) = (s,T) \lor c^* \neq c$ case (i.e., case (1) in Game 2)}. That is, first find the $\langle\star,pk,\star\rangle$ record, then find $\adv$'s $\Htag(pk,K^*)$ query resulting in $\tau^*$. If there is none or more than one, set $SK := \bot$. If there is a unique such query, do the following:
-\begin{itemize}
-  \item If $K^* = K$, set $SK := \Hkey(K)$.
-  \item If $K^* \neq K$, set $SK := \bot$.
-\end{itemize}
-
-This game only involves case (1) in Game 2, i.e., it checks $\adv$'s $\Htag$ queries \emph{but does not check $P'$'s $\Htag$ query}. Therefore, this game hop has nothing to do with what's different in the new Game 2, and the previous argument still goes through.
-
-\medskip\noindent\emph{Game 13:} This game should now extract $pk^*$ from $\adv$ {\color{blue}\emph{or $P'$}}'s $\Htag$ query, in case (2) in Game 2. For completeness, we include a full description of the game.
-
-In the case where {\color{blue}$\pw = \pw' \lor (s^*,T^*) = (s,T) \lor c^* \neq c$ yet $\neg(\pw = \pw' \land (s^*,T^*) = (s,T) \land (c^*,\tau^*) = (c,\tau'))$}, find $\adv$'s $\Htag(pk^*,K^*)$ query resulting in $\tau^*$. If there is none or more than one, set $SK := \bot$. Otherwise there is a unique such $\Htag(pk^*,K^*)$ query, and
-\begin{itemize}
-  \item If there is more than one $\langle\pw^*,pk^*,sk^*\rangle$ record, abort.
-  \item If there is no $\langle\pw^*,pk^*,sk^*\rangle$ record, set $SK := \bot$.
-  \item If there is a unique $\langle\pw^*,pk^*,sk^*\rangle$ record, but $\pw^* \neq \pw$, also set $SK := \bot$.
-  \item If there is a unique $\langle\pw^*,pk^*,sk^*\rangle$ record, and $\pw^* = \pw$, compute $K := \Decap(sk^*,c^*)$. If $K^* = K$ then set $SK := \Hkey(K)$, otherwise set $SK := \bot$.
-\end{itemize}
-
-Furthermore, in the case where $\pw \neq \pw' \land (s^*,T^*) \neq (s,T) \land c^* = c$ (i.e., case (2) in Game 2), do the same as above, except that we now find $\adv$ {\color{blue}\emph{or $P'$}}'s $\Htag(pk^*,K^*)$ query resulting in $\tau^*$.
-
-The previous statistical argument is based on ruling out collisions in $\Htag$. Here we can still rule out such collisions, except that the probability of a collision is $\qtag(\qtag+1)/2$ rather than $\qtag(\qtag-1)/2$ (since we may additionally count the $\Htag$ query by $P'$). The rest of the argument does not change.
-
-\medskip\noindent\emph{Games 14--16:} The statistical arguments for these three games do not need to change.
 
 {\color{blue}
 \medskip\noindent\emph{New game I:} Now that $(\pw')^*$ --- the password guess extracted from $(s^*,T^*)$ --- is defined (in Game 15), we can finally add (part of) what's in step 2 of \Cref{fig:oeke-sim-hash-pk}. In this game we first add the aborting condition. Concretely, in the case where $(\pw')^* = \pw' \land (s^*,T^*) \neq (s,T) \land (c^*,\tau^*) = (c,\tau')$, there must be a $pk'$ defined on the $P'$ side. If there is more than one record $\langle\pw^*,pk',\star\rangle$, abort. (This corresponds to step 2(a) in the simulator in \Cref{fig:oeke-sim-hash-pk}.)
@@ -2321,7 +2287,7 @@ P(\pw) \< \< \adv \< \< P'(\pw') \\
 
 In this ``attack'', the two parties' passwords may or may not be the same or different. Assuming $\adv$ knows both, it can decrypt $P$’s message to recover $X = g^x$, and then re-encrypt $X^2$ under $pw'$; this causes $P'$ to output $SK' = \Hkey(g^{2xy})$ and send $(Y = g^y, \tau' = \Htag(g^{2xy}))$. Then $\adv$ sends $(Y^2,\tau')$ to $P$, causing $P$'s check to pass and $P$ will also output $\Hkey(g^{2xy})$. This is a combination of the ``attacks'' in both \Cref{sec:hash-pw} (where $\adv$ can change $pk$ but not $\pw$ during re-encryption) and \Cref{sec:hash-pk} (where $\adv$ can change $\pw$ but not $pk$ during re-encryption); here, since neither $\pw$ nor $pk$ is included in $\Htag$ inputs, $\adv$ can change \emph{both} of them.
 
-\subsection{Changes in Game Hops}
+\subsubsection{Changes in Game Hops}
 
 \section{Proof of \Cref{lem:uni-ano-ro}}
 \label{app:uni-ano-ro-proof}
@@ -2468,7 +2434,7 @@ But then
 &= \sum_{i^* = 1}^q p\cdot\Pr[i = i^*] \\
 &= p\cdot\sum_{i^* = 1}^q \Pr[i = i^*] = p,
 \end{align*}
-so $Pr[b^* = 1]$ in the original game and the simplified game are equal. (Note that we do not need a hybrid argument here.)
+so $\Pr[b^* = 1]$ in the original game and the simplified game are equal. (Note that we do not need a hybrid argument here.)
 
 Next, we sample $h_1,h_2$ at random rather than set them to the real RO outputs:
 \[
