@@ -1528,8 +1528,8 @@ On $(c^*,\tau^*)$ from $\func$, simulate $P$'s output as follows:
   \item Otherwise find $\adv$'s {\color{blue}$\Htag(s,T,K^*)$} query resulting in $\tau^*$.
       \begin{enumerate}
         \item If there is no such query or more than one such query, send $(\TestPwd, sid, P, \bot)$ and then $(\NewKey, sid, P, 0^n)$ to $\func$.
-        \item If there is exactly one such query, retrieve {\color{blue}all records in the form of $\langle\pw^*,pk^*,sk^*\rangle$}. {\color{blue}For each such record}, compute $K := \Decap(sk^*,c^*)$ and check if $K^* = K$. {\color{blue}If there is more than one such record, abort.} If there is no such record, send $(\TestPwd, sid, P, \bot)$ and then $(\NewKey, sid, P, 0^n)$ to $\func$.
-        \item {\color{blue}If there is exactly one record $\langle\pw^*,pk^*,sk^*\rangle$ with $\Decap(sk^*,c^*) = K^*$}, send $(\TestPwd, sid, P, \pw^*)$ to $\func$.
+        \item If there is exactly one such query, retrieve {\color{blue}all records in the form of $\langle\pw^*,\star,sk^*\rangle$}. {\color{blue}For each such record}, compute $K := \Decap(sk^*,c^*)$ and check if $K^* = K$. {\color{blue}If there is more than one such record, abort.} If there is no such record, send $(\TestPwd, sid, P, \bot)$ and then $(\NewKey, sid, P, 0^n)$ to $\func$.
+        \item {\color{blue}If there is exactly one record $\langle\pw^*,\star,sk^*\rangle$ with $K := \Decap(sk^*,c^*) = K^*$}, send $(\TestPwd, sid, P, \pw^*)$ to $\func$.
             \begin{enumerate}
               \item If $\func$ replies with ``wrong guess'', send $(\NewKey, sid, P, 0^n)$ to $\func$.
               \item If $\func$ replies with ``correct guess'', compute $SK := \Hkey(K)$ and send $(\NewKey, sid, P, SK)$ to $\func$.
@@ -2275,6 +2275,46 @@ P(\pw) \< \< \adv \< \< P'(\pw') \\
 \end{figure}
 
 In this ``attack'', the two parties' passwords may or may not be the same or different. Assuming $\adv$ knows both, it can decrypt $P$’s message to recover $X = g^x$, and then re-encrypt $X^2$ under $\pw'$; this causes $P'$ to output $SK' = \Hkey(g^{2xy})$ and send $(Y = g^y, \tau' = \Htag(g^{2xy}))$. Then $\adv$ sends $(Y^2,\tau')$ to $P$, causing $P$'s check to pass and $P$ will also output $\Hkey(g^{2xy})$. This is a generalization of both ``attacks'' in \Cref{sec:hash-pw} (where $\adv$ can change $pk$ but not $\pw$ during re-encryption) and \Cref{sec:hash-pk} (where $\adv$ can change $\pw$ but not $pk$ during re-encryption); here, since neither $\pw$ nor $pk$ is included in $\Htag$ inputs, $\adv$ can change \emph{both} of them.
+
+The simulation strategy in this scenario is essentially a combination of the simulators in \Cref{sec:hash-pw,sec:hash-pk}. When $\adv$ decrypts $(s,T)$ under $\pw$, $\sim$ records $\langle\pw,pk,sk\rangle$ (although there might be a large number of such decryption attempts, and $\sim$ does not know which is the ``right'' one at this point). $\sim$ also computes $K'$ while simulating the $P'$ side. Later, when $\adv$ sends $(c^*,\tau')$, $\sim$ can tell if $\adv$ is performing the aforementioned attack by checking if there exists a record $\langle\pw,pk,sk\rangle$ that satisfies $\Decap(sk,c^*) = K'$ (using the specific example in \Cref{fig:attack-no-pw-pk}: When $\adv$ sends $(Y^2,\tau')$, $\sim$ finds the record $\langle\pw,X,x\rangle$ that satisfies $(Y^2)^x = K'$, where $K' = (X^2)^y$ was computed while encapsulating $X^2$ on $(s^*,T^*)$ from $\adv$). In this way $\sim$ can extract the password guess $\pw$ on the $P$ side.
+
+We show the new simulator in \Cref{fig:oeke-sim-hash-nothing}. (Only the steps after receiving $(c^*,\tau^*)$ are included.)
+
+\begin{figure}[H]
+\begin{framed}
+\begin{small}
+\underline{$P$'s session key}
+
+\medskip
+On $(c^*,\tau^*)$ from $\func$, simulate $P$'s output as follows:
+\begin{enumerate}
+  \item If $(s^*,T^*) = (s,T) \land (c^*,\tau^*) = (c,\tau')$, send $(\NewKey, sid, P', 0^n)$ to $\func$. \textcolor[gray]{0.5}{// $\adv$ is passive}
+  {\color{blue}\item If $(s^*,T^*) \neq (s,T) \land \tau^* = \tau'$, and there has been a $(\TestPwd, sid, P, \pw')$ command to $\func$ resulting in ``correct guess'' (i.e., $\sim$ previously entered step 2(b)(ii) in \Cref{fig:oeke-sim2}), there must be a $K'$ and an $SK'$ defined at that time.
+      \begin{enumerate}
+        \item Retrieve all records in the form of $\langle\pw^*,\star,sk^*\rangle$. For each such record, compute $K := \Decap(sk^*,c^*)$ and check if $K^* = K'$. If there is more than one such record, abort. If there is no such record, go to step 3.
+        \item If there is exactly one record $\langle\pw^*,\star,sk^*\rangle$ with $K := \Decap(sk^*,c^*) = K^*$, send $(\TestPwd, sid, P, \pw^*)$ to $\func$.
+            \begin{enumerate}
+              \item If $\func$ replies with ``wrong guess'', send $(\NewKey, sid, P, 0^n)$ to $\func$.
+              \item If $\func$ replies with ``correct guess'', compute $SK := \Hkey(K)$ and send $(\NewKey, sid, P, SK)$ to $\func$.
+            \end{enumerate}
+      \end{enumerate}
+  }
+  \item Otherwise find $\adv$'s {\color{blue}$\Htag(K^*)$} query resulting in $\tau^*$.
+      \begin{enumerate}
+        \item If there is no such query or more than one such query, send $(\TestPwd, sid, P, \bot)$ and then $(\NewKey, sid, P, 0^n)$ to $\func$.
+        \item If there is exactly one such query, retrieve all records in the form of $\langle\pw^*,\star,sk^*\rangle$. For each such record, compute $K := \Decap(sk^*,c^*)$ and check if $K^* = K$. If there is more than one such record, abort. If there is no such record, send $(\TestPwd, sid, P, \bot)$ and then $(\NewKey, sid, P, 0^n)$ to $\func$.
+        \item If there is exactly one record $\langle\pw^*,\star,sk^*\rangle$ with $K := \Decap(sk^*,c^*) = K^*$, send $(\TestPwd, sid, P, \pw^*)$ to $\func$.
+            \begin{enumerate}
+              \item If $\func$ replies with ``wrong guess'', send $(\NewKey, sid, P, 0^n)$ to $\func$.
+              \item If $\func$ replies with ``correct guess'', compute $SK := \Hkey(K)$ and send $(\NewKey, sid, P, SK)$ to $\func$.
+            \end{enumerate}
+      \end{enumerate}
+\end{enumerate}
+\end{small}
+\end{framed}
+\caption{UC simulator $\sim$ for the ``hash $pk$'' variant of OEKE. Only the paragraph that needs essential change from \Cref{fig:oeke-sim-hash-st} (shown in {\color{blue}blue}) is included}
+\label{fig:oeke-sim-hash-nothing}
+\end{figure}
 
 \subsubsection{Changes in Game Hops}
 
