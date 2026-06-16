@@ -271,7 +271,7 @@ A KEM scheme is \emph{weakly non-malleable (WNM)} if for any PPT adversary $\adv
     }
 \]
 \end{definition}
-WEM is needed in OEKE varants where $c$ is removed from $\Htag$ inputs. Then we must prevent the OEKE adversary $\adv$ from forwarding the $P$-to-$P'$ message $(s,T)$ without modification, but then modifying the $P'$-to-$P$ message $(c,\tau')$ to some $(c^*,\tau)$ which makes $P$'s check pass.\footnote{It is, in fact, unclear whether this is an ``actual'' attack: $\adv$ causes the two parties to output the same session key by changing $c$ and forwarding all other protocol messages, but $\adv$ does not learn the session key or the password. However, at least such an $\adv$ makes the UC simulation fail, since the simulator is not able to tell that $\adv$ is sending a valid $c^*$ (it does not know $sk$). The same comment is true for the attack in the ``key binding'' paragraph below.} (If $c$ is included in $\Htag$ then $P$'s check will not pass unless $(\dots, c, \dots)$ and $(\dots, c^*, \dots)$ form a collision for $\Htag$.) This should not happen even after $\adv$ later learns $\pw$ and uses it to compute $pk := \mathsf{2F}^{\text{-}1}(\pw,(s,T))$.
+WEM is needed in OEKE varants where $c$ is removed from $\Htag$ inputs. Then we must prevent the OEKE adversary $\adv$ from forwarding the $P$-to-$P'$ message $(s,T)$ without modification, but then modifying the $P'$-to-$P$ message $(c,\tau')$ to some $(c^*,\tau)$ which makes $P$'s check pass.\footnote{It is, in fact, unclear whether this is an ``actual'' attack: $\adv$ causes the two parties to output the same session key by changing $c$ and forwarding all other protocol messages, but $\adv$ does not learn the session key or the password. However, at least such an $\adv$ makes the UC simulation fail, since the simulator is not able to tell that $\adv$ is sending a valid $c^*$ (it does not know $sk$). The same comment is true for the attacks in the ``key binding'' paragraph below.} (If $c$ is included in $\Htag$ then $P$'s check will not pass unless $(\dots, c, \dots)$ and $(\dots, c^*, \dots)$ form a collision for $\Htag$.) This should not happen even after $\adv$ later learns $\pw$ and uses it to compute $pk := \mathsf{2F}^{\text{-}1}(\pw,(s,T))$.
 
 \paragraph{Unpredictability.}
 This property roughly says that an adversary $\adv$ cannot feasibly output a ciphertext/KEM key pair $(c^*,K^*)$ ``out of thin air'', such that $(pk,K^*,c^*)$ is a valid tuple for an honestly generated public key $pk$ that $\adv$ does not know.
@@ -311,14 +311,21 @@ A KEM scheme is \emph{key binding (KBIND)} if for any PPT adversary $\adv$, the 
     }
 \]
 \end{definition}
-KBIND is needed in OEKE varants where $\pw$, $pk$ and $c$ are \emph{all} removed from $\Htag$ inputs. The attack only works in the setting where $P$'s password $\pw$ and $P'$'s password $\pw'$ are different. It is more subtle than previous attacks, so let us describe the OEKE adversary $\adv$ in more detail:
+KBIND is needed in OEKE variants where $\pw$, $pk$ and $c$ are \emph{all} removed from $\Htag$ inputs. The attack only works in the setting where $P$'s password $\pw$ and $P'$'s password $\pw'$ are different. It is more subtle than previous attacks, so let us describe the OEKE adversary $\adv$ in more detail:
 \begin{enumerate}
   \item On protocol message $(s,T)$ from $P$, forward $(s,T)$ to $P'$ without modification. This causes $P'$ to decrypt $pk' := \mathsf{2F}^{\text{-}1}(\pw',(s,T))$, which is uniformly random and independent of $pk$ since $\pw' \neq \pw$. $P'$ then sends $(c,\tau' := \Htag(s,T,K'))$ to $P$ (intercepted by $\adv$) and outputs $SK' := \Htag(K')$.
   \item Suppose $\adv$ now learns $\pw'$ (i.e., after $P'$'s session completes); then $\adv$ can use it to recover $pk'$. If $\adv$ can find another $c^*$ that breaks the KBIND property, then $\adv$ can send $(c^*,\tau')$ to $P$. $P$ will compute the same $K'$ upon decapsulation, so its check $\tau' \stackrel{?}{=} \Htag(s,T,K')$ will pass and $P$ will output the same $\Htag(K')$ as $P'$ does.
 \end{enumerate}
 Similar to the attack in the ``weak non-malleability'' paragraph, $\adv$ causes the two parties to output the same session key by changing $c$ and forwarding all other protocol messages. (If $\pw$ is included in $\Htag$ then $P$'s check will not pass unless $(\pw, \dots)$ and $(\pw', \dots)$ form a collision for $\Htag$. If $pk$ is included in $\Htag$ then $P$'s check will not pass unless either (1) the uniformly random and independent $pk'$ happens to be equal to $pk$, or (2) $(\dots, pk, \dots)$ and $(\dots, pk', \dots)$ form a collision for $\Htag$. Similarly, if $c$ is included in $\Htag$ then $P$'s check will not pass unless $(\dots, c, \dots)$ and $(\dots, c^*, \dots)$ form a collision for $\Htag$.)
 
-Note that the OEKE adversary above only knows $pk'$ and $c$, whereas in the definition of KBIND we additionally give $pk$ and $K'$ to the adversary. This is because the \emph{reduction} in our OEKE security proof (see \Cref{clm:htag4}) needs $pk$ to simulate the $P$-to-$P'$ message $(s,T)$, and needs $K'$ to simulate $P'$'s output $SK'$. It is possible that a reduction to a weaker KBIND property (where $pk,K'$ are not given the adversary) can go through by sampling $s,T,K'$ at random, but that would require changing the order of the games in the security proof, and we do not explore this possibility.
+Furthermore, KBIND is also needed if $pk$ and $(s,T)$ are \emph{both} removed from $\Htag$ inputs. The attack goes as follows (here $\pw$ and $\pw'$ need to be the same if $\pw$ is included in $\Htag$):
+\begin{enumerate}
+  \item Ignore protocol message $(s,T)$ from $P$, and send random junk $(s^*,T^*) \neq (s,T)$ to $P'$. This causes $P'$ to decrypt $pk' := \mathsf{2F}^{\text{-}1}(\pw,(s^*,T^*))$, which is uniformly random and independent of $pk$. $P'$ then sends $(c,\tau' := \Htag(\pw,K'))$ to $P$ (intercepted by $\adv$) and outputs $SK' := \Htag(K')$.
+  \item Suppose $\adv$ now learns $\pw'$ (i.e., after $P'$'s session completes); then $\adv$ can use it to recover $pk'$. If $\adv$ can find another $c^*$ that breaks the KBIND property, then $\adv$ can send $(c^*,\tau')$ to $P$. $P$ will compute the same $K'$ upon decapsulation, so its check $\tau' \stackrel{?}{=} \Htag(\pw,K')$ will pass and $P$ will output the same $\Htag(K')$ as $P'$ does.
+\end{enumerate}
+In this attack, $\adv$ modifies the $P$-to-$P'$ message $(s,T)$, but still forwards $\tau'$. Again, this poses a problem to the UC simulator since the simulator cannot tell if $\adv$ is sending a valid $c^*$ or not (it does not know $sk$). (If $pk$ is included in $\Htag$ then $P$'s check will not pass unless either (1) the uniformly random and independent $pk'$ happens to be equal to $pk$, or (2) $(\dots, pk, \dots)$ and $(\dots, pk', \dots)$ form a collision for $\Htag$. If $(s,T)$ is included in $\Htag$ then $P$'s check will not pass unless $(\dots, s,T, \dots)$ and $(\dots, s^*,T^*, \dots)$ form a collision for $\Htag$.)
+
+Note that the OEKE adversaries above only know $pk'$ and $c$, whereas in the definition of KBIND we additionally give $pk$ and $K'$ to the adversary. This is because the \emph{reduction} in our OEKE security proof (see \Cref{clm:htag4}) needs $pk$ to simulate the $P$-to-$P'$ message $(s,T)$, and needs $K'$ to simulate $P'$'s output $SK'$. It is possible that a reduction to a weaker KBIND property (where $pk,K'$ are not given the adversary) can go through by sampling $s,T,K'$ at random, but that would require changing the order of the games in the security proof, and we do not explore this possibility.
 
 \paragraph{Ciphertext binding.}
 This property roughly says that given two honestly generated public keys $pk,pk'$, an adversary cannot feasibly come up with a ciphertext $c^*$ that decapsulates to the same KEM key $K^*$ under the corresponding secret keys $sk,sk'$. In other words, an (adversarially generated) ciphertext/KEM key pair $(c^*,K^*)$ binds an (honestly generated) public/secret key pair.
@@ -339,9 +346,6 @@ CBIND is needed in OEKE variants where $\pw$ and $pk$ are \emph{both} removed fr
 
 \medskip
 It is unclear whether our new KEM properties are of independent interest. Some of them, such as CBIND, appear natural enough; while properties such as KBIND look highly tailored (especially since in KBIND one of the public keys is generated honestly, and the other is sampled uniformly at random). Either way, we do not know of any other applications of these properties yet.
-
-\paragraph{What about removing $(s,T)$ from $\Htag$ inputs?}
-Note that all of the KEM properties above are needed in a certain OEKE variant where one or more of $\pw,pk,c$ are removed from $\Htag$ inputs; we never mentioned removing $(s,T)$. Roughly speaking, including $(s,T)$ in $\Htag$ inputs forces the adversary $\adv$ to forward $(s,T)$ to $P'$ without modification if it later wants to forward $\tau'$ to $P$ without modification; removing $(s,T)$ allows $\adv$ to modify $(s,T)$ to some other $(s^*,T^*)$ and later forward $\tau'$, while still making $P$'s check pass. However, it turns out that all these additional scenarios require $\adv$ to know the correct password of $P'$, which can be extracted by the simulator, so they are not ``real'' attacks (although they complicate the security proofs a lot) and do not require additional KEM properties. We refer to \Cref{app:no-st} for more details. 
 
 \subsection{Example: Diffie--Hellman KEM}
 It is instructive to see what cryptographic assumptions the various KEM properties are, in the well-known Diffie--Hellman KEM. This KEM scheme works in a finite cyclic group with (public) generator $g$ and prime order $q$ superpolynomial in $n$, and
@@ -1569,20 +1573,20 @@ $P'$ makes a single $\Htag$ query, on $(s^*,T^*,K')$. If $(s^*,T^*) \neq (s,T)$,
         \item On $(\NewSession, sid, P', P, \pw', \text{``respondent''})$ from $\env$ and $(s^*,T^*)$ from $\adv$, if $\neg(\pw \neq \pw' \land (s^*,T^*) = (s,T))$, abort. Otherwise
             \begin{enumerate}
               \item If $\adv$ has not queried $H_2(\pw',T)$, make this query on behalf of $P'$.
-              \item Compute $SK := \Hkey(K')$ and $\tau' := \Htag(s,T,K')$. Output $SK'$ to $\env$, and send $(c,\tau')$ to $\adv$. ($c$ and $K'$ are part of $\red_\mathrm{KBIND}$'s input.)
+              \item Compute $SK' := \Hkey(K')$ and $\tau' := \Htag(s,T,K')$. Output $SK'$ to $\env$, and send $(c,\tau')$ to $\adv$. ($c$ and $K'$ are part of $\red_\mathrm{KBIND}$'s input.)
             \end{enumerate}
         \item On $(c^*,\tau^*)$ from $\adv$, output $c^*$.
       \end{enumerate}
-      Assuming $\Decap(sk,c^*) = K'$ and $\red_\text{KBIND}$'s guess of index $j$ is correct, the only difference between Game 1/2 and $\red_\text{KBIND}$'s simulation (until $\adv$ sends $c^*$) is that $\red_\text{KBIND}$ uses its input $pk'$ to program $H_1(\pw',r')$, and then uses its inputs $(c,K') \gets \Encap(pk')$ as the $P'$-to-$P$ message and compute $SK$ and $\tau'$. Since $(c,K')$ is also computed as $\Encap(pk')$ in Game 1/2, $\red_\text{KBIND}$ simulates Game 1/2 perfectly. Furthermore, $\red_\text{KBIND}$ wins the KBIND game. We have
+      Assuming $\Decap(sk,c^*) = K'$ and $\red_\text{KBIND}$'s guess of index $j$ is correct, the only difference between Game 1/2 and $\red_\text{KBIND}$'s simulation (until $\adv$ sends $c^*$) is that $\red_\text{KBIND}$ uses its input $pk'$ to program $H_1(\pw',r')$, and then uses its inputs $(c,K') \gets \Encap(pk')$ as the $P'$-to-$P$ message and compute $SK'$ and $\tau'$. Since $(c,K')$ are also computed as $\Encap(pk')$ in Game 1/2, $\red_\text{KBIND}$ simulates Game 1/2 perfectly. Furthermore, $\red_\text{KBIND}$ wins the KBIND game. We have
       \[
-      \Pr[K = K' \mid \pw \neq \pw'] \leq \Adv_{\red_\text{WNM}}^\text{WNM}.
+      \Pr[K = K' \mid \pw \neq \pw'] \leq (q_2+1)\Adv_{\red_\text{KBIND}}^\text{KBIND}.
       \]
   \item If $\pw = \pw' \land c^* \neq c$, then the argument in the proof of \Cref{clm:htag2} still holds, and $\Pr[K = K' \mid \pw = \pw' \land c^* \neq c] \leq (q_2+1)\Adv_{\red_\text{KBIND}}$.
 \end{itemize}
 
 If $K \neq K'$ then of course $P'$'s query is not $\Htag(s,T,K)$. Overall, we have
 \[
-\Pr[P'\text{ queries }\Htag(s,T,K)] = \Pr[K = K'] \leq \Adv_{\red_\text{WNM}}^\text{WNM} + (q_2+1)\Adv_{\red_\text{KBIND}}^\text{KBIND},
+\Pr[P'\text{ queries }\Htag(s,T,K)] = \Pr[K = K'] \leq (q_2+1)(\Adv_{\red_\text{WNM}}^\text{WNM} + \Adv_{\red_\text{KBIND}}^\text{KBIND}),
 \]
 which yields the claim.
 \end{proof}
@@ -1609,13 +1613,13 @@ If $\adv$ makes no $\Htag(s,T,\star)$ query resulting in $\tau^*$, then both Gam
 \begin{itemize}
   \item We first upper-bound the probability that there is more than one $\langle\pw^*,pk^*,\allowbreak sk^*\rangle$ record with $\Decap(sk^*,c^*) = K^*$. Note that in each such record, $(pk^*,sk^*) \gets \Gen$ is freshly generated, so a straightforward reduction to the CBIND property of the KEM scheme, $\red_\text{CBIND1}$, shows that the probability that the same $c^*$ decapsulates to the same $K^*$ under two freshly generated $sk^*$ is upper-bounded by ${q_2 \choose 2} \cdot \Adv_{\red_\text{CBIND1}}^\text{CBIND}$.
   \item If there is no $\langle\pw^*,pk^*,sk^*\rangle$ record with $\Decap(sk^*,c^*) = K^*$, then both Game 12 and Game 13 set $SK := \bot$.
-  \item Next, suppose there is a unique $\langle\pw^*,pk^*,sk^*\rangle$ record with $\Decap(sk^*,c^*) = K^*$, but $\pw^* \neq \pw$. If there is no $\langle\pw,pk,sk\rangle$ record, then both Game 12 and Game 13 set $SK := \bot$. If there is a $\langle\pw,pk,sk\rangle$ record, then $(pk,sk) \gets \Gen$ is freshly generated, so a straightforward reduction to the CBIND property of the KEM scheme, $\red_\text{CBIND2}$, shows that the probability that the same $c^*$ decapsulates to the same $K^*$ under both $sk$ and $sk^*$ is upper-bounded by $q_2 \cdot \Adv_{\red_\text{CBIND2}}^\text{CBIND2}$. If this does not happen, then again both Game 12 and Game 13 set $SK := \bot$.
+  \item Next, suppose there is a unique $\langle\pw^*,pk^*,sk^*\rangle$ record with $\Decap(sk^*,c^*) = K^*$, but $\pw^* \neq \pw$. If there is no $\langle\pw,pk,sk\rangle$ record, then both Game 12 and Game 13 set $SK := \bot$. If there is a $\langle\pw,pk,sk\rangle$ record, then $(pk,sk) \gets \Gen$ is freshly generated, so a straightforward reduction to the CBIND property of the KEM scheme, $\red_\text{CBIND2}$, shows that the probability that the same $c^*$ decapsulates to the same $K^*$ under both $sk$ and $sk^*$ is upper-bounded by $q_2 \cdot \Adv_{\red_\text{CBIND2}}^\text{CBIND}$. If this does not happen, then again both Game 12 and Game 13 set $SK := \bot$.
   \item Finally, if there is a unique $\langle\pw^*,pk^*,sk^*\rangle$ record, and $\pw^* = \pw$, then both Game 12 and Game 13 set $SK := \Hkey(K)$.
 \end{itemize}
 
 In sum, we have
 \[
-\Dist_\env^{12,13} \leq \frac{q_2(q_2-1)}{2} \cdot \Adv_{\red_\text{CBIND1}}^\text{CBIND1} + q_2 \cdot \Adv_{\red_\text{CBIND2}}^\text{CBIND2} + \frac{\qtag(\qtag-1)}{2^{2n+1}}.
+\Dist_\env^{12,13} \leq \frac{q_2(q_2-1)}{2} \cdot \Adv_{\red_\text{CBIND1}}^\text{CBIND} + q_2 \cdot \Adv_{\red_\text{CBIND2}}^\text{CBIND} + \frac{\qtag(\qtag-1)}{2^{2n+1}}.
 \]
 
 Overall, we conclude that the ``only hash $(s,T)$'' version is secure under the WNM, UNPRE, KBIND and CBIND properties of the KEM scheme.
@@ -2030,17 +2034,45 @@ There are the following cases:
 \begin{itemize}
   \item If $\tau^* \neq \tau'$, then of course $P'$'s $\Htag$ query does not result in $\tau^*$ (it results in $\tau'$), so we can safely drop $P'$'s $\Htag$ query from the check.
   \item If $\tau^* = \tau'$, but there is no $\langle\pw,\star,sk\rangle$ record, then both new Game I and new Game II outright set $SK := \bot$, regardless of $\Htag$ queries by $\adv$ or $P'$. Thus, the two games are identical.
-  \item If $(\pw')^* \neq \pw' \land \tau^* = \tau'$, and there is a $\langle\pw,\star,sk\rangle$ record, then $P'$'s $\Htag(\pw',K')$ query results in $\tau^*$, and we need to argue that this query can be dropped from the check.
+  \item If $(\pw')^* \neq \pw' \land \tau^* = \tau'$, and there is a $\langle\pw,pk,sk\rangle$ record, then $P'$'s $\Htag(\pw',K')$ query results in $\tau^*$, and we need to argue that this query can be dropped from the check.
       \begin{itemize}
         \item If $\adv$ queries $\Htag(\pw',K')$, then new Game II still finds this query, so new Game I and new Game II are identical.
-        \item If $\adv$ does not query $\Htag(\pw',K')$, then new Game II sets $SK := \bot$. We argue that new Game I also sets $SK := \bot$ except with negligible probability. New Game I finds $P'$'s $\Htag(\pw',K')$ query, and sets $SK := \bot$ unless $\Decap(sk,c^*) = K'$. But $(pk,sk)$ are independent of $pk'$ by \Cref{clm:pk-ind},\footnote{\Cref{clm:pk-ind} additionally requires $c^* = c$, but its proof does not use this condition.} so a straightforward reduction to the UNPRE property of the KEM scheme, $\red_\text{UNPRE2}$, shows that $\Decap(sk,c^*) = K'$ happens with negligible probability (cf. the reduction in Game 11 in \Cref{sec:hash-pw-st}).
+        \item If $\adv$ does not query $\Htag(\pw',K')$, then new Game II sets $SK := \bot$. We argue that new Game I also sets $SK := \bot$ except with negligible probability. New Game I finds $P'$'s $\Htag(\pw',K')$ query, and sets $SK := \bot$ unless $\Decap(sk,c^*) = K'$. But $(pk,sk)$ are independent of $pk'$ by \Cref{clm:pk-ind},\footnote{\Cref{clm:pk-ind} additionally requires $c^* = c$, but its proof does not use this condition.} which suggests a reduction $\red_\text{KBIND}$ to the KBIND property of the KEM scheme: \\
+            \vspace{-6pt} \\ % force \medskip in itemize environment
+            \textbf{\underline{Reduction $\red_\mathrm{KBIND}$}:}
+            \vspace{6pt} \\
+            Sample $j \gets [q_2+1]$ as a guess that the $j$-th $H_2$ query (by either $\adv$ or $P'$) is $H_2(\pw,T^*)$. \\
+            On input $(pk,pk',c,K')$,
+            \begin{enumerate}
+              \item Invoke $\env$. On $(\NewSession, sid, P, P', \pw, \text{``initiator''})$ from $\env$, sample $s \gets \{0,1\}^{3n}, T \gets \group$ and send $(s,T)$ to $\adv$. \\
+                  When $\adv$ makes an $H_2(\pw,T) =: t$ query, compute
+                  \[
+                  r := s \oplus t, \quad R := T/pk.
+                  \]
+                  ($pk$ is part of $\red_\mathrm{KBIND}$'s input.) If $H_1(\pw,r)$ has already been defined and it is not $R$, abort. Otherwise program $H_1(\pw,r) := R$.
+              \item On the $j$-th $H_2(\pw,T') =: t'$ query (by either $\adv$ or $\red_\mathrm{KBIND}$ itself on behalf of $P'$ --- see step 3 below), compute
+                  \[
+                  r' := s \oplus t', \quad R' := T/pk'.
+                  \]
+                  ($pk'$ is part of $\red_\mathrm{KBIND}$'s input.) If $H_1(\pw,r')$ has already been defined and it is not $R'$, abort. Otherwise program $H_1(\pw,r') := R'$.
+              \item On $(\NewSession, sid, P', P, \pw', \text{``respondent''})$ from $\env$ and $(s^*,T^*)$ from $\adv$, if $\neg(\pw = \pw' \land (s^*,T^*) \neq (s,T))$, abort. Otherwise
+                  \begin{enumerate}
+                    \item If $\adv$ has not queried $H_2(\pw,T^*)$, make this query on behalf of $P'$.
+                    \item Compute $SK':= \Hkey(K')$ and $\tau' := \Htag(\pw,K')$. Output $SK'$ to $\env$, and send $(c,\tau')$ to $\adv$. ($c$ and $K'$ are part of $\red_\mathrm{KBIND}$'s input.)
+                  \end{enumerate}
+              \item On $(c^*,\tau^*)$ from $\adv$, if $\tau^* \neq \tau'$, abort. Otherwise output $c^*$.
+            \end{enumerate}
       \end{itemize}
+      Assuming $\Decap(sk,c^*) = K'$ and $\red_\text{KBIND}$'s guess of index $j$ is correct, the only difference between new Game I/II and $\red_\text{KBIND}$'s simulation (until $\adv$ sends $c^*$) is that $\red_\text{KBIND}$ uses its input $pk$ to program $H_1(\pw,r)$, uses its input $pk'$ to program $H_1(\pw',r')$, and then uses its inputs $(c,K') \gets \Encap(pk')$ as the $P'$-to-$P$ message and compute $SK'$ and $\tau'$. Since $(c,K')$ are also computed as $\Encap(pk')$ in new Game I/II, $\red_\text{KBIND}$ simulates new Game I/II perfectly. Furthermore, $\red_\text{KBIND}$ wins the KBIND game. We have
+      \[
+      \Pr[\text{new Game I does not set }SK := \bot] \leq (q_2+1)\Adv_{\red_\text{KBIND}}^\text{KBIND}.
+      \]
   \item If $(\pw')^* = \pw' \land \tau^* = \tau'$, but $\Decap(sk,c^*) \neq K'$, then new Game I finds $P'$'s $\Htag(\pw',K')$ query and then sets $SK := \bot$ because the check $\Decap(sk,c^*) \stackrel{?}{=} K'$ does not pass, and new Game II also sets $SK := \bot$ because it either fails to find $\adv$'s $\Htag(\pw',K')$ query, or it finds such a query but then sets $SK := \bot$ because the check $\Decap(sk,c^*) \stackrel{?}{=} K'$ does not pass. Thus, the two games are identical.
 \end{itemize}
 
 The remaining case is that $(\pw')^* = \pw' \land \tau^* = \tau'$, there is a $\langle\pw,\star,sk\rangle$ record, and $\Decap(sk,c^*) = K'$. The condition of the game additionally requires $\pw = \pw' \land (s^*,T^*) \neq (s,T)$. Combined, we get ``$(s^*,T^*) \neq (s,T) \land (\pw')^* = \pw = \pw' \land \tau^* = \tau'$, there is a record $\langle\pw,\star,sk\rangle$, and $\Decap(sk,c^*) = K'$''. This is exactly the condition in new Game I, in which case we do not make any change in new Game II. Overall, we conclude that
 \[
-\Dist_\env^{\text{newI},\text{newII}} \leq \Adv_{\red_\text{UNPRE2}}^{\text{UNPRE}}.
+\Dist_\env^{\text{newI},\text{newII}} \leq (q_2+1)\Adv_{\red_\text{KBIND}}^\text{KBIND}.
 \]
 
 Game 17 is essentially unchanged from the corresponding game in \Cref{sec:hash-pw-st}.
@@ -2295,7 +2327,7 @@ On $(c^*,\tau^*)$ from $\func$, simulate $P$'s output as follows:
         \item If there is exactly one record $\langle\pw^*,\star,sk^*\rangle$ with $K := \Decap(sk^*,c^*) = K^*$, send $(\TestPwd, sid, P, \pw^*)$ to $\func$.
             \begin{enumerate}
               \item If $\func$ replies with ``wrong guess'', send $(\NewKey, sid, P, 0^n)$ to $\func$.
-              \item If $\func$ replies with ``correct guess'', compute $SK := \Hkey(K)$ and send $(\NewKey, sid, P, SK)$ to $\func$.
+              \item If $\func$ replies with ``correct guess'', send $(\NewKey, sid, P, SK')$ to $\func$.
             \end{enumerate}
       \end{enumerate}
   }
@@ -2317,6 +2349,73 @@ On $(c^*,\tau^*)$ from $\func$, simulate $P$'s output as follows:
 \end{figure}
 
 \subsubsection{Changes in Game Hops}
+Once more, we only describe Game 2 and the four new games.
+
+\medskip\noindent\emph{Game 2:} In the case where $(s^*,T^*) = (s,T) \land (\pw \neq \pw' \lor c^* \neq c)$, find $\adv$'s $\Htag(K^*)$ query resulting in $\tau^*$. If there is none or more than one, set $SK := \bot$. If there is a unique such query, do the following:
+\begin{itemize}
+  \item If $K^* = K$, set $SK := \Hkey(K)$ (i.e., there is no change from Game 1).
+  \item If $K^* \neq K$, set $SK := \bot$.
+\end{itemize}
+
+Furthermore, in the case where $(s^*,T^*) \neq (s,T)$, do the same as above, except that we now find $\adv$ \emph{or $P'$}'s $\Htag(K^*)$ query resulting in $\tau^*$.
+
+The difference between the new Game 2 and the old one is that we now have two separate cases:
+\begin{enumerate}
+  \item $(s^*,T^*) = (s,T) \land (\pw \neq \pw' \lor c^* \neq c)$;
+  \item $(s^*,T^*) \neq (s,T)$.
+\end{enumerate}
+These two cases combined yield $\neg(\pw = \pw' \land (s^*,T^*) = (s,T) \land c^* = c)$, which is identical to the case in the old Game 2 (i.e., they cover all situations other than the one addressed in Game 1). In case (1) we proceed as in the old Game 2, whereas in case (2) we cannot due to the ``attack'' in \Cref{fig:attack-no-pw-pk}; instead, in case (2) we need to include $P'$'s $\Htag$ query as if it were $\adv$'s.
+\begin{claim}
+\label{clm:htag8}
+Suppose the WNM and KBIND properties hold for the KEM scheme. In case (1) above, the probability that $P'$ queries $\Htag(K)$ is negligible.
+\end{claim}
+\begin{proof}
+This has been proven in \Cref{clm:htag4} (most of the proof of \Cref{clm:htag4} assumes $(s^*,T^*) = (s,T)$, which is also in the condition of this game).
+\end{proof}
+
+\medskip
+Games 3--16 are essentially unchanged from the corresponding games in \Cref{sec:hash-st}.
+
+\medskip\noindent\emph{New game I:} Now that $(\pw')^*$ --- the password guess extracted from $(s^*,T^*)$ --- is defined (in Game 15), we can finally add (part of) what's in step 2 of \Cref{fig:oeke-sim-hash-nothing}. In this game we first add the aborting condition. Concretely, in the case where $(s^*,T^*) \neq (s,T) \land (\pw')^* = \pw' \land \tau^* = \tau'$, there must be a $K'$ defined on the $P'$ side. Retrieve all records in the form of $\langle\pw^*,\star,sk^*\rangle$. If there is more than one such record such that $\Decap(sk^*,c^*) = K'$, abort. If $(\pw')^*$ is undefined, treat it as if $(\pw')^* \neq \pw'$. (This corresponds to step 2(a) in the simulator in \Cref{fig:oeke-sim-hash-nothing}.)
+
+Note that in each such record, $(\star,sk^*) \gets \Gen$ is freshly generated, so a straightforward reduction to the CBIND property of the KEM scheme, $\red_\text{CBIND2}$, shows that the probability that the same $c^*$ decapsulates to the same $K^*$ under two freshly generated $sk^*$ is upper-bounded by $q_2 \cdot \Adv_{\red_\text{CBIND2}}^\text{CBIND}$ (cf. Game 13 in \Cref{sec:hash-pk-st-games}). We have
+\[
+\Dist_\env^{16,\text{newI}} \leq q_2 \cdot \Adv_{\red_\text{CBIND2}}^\text{CBIND}.
+\]
+
+\medskip\noindent\emph{New game II:} Again in the case where $(s^*,T^*) \neq (s,T) \land (\pw')^* = \pw' \land \tau^* = \tau'$, if there is a unique record $\langle\pw^*,\star,sk^*\rangle$ such that $\Decap(sk^*,c^*) = K'$, and $\pw^* = \pw$, set $SK := SK'$. (In some sense this is the most crucial new game, as it covers the scenario in \Cref{fig:attack-no-pw-pk} --- which is why we need to make all these changes to begin with. It also corresponds to step 2(b)(ii) in the simulator in \Cref{fig:oeke-sim-hash-nothing}. We will deal with step 2(b)(i) later.)
+
+Since $(s^*,T^*) \neq (s,T)$, Game 16 finds $\adv$ or $P'$'s $\Htag$ query resulting in $\tau^*$. $P'$ makes a singe query to $\Htag$, on input $K'$; and the query result is $\tau' = \tau^*$. Therefore, Game 16 finds this query, and does the following:
+\begin{enumerate}
+  \item Retrieve all records in the form of $\langle\pw^*,\star,sk^*\rangle$, and check if there is such a (unique) record such that $K := \Decap(sk^*,c^*) = K'$. This is indeed the case per the condition of the game.
+  \item Check if $\pw^* = \pw$, which is again the case per the condition of the game.
+  \item Set $SK := \Hkey(K) (= \Hkey(K') = SK')$.
+\end{enumerate}
+This entire process in Game 16 eventually results in setting $SK := SK'$, which exactly matches the new game. Thus, there is no difference. We have
+\[
+\Dist_\env^{\text{newI},\text{newII}} = 0.
+\]
+
+\noindent\emph{New game III:} In the case where $(s^*,T^*) \neq (s,T) $ (i.e., case (2) in Game 2), we find $\adv$ \emph{or $P'$}'s $\Htag(K^*)$ query resulting in $\tau^*$ --- except that in new Game II's condition, new Game II already shortcuts it to $SK := SK'$ without trying to find any $\Htag$ query. In this game, we do not check $P'$'s $\Htag$ query anymore, and only check $\adv$'s $\Htag$ query.
+
+There are the following cases:
+\begin{itemize}
+  \item If $\tau^* \neq \tau'$, then of course $P'$'s $\Htag$ query does not result in $\tau^*$ (it results in $\tau'$), so we can safely drop $P'$'s $\Htag$ query.
+  \item If $\tau^* = \tau'$, but there is more than one $\langle\pw^*,\star,sk^*\rangle$ record such that $\Decap(sk^*,c^*) = K'$, then both new Game II and new Game III abort, regardless of $\Htag$ queries by $\adv$ or $P'$. Similarly, if $\tau^* = \tau'$, but there is no $\langle\pw^*,\star,sk^*\rangle$ record such that $\Decap(sk^*,c^*) = K'$, then both new Game II and new Game III outright set $SK := \bot$. Thus, the two games are identical.
+  \item If $(\pw')^* \neq \pw' \land \tau^* = \tau'$, then $P'$'s $\Htag(K')$ query results in $\tau^*$, and we need to argue that this query can be dropped from the check.
+      \begin{itemize}
+        \item If $\adv$ queries $\Htag(K')$, then new Game II still finds this query, so new Game II and new Game III are identical.
+        \item If $\adv$ does not query $\Htag(K')$, then new Game III sets $SK := \bot$. We argue that new Game II also sets $SK := \bot$ except with negligible probability. New Game II finds $P'$'s $\Htag(K')$ query, then finds the (unique) $\langle\pw^*,pk^*,sk^*\rangle$ record such that $\Decap(sk^*,c^*) = K'$, and sets $SK := \bot$ unless $\pw^* = \pw$. We claim that $\pw^* = \pw$, i.e., $(pk^*,sk^*)$ are the same with $(pk,sk)$ as in the $\langle\pw,pk,sk\rangle$ record, with negligible probability. $pk$ and $pk'$ are independent of each other by \Cref{clm:pk-ind}, so a straightforward reduction to the CBIND property of the KEM scheme, $\red_\text{CBIND3}$, shows that the probability that some $(c^*,K$ decapsulates to $K^*$ under both $sk$ and $sk'$ is upper-bounded by $q_2 \cdot \Adv_{\red_\text{CBIND3}}^\text{CBIND}$.
+      \end{itemize}
+  \item If $(\pw')^* = \pw' \land \tau^* = \tau'$, there is a unique $\langle\pw^*,pk',\star\rangle$ record, but $\pw^* \neq \pw$, then again both new Game II and new Game III outright sets $SK := \bot$, regardless of $\Htag$ queries by $\adv$ or $P'$. Thus, the two games are identical.
+\end{itemize}
+
+The remaining case is that $(\pw')^* = \pw' \land \tau^* = \tau'$, there is a unique $\langle\pw^*,pk',\star\rangle$ record, and $\pw^* = \pw$. The condition of the game additionally requires $(s^*,T^*) \neq (s,T) \land c^* = c$. Combined, we get ``$(s^*,T^*) \neq (s,T) \land (\pw')^* = \pw' \land (c^*,\tau^*) = (c,\tau')$, there is a unique record $\langle\pw^*,pk',\star\rangle$, and $\pw^* = \pw$''. This is exactly the condition in new Game II, in which case we do not make any change in new Game III. Overall, we conclude that
+\[
+\Dist_\env^{\text{newII},\text{newIII}} \leq p_\text{guess}.
+\]
+
+Game 17 is essentially unchanged from the corresponding game in \Cref{sec:hash-pw-st}.
 
 \section{Proof of \Cref{lem:uni-ano-ro}}
 \label{app:uni-ano-ro-proof}
