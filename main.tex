@@ -145,6 +145,8 @@ Whenever we refer to a KEM scheme below, we always assume these two properties a
 
 The most commonly seen security property in the KEM literature is security under chosen-ciphertext attacks (CCA, or IND-CCA), but the KEM scheme in OEKE needs other properties. The ``hash everything'' version of OEKE only requires some relatively standard properties for the underlying KEM scheme, which we define in \Cref{sec:kem-standard}. The variants where certain items are removed from the hash require a number of non-standard properties, which we define in \Cref{sec:kem-additional}.
 
+In all KEM properties below, we use $\Adv_\adv^\text{property}$ to denote the adversary $\adv$'s advantage in the property (either $\adv$'s winning probability in the game, or $\adv$'s distinguishing advantage between two games), and do not repeat it in each definition.
+
 \subsection{KEM Properties Used in the ``Hash Everything'' Version}
 \label{sec:kem-standard}
 \paragraph{Pseudorandom public keys.}
@@ -2065,7 +2067,7 @@ There are the following cases:
       \end{itemize}
       Assuming $\Decap(sk,c^*) = K'$ and $\red_\text{KBIND}$'s guess of index $j$ is correct, the only difference between new Game I/II and $\red_\text{KBIND}$'s simulation (until $\adv$ sends $c^*$) is that $\red_\text{KBIND}$ uses its input $pk$ to program $H_1(\pw,r)$, uses its input $pk'$ to program $H_1(\pw',r')$, and then uses its inputs $(c,K') \gets \Encap(pk')$ as the $P'$-to-$P$ message and compute $SK'$ and $\tau'$. Since $(c,K')$ are also computed as $\Encap(pk')$ in new Game I/II, $\red_\text{KBIND}$ simulates new Game I/II perfectly. Furthermore, $\red_\text{KBIND}$ wins the KBIND game. We have
       \[
-      \Pr[\text{new Game I does not set }SK := \bot] \leq (q_2+1)\Adv_{\red_\text{KBIND}}^\text{KBIND}.
+      \Pr[\Decap(sk,c^*) = K'] \leq (q_2+1)\Adv_{\red_\text{KBIND}}^\text{KBIND}.
       \]
   \item If $(\pw')^* = \pw' \land \tau^* = \tau'$, but $\Decap(sk,c^*) \neq K'$, then new Game I finds $P'$'s $\Htag(\pw',K')$ query and then sets $SK := \bot$ because the check $\Decap(sk,c^*) \stackrel{?}{=} K'$ does not pass, and new Game II also sets $SK := \bot$ because it either fails to find $\adv$'s $\Htag(\pw',K')$ query, or it finds such a query but then sets $SK := \bot$ because the check $\Decap(sk,c^*) \stackrel{?}{=} K'$ does not pass. Thus, the two games are identical.
 \end{itemize}
@@ -2245,7 +2247,7 @@ There are the following cases:
         \item If $\adv$ queries $\Htag(pk',K')$, then new Game II still finds this query, so new Game II and new Game III are identical.
         \item If $\adv$ does not query $\Htag(pk',K')$, then new Game III sets $SK := \bot$. We argue that new Game II also sets $SK := \bot$ except with negligible probability. New Game II finds $P'$'s $\Htag(pk',K')$ query, then finds the $\langle\pw^*,pk',sk'\rangle$ record, and sets $SK := \bot$ unless $\pw^* = \pw \land \Decap(sk',c^*) = K'$. We claim that $\pw^* = \pw$ with negligible probability; in other words, suppose there is a record $\langle\pw,pk,\star\rangle$, then $pk = pk'$ with negligible probability. This is because $pk$ and $pk'$ are independent of each other by \Cref{clm:pk-ind}, so $\Pr[pk = pk'] \leq p_\text{guess}$.
       \end{itemize}
-  \item If $(\pw')^* = \pw' \land \tau^* = \tau'$, there is a unique $\langle\pw^*,pk',\star\rangle$ record, but $\pw^* \neq \pw$, then again both new Game II and new Game III outright sets $SK := \bot$, regardless of $\Htag$ queries by $\adv$ or $P'$. Thus, the two games are identical.
+  \item If $(\pw')^* = \pw' \land \tau^* = \tau'$, there is a unique $\langle\pw^*,pk',\star\rangle$ record, but $\pw^* \neq \pw$, then again both new Game II and new Game III outright set $SK := \bot$, regardless of $\Htag$ queries by $\adv$ or $P'$. Thus, the two games are identical.
 \end{itemize}
 
 The remaining case is that $(\pw')^* = \pw' \land \tau^* = \tau'$, there is a unique $\langle\pw^*,pk',\star\rangle$ record, and $\pw^* = \pw$. The condition of the game additionally requires $(s^*,T^*) \neq (s,T) \land c^* = c$. Combined, we get ``$(s^*,T^*) \neq (s,T) \land (\pw')^* = \pw' \land (c^*,\tau^*) = (c,\tau')$, there is a unique record $\langle\pw^*,pk',\star\rangle$, and $\pw^* = \pw$''. This is exactly the condition in new Game II, in which case we do not make any change in new Game III. Overall, we conclude that
@@ -2269,7 +2271,7 @@ We have made the following essential changes to the games:
   \item In the case where $(s^*,T^*) \neq (s,T) \land (\pw')^* = \pw' \land (c^*,\tau^*) = (c,\tau')$, and there is more than one record $\langle\pw^*,pk',\star\rangle$, new Game I aborts.
   \item In the case where $(s^*,T^*) \neq (s,T) \land (c^*,\tau^*) = (c,\tau')$, there is a unique record $\langle\pw^*,pk',\star\rangle$, and $\pw^* = \pw$, new Game II outright sets $SK := SK'$ (without trying to find any $\Htag$ query by $\adv$ or $P'$).
   \item In the case where $(s^*,T^*) \neq (s,T) \land c^* = c$, new Game III drops the check on $P'$'s $\Htag$ query introduced in Game 2 (except in new Game II's condition, where all checks on $\Htag$ queries have already been dropped).
-  \item In the case where $(s^*,T^*) \neq (s,T) \land (c^*,\tau^*) = (c,\tau')$, there is a unique record $\langle\pw^*,pk',\star\rangle$, and $\pw^* \neq \pw$, new Game 3 outright sets $SK := \bot$.
+  \item In the case where $(s^*,T^*) \neq (s,T) \land (c^*,\tau^*) = (c,\tau')$, there is a unique record $\langle\pw^*,pk',\star\rangle$, and $\pw^* \neq \pw$, new Game IV outright sets $SK := \bot$.
 \end{enumerate}
 
 Items (1) and (4) introduce the check on $P'$'s $\Htag$ query and then drop it, so there is no net change there. To see the net change, we only need to combine items (2), (3) and (5), which say that in the case where $(s^*,T^*) \neq (s,T) \land (c^*,\tau^*) = (c,\tau')$ and there is a record $\langle\pw^*,pk',\star\rangle$,
@@ -2405,17 +2407,42 @@ There are the following cases:
   \item If $(\pw')^* \neq \pw' \land \tau^* = \tau'$, then $P'$'s $\Htag(K')$ query results in $\tau^*$, and we need to argue that this query can be dropped from the check.
       \begin{itemize}
         \item If $\adv$ queries $\Htag(K')$, then new Game II still finds this query, so new Game II and new Game III are identical.
-        \item If $\adv$ does not query $\Htag(K')$, then new Game III sets $SK := \bot$. We argue that new Game II also sets $SK := \bot$ except with negligible probability. New Game II finds $P'$'s $\Htag(K')$ query, then finds the (unique) $\langle\pw^*,pk^*,sk^*\rangle$ record such that $\Decap(sk^*,c^*) = K'$, and sets $SK := \bot$ unless $\pw^* = \pw$. We claim that $\pw^* = \pw$, i.e., $(pk^*,sk^*)$ are the same with $(pk,sk)$ as in the $\langle\pw,pk,sk\rangle$ record, with negligible probability. $pk$ and $pk'$ are independent of each other by \Cref{clm:pk-ind}, so a straightforward reduction to the CBIND property of the KEM scheme, $\red_\text{CBIND3}$, shows that the probability that some $(c^*,K$ decapsulates to $K^*$ under both $sk$ and $sk'$ is upper-bounded by $q_2 \cdot \Adv_{\red_\text{CBIND3}}^\text{CBIND}$.
+        \item If $\adv$ does not query $\Htag(K')$, then new Game III sets $SK := \bot$. We argue that new Game II also sets $SK := \bot$ except with negligible probability. New Game II finds $P'$'s $\Htag(K')$ query, then finds the (unique) $\langle\pw^*,\star,sk^*\rangle$ record such that $\Decap(sk^*,c^*) = K'$, and sets $SK := \bot$ unless $\pw^* = \pw$. We claim that $\pw^* = \pw$, i.e., there is a $\langle\pw,pk,sk\rangle$ record such that $\Decap(sk,c^*) = K'$, with negligible probability. $pk$ and $pk'$ are independent of each other by \Cref{clm:pk-ind}, so a reduction to the KBIND property of the KEM scheme similar to that in new Game II of \Cref{sec:new-games}, $\red_\text{KBIND2}$, shows that $\Pr[\pw^* = \pw] \leq (q_2+1)\Adv_{\red_\text{KBIND2}}^\text{KBIND}$.
       \end{itemize}
-  \item If $(\pw')^* = \pw' \land \tau^* = \tau'$, there is a unique $\langle\pw^*,pk',\star\rangle$ record, but $\pw^* \neq \pw$, then again both new Game II and new Game III outright sets $SK := \bot$, regardless of $\Htag$ queries by $\adv$ or $P'$. Thus, the two games are identical.
+  \item If $(\pw')^* = \pw' \land \tau^* = \tau'$, there is a unique $\langle\pw^*,\star,sk^*\rangle$ record such that $\Decap(sk^*,c^*) = K'$, but $\pw^* \neq \pw$, then again both new Game II and new Game III outright set $SK := \bot$, regardless of $\Htag$ queries by $\adv$ or $P'$. Thus, the two games are identical.
 \end{itemize}
 
-The remaining case is that $(\pw')^* = \pw' \land \tau^* = \tau'$, there is a unique $\langle\pw^*,pk',\star\rangle$ record, and $\pw^* = \pw$. The condition of the game additionally requires $(s^*,T^*) \neq (s,T) \land c^* = c$. Combined, we get ``$(s^*,T^*) \neq (s,T) \land (\pw')^* = \pw' \land (c^*,\tau^*) = (c,\tau')$, there is a unique record $\langle\pw^*,pk',\star\rangle$, and $\pw^* = \pw$''. This is exactly the condition in new Game II, in which case we do not make any change in new Game III. Overall, we conclude that
+The remaining case is that $(\pw')^* = \pw' \land \tau^* = \tau'$, there is a unique $\langle\pw^*,\star,sk^*\rangle$ record such that $\Decap(sk^*,c^*) = K'$, and $\pw^* = \pw$. The condition of the game additionally requires $(s^*,T^*) \neq (s,T)$. Combined, we get ``$(s^*,T^*) \neq (s,T) \land (\pw')^* = \pw' \land \tau^* = \tau'$, there is a unique $\langle\pw^*,\star,sk^*\rangle$ record such that $\Decap(sk^*,c^*) = K'$, and $\pw^* = \pw$''. This is exactly the condition in new Game II, in which case we do not make any change in new Game III. Overall, we conclude that
 \[
-\Dist_\env^{\text{newII},\text{newIII}} \leq p_\text{guess}.
+\Dist_\env^{\text{newII},\text{newIII}} \leq (q_2+1)\Adv_{\red_\text{KBIND2}}^\text{KBIND}.
 \]
 
 Game 17 is essentially unchanged from the corresponding game in \Cref{sec:hash-pw-st}.
+
+\medskip\noindent\emph{New Game IV:} In the case where $(s^*,T^*) \neq (s,T) \land \tau^* = \tau'$, if there is a unique record $\langle\pw^*,\star,sk^*\rangle$ such that $\Decap(sk^*,c^*) = K'$, but $\pw^* \neq \pw$, set $SK := \bot$. (This corresponds to step 2(c)(i) in \Cref{fig:oeke-sim-hash-nothing}.)
+
+In this case Game 17 first tries to find $\adv$'s (unique) $\Htag(K^*)$ query resulting in $\tau^*$. Since $\tau^* = \tau' = \Htag(K')$, if $\adv$ does not query $\Htag(K')$, then Game 17 sets $SK := \bot$. Otherwise Game 17 finds $\adv$'s $\Htag(K')$ query, and then tries to find the (unique) $\langle\pw^*,\star,sk^*\rangle$ record such that $\Decap(sk^*,c^*) = K'$, and checks if $\pw^* = \pw$ (see Game 13). Since $\pw^* \neq \pw$, the check never passes, so Game 17 again sets $SK := \bot$. Either way, Game 17 matches new Game IV which outright sets $SK := \bot$. We have
+\[
+\Dist_\env^{17,\text{newIV}} = 0.
+\]
+
+\paragraph{Summary.}
+We have made the following essential changes to the games:
+\begin{enumerate}
+  \item In the case where $(s^*,T^*) \neq (s,T)$, Game 2 tries to find $P'$'s $\Htag$ query resulting in $\tau^*$ (in addition to $\adv$'s query).
+  \item In the case where $(s^*,T^*) \neq (s,T) \land (\pw')^* = \pw' \land \tau^* = \tau'$, and there is more than one record $\langle\pw^*,\star,sk^*\rangle$ such that $\Decap(sk^*,c^*) = K'$, new Game I aborts.
+  \item In the case where $(s^*,T^*) \neq (s,T) \land \tau^* = \tau'$, there is a unique record $\langle\pw^*,\star,sk^*\rangle$ such that $\Decap(sk^*,c^*) = K'$, and $\pw^* = \pw$, new Game II outright sets $SK := SK'$ (without trying to find any $\Htag$ query by $\adv$ or $P'$).
+  \item In the case where $(s^*,T^*) \neq (s,T)$, new Game III drops the check on $P'$'s $\Htag$ query introduced in Game 2 (except in new Game II's condition, where all checks on $\Htag$ queries have already been dropped).
+  \item In the case where $(s^*,T^*) \neq (s,T) \land \tau^* = \tau'$, there is a unique record $\langle\pw^*,\star,sk^*\rangle$ such that $\Decap(sk^*,c^*) = K'$, and $\pw^* \neq \pw$, new Game IV outright sets $SK := \bot$.
+\end{enumerate}
+
+Items (1) and (4) introduce the check on $P'$'s $\Htag$ query and then drop it, so there is no net change there. To see the net change, we only need to combine items (2), (3) and (5), which say that in the case where $(s^*,T^*) \neq (s,T) \land \tau^* = \tau'$ and there is a record $\langle\pw^*,\star,sk^*\rangle$ such that $\Decap(sk^*,c^*) = K'$,
+\begin{itemize}
+  \item If the record is not unique, then the game aborts [item (2)].
+  \item If the record is unique, and $\pw^* = \pw$, then we set $SK := SK'$ [item (3)].
+  \item If the record is unique, and $\pw^* \neq \pw$, then we set $SK := \bot$ [item (5)].
+\end{itemize}
+This exactly matches step 2 of the simulator in \Cref{fig:oeke-sim-hash-nothing}, so new Game IV is identical to the ideal world. This completes the proof.
 
 \section{Proof of \Cref{lem:uni-ano-ro}}
 \label{app:uni-ano-ro-proof}
