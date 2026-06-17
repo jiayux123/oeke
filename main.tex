@@ -143,7 +143,7 @@ We require two syntactic properties for a KEM scheme:
 \end{itemize}
 Whenever we refer to a KEM scheme below, we always assume these two properties and do not explicitly mention them.
 
-The most commonly seen security property in the KEM literature is security under chosen-ciphertext attacks (CCA, or IND-CCA), but the KEM scheme in OEKE needs other properties. The ``hash everything'' version of OEKE only requires some relatively standard properties for the underlying KEM scheme, which we define in \Cref{sec:kem-standard}. The variants where certain items are removed from the hash require a number of non-standard properties, which we define in \Cref{sec:kem-additional}.
+The most commonly seen security properties in the KEM literature are indistinguishability (IND, or just security) and indistinguishability under chosen-ciphertext attacks (IND-CCA, or just CCA), but the KEM scheme in OEKE needs other properties. The ``hash everything'' version of OEKE only requires some relatively standard properties for the underlying KEM scheme, which we define in \Cref{sec:kem-standard}. The variants where certain items are removed from the hash require a number of non-standard properties, which we define in \Cref{sec:kem-additional}.
 
 In all KEM properties below, we use $\Adv_\adv^\text{property}$ to denote the adversary $\adv$'s advantage in the property (either $\adv$'s winning probability in the game, or $\adv$'s distinguishing advantage between two games), and do not repeat it in each definition.
 
@@ -1560,7 +1560,7 @@ Suppose the WNM and KBIND properties hold for the KEM scheme. In the case where 
 \begin{proof}
 $P'$ makes a single $\Htag$ query, on $(s^*,T^*,K')$. If $(s^*,T^*) \neq (s,T)$, then of course $P'$'s query is not $\Htag(s,T,K)$. Now assume $(s^*,T^*) = (s,T)$, which implies $\pw \neq \pw' \lor c^* \neq c$ by the condition of the claim.
 \begin{itemize}
-  \item If $\pw \neq \pw'$, by the proof of \Cref{clm:htag2}, $pk$ and $pk'$ are independent of each other (where $pk$ is honestly generated and $pk'$ is uniformly random). This suggests that we should upper-bound $\Pr[K = K'] = \Pr[\Decap(sk,c^*) = K']$ via a reduction $\red_\text{KBIND}$ to the KBIND property of the KEM scheme:
+  \item If $\pw \neq \pw'$, by the proof of \Cref{clm:htag3}, $pk$ and $pk'$ are independent of each other (where $pk$ is honestly generated and $pk'$ is uniformly random). This suggests that we should upper-bound $\Pr[K = K'] = \Pr[\Decap(sk,c^*) = K']$ via a reduction $\red_\text{KBIND}$ to the KBIND property of the KEM scheme:
       \vspace{-6pt} \\ % force \medskip in itemize environment
       \textbf{\underline{Reduction $\red_\mathrm{KBIND}$}:}
       \vspace{6pt} \\
@@ -1584,7 +1584,7 @@ $P'$ makes a single $\Htag$ query, on $(s^*,T^*,K')$. If $(s^*,T^*) \neq (s,T)$,
       \[
       \Pr[K = K' \mid \pw \neq \pw'] \leq (q_2+1)\Adv_{\red_\text{KBIND}}^\text{KBIND}.
       \]
-  \item If $\pw = \pw' \land c^* \neq c$, then the argument in the proof of \Cref{clm:htag2} still holds, and $\Pr[K = K' \mid \pw = \pw' \land c^* \neq c] \leq (q_2+1)\Adv_{\red_\text{KBIND}}$.
+  \item If $\pw = \pw' \land c^* \neq c$, then the argument in the proof of \Cref{clm:htag2} still holds, and $\Pr[K = K' \mid \pw = \pw' \land c^* \neq c] \leq (q_2+1)\Adv_{\red_\text{WNM}}^\text{WNM}$.
 \end{itemize}
 
 If $K \neq K'$ then of course $P'$'s query is not $\Htag(s,T,K)$. Overall, we have
