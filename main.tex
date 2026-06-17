@@ -2444,6 +2444,39 @@ Items (1) and (4) introduce the check on $P'$'s $\Htag$ query and then drop it, 
 \end{itemize}
 This exactly matches step 2 of the simulator in \Cref{fig:oeke-sim-hash-nothing}, so new Game IV is identical to the ideal world. This completes the proof.
 
+\section{Comparison with \cite{EC:JanRoyXu25}}
+We believe our security proof for the ``hashing nothing but $K$'' in \Cref{sec:hash-nothing} is fundamentally similar to the OEKE security proof in \cite{EC:JanRoyXu25}; however, the structure and presentation of their proof is drastically different from ours. Below we give a high-level comparison with \cite{EC:JanRoyXu25}, although a game-by-game comparison --- like what we did in \Cref{sec:games} --- seems impossible.
+
+\paragraph{Modular structure of \cite{EC:JanRoyXu25}.}
+While our proof is a monolith, the proof in \cite{EC:JanRoyXu25} is split into three levels:
+\begin{itemize}
+  \item \cite[Section~4]{EC:JanRoyXu25} gives an ideal functionality $\func_\text{POPF}$ for the 2-round Feistel cipher. In fact the 2F construction does not appear to UC-realize $\func_\text{POPF}$ (or any reasonable UC functionality); to circumvent this, \cite{EC:JanRoyXu25} only proves that 2F ``almost'' UC-realizes $\func_\text{POPF}$, a relaxation of UC which places some restrictions on the upper-level protocol composed with 2F. We refer to \cite[Section~4]{EC:JanRoyXu25} for more details.
+  \item \cite[Section~5.1]{EC:JanRoyXu25} proves that the $P$-to-$P'$ message, using $\func_\text{POPF}$, UC-realizes a ``first-round'' functionality $\func_\text{EKE-1r}$. The reason why they do this is that the $P$-to-$P'$ message in EKE and OEKE is exactly identical, so having this common first-round functionality avoids copying a large chunk of argument across two security proofs. However, if we only care about OEKE then this abstraction is unnecessary.
+  \item Finally, \cite[Section~5.3]{EC:JanRoyXu25} proves that OEKE (the ``hash nothing but $K$'' version), using $\func_\text{EKE-1r}$, UC-realizes the standard PAKE functionality $\func_\text{PAKE}$. (They do not consider the PAKE functionality with client-side explicit authentication.)
+\end{itemize}
+If we collect and combine all proofs in the three sections of \cite{EC:JanRoyXu25} using the composition theorem, that should yield a monolith security proof for OEKE. However, there would be so much work that we might as well perform a monolith proof from scratch --- as what we did.
+
+\paragraph{KEM scheme: hashed v. unhashed.}
+Another difficulty when comparing our security proof with the one in \cite{EC:JanRoyXu25} is that they put the ROs $\Hkey$ and $\Htag$ inside the KEM scheme.\footnote{In fact, \cite{EC:JanRoyXu25} uses the syntax of (unauthenticated) key exchange protocols, rather than KEM.} In our description of OEKE, we use the KEM scheme to derive the KEM key $K$, and then use $\Hkey$ and $\Htag$ to derive the PAKE session key $SK$ and the authenticator $\tau'$. In contrast, \cite{EC:JanRoyXu25} splits the KEM key as $SK||\tau'$, without applying an RO --- which means that the ROs are implicitly ``baked into'' the KEM scheme.
+
+In more detail, let $(\Gen,\Encap,\Decap)$ be a KEM scheme as used in our description of OEKE. We can construct another KEM scheme $(\Gen,\Encap',\Decap')$ as follows:
+\begin{itemize}
+  \item $\Encap'(pk)$: Run $(c,K) \gets \Encap(pk)$, compute $SK := \Hkey(K)$ and $\tau' := \Htag(K)$, and output $(c,SK||\tau')$.
+  \item $\Decap'(sk,c)$: Run $K \gets \Decap(pk)$, compute $SK := \Hkey(K)$ and $\tau' := \Htag(K)$, and output $SK||\tau'$.
+\end{itemize}
+Then on the PAKE level, the OEKE scheme can use the ``raw'' KEM key as $SK$ and $\tau'$, without mentioning $\Hkey$ or $\Htag$.
+
+Outputting the ``raw'' KEM key also means that \cite{EC:JanRoyXu25} needs stronger KEM security properties than ours. The OEKE security result in \cite{EC:JanRoyXu25} requires three KEM security properties: first pseudorandomness, pseudorandom non-malleability, and collision resistance. First pseudorandomness is the same as what we call UNI-PK. Pseudorandom non-malleability roughly corresponds to the combination of IND-1CCA\$ and ANO-1CCA, whereas we only need OW-1PCA and ANO-1PCA. (It shouldn't be surprising that they need IND and we only need OW: they use the ``raw'' KEM key as the PAKE session key, whereas we use an RO of the KEM key --- so we only need the KEM key to be unpredictable.) Collision resistance roughly corresponds to the additional properties in \Cref{sec:kem-additional}.
+
+\begin{remark}
+\cite[Section~1]{EPRINT:ArrBarJar25} correctly observes that \cite{EC:JanRoyXu25} requires stronger KEM security properties, but does not specify \emph{why}. There are, in fact, two orthogonal reasons:
+\begin{enumerate}
+  \item \cite{EC:JanRoyXu25} puts the ROs inside the KEM scheme, so it needs ``indistinguishability'' rather than ``unprecitability'' type of properties;
+  \item \cite{EC:JanRoyXu25} only hashes $K$ in $\Htag$, whereas \cite{EPRINT:ArrBarJar25} hashes everything.
+\end{enumerate}
+(1) explains why \cite{EC:JanRoyXu25} needs pseudorandom non-malleability, and (2) explains why \cite{EC:JanRoyXu25} needs collision resistance.
+\end{remark}
+
 \section{Proof of \Cref{lem:uni-ano-ro}}
 \label{app:uni-ano-ro-proof}
 We need two helper lemmas first.
