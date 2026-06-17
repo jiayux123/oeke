@@ -162,8 +162,8 @@ A KEM scheme has \emph{pseudorandom public keys (UNI-PK)} if for any PPT adversa
     \quad
     \fcodebox{
     \underline{challenge bit $b = 1$}: \\
-    $pk' \gets \pkspace$ \\
-    $b^* \gets \adv(pk')$
+    $pk \gets \pkspace$ \\
+    $b^* \gets \adv(pk)$
     }
     \]
 \end{definition}
@@ -442,7 +442,7 @@ We give a formal, UC-compatible description of the OEKE protocol in \Cref{fig:pr
 \begin{figure}[H]
 \begin{framed}
 \begin{small}
-Let $\mathcal{G}$ be a PPT algorithm that outputs a (multiplicative) Abelian group $\group$ whose order is superpolynomial, and where uniformly sampling, multiplication and inverse can be done in polynomial time. (We do not require $\group$ to be cyclic, and do not assume $|\group|$ to be public.) We implicitly assume that $\group \gets \mathcal{G}$ is run as part of the initialization process. Furthermore, we assume that all algorithms take $\group$ as an input, and do not explicitly write it. \\
+Let $\mathcal{G}$ be a PPT algorithm that outputs a (multiplicative) Abelian group $\group$ whose order is superpolynomial, and where uniformly sampling, multiplication and inverse can be done in PPT. (We do not require $\group$ to be cyclic, and do not assume $|\group|$ to be public.) We implicitly assume that $\group \gets \mathcal{G}$ is run as part of the initialization process. Furthermore, we assume that all algorithms take $\group$ as an input, and do not explicitly write it. \\
 Let $(\Encap,\Decap)$ be a KEM scheme whose public-key space $\pkspace = \group$.
 
 \medskip
