@@ -128,7 +128,7 @@ We require two syntactic properties for a KEM scheme:
       \begin{array}{c}
       (pk,sk) \gets \Gen \\
       (c,K) \gets \Encap(pk) \\
-      K' := \Decap(sk,\allowbreak c)
+      K' := \Decap(sk,c)
       \end{array}
       \right] \geq 1-\varepsilon_\text{correctness},
       \]
@@ -329,6 +329,30 @@ Furthermore, KBIND is also needed if $pk$ and $(s,T)$ are \emph{both} removed fr
 In this attack, $\adv$ modifies the $P$-to-$P'$ message $(s,T)$, but still forwards $\tau'$. Again, this poses a problem to the UC simulator since the simulator cannot tell if $\adv$ is sending a valid $c^*$ or not (it does not know $sk$). (If $pk$ is included in $\Htag$ then $P$'s check will not pass unless either (1) the uniformly random and independent $pk'$ happens to be equal to $pk$, or (2) $(\dots, pk, \dots)$ and $(\dots, pk', \dots)$ form a collision for $\Htag$. If $(s,T)$ is included in $\Htag$ then $P$'s check will not pass unless $(\dots, s,T, \dots)$ and $(\dots, s^*,T^*, \dots)$ form a collision for $\Htag$.)
 
 Note that the OEKE adversaries above only know $pk'$ and $c$, whereas in the definition of KBIND we additionally give $pk$ and $K'$ to the adversary. This is because the \emph{reduction} in our OEKE security proof (see \Cref{clm:htag4}) needs $pk$ to simulate the $P$-to-$P'$ message $(s,T)$, and needs $K'$ to simulate $P'$'s output $SK'$. It is possible that a reduction to a weaker KBIND property (where $pk,K'$ are not given the adversary) can go through by sampling $s,T,K'$ at random, but that would require changing the order of the games in the security proof, and we do not explore this possibility.
+
+\medskip
+We also consider a much weaker variant of KBIND, where the adversary $\adv$ is forced to output $c^* = c$. Since $\adv$ is passive now, this is in fact a statistical property, and we show that it is implied by UNI-PK and OW:
+\begin{lemma}
+\label{lem:kbind-eq}
+Suppose the UNI-PK and OW properties hold for a KEM scheme. Then
+\[
+      \operatorname{Pr}
+      \left[
+      \begin{array}{c}
+      K = K'
+      \end{array}
+      :
+      \begin{array}{c}
+      (pk,sk) \gets \Gen \\
+      pk' \gets \pkspace \\
+      (c,K') \gets \Encap(pk') \\
+      K := \Decap(sk,c)
+      \end{array}
+      \right]
+\]
+is negligible.
+\end{lemma}
+The proof is straightforward and is deferred to \Cref{app:kbind-eq-proof}.
 
 \paragraph{Ciphertext binding.}
 This property roughly says that given two honestly generated public keys $pk,pk'$, an adversary cannot feasibly come up with a ciphertext $c^*$ that decapsulates to the same KEM key $K^*$ under the corresponding secret keys $sk,sk'$. In other words, an (adversarially generated) ciphertext/KEM key pair $(c^*,K^*)$ binds an (honestly generated) public/secret key pair.
@@ -2499,7 +2523,8 @@ Outputting the ``raw'' KEM key also means that \cite{EC:JanRoyXu25} needs strong
 (1) explains why \cite{EC:JanRoyXu25} needs pseudorandom non-malleability, and (2) explains why \cite{EC:JanRoyXu25} needs collision resistance.
 \end{remark}
 
-\section{Proof of \Cref{lem:uni-ano-ro}}
+\section{Deferred Proofs from \Cref{sec:prelim}}
+\subsection{Proof of \Cref{lem:uni-ano-ro}}
 \label{app:uni-ano-ro-proof}
 We need two helper lemmas first.
 \begin{lemma}
@@ -2707,5 +2732,51 @@ Finally, we bring back $\adv$'s ability to choose an index $i$ and arrive at the
     }
 \]
 An argument similar to the first game hop shows that $\Pr[b^* = 1]$ in the two games above are equal, completing the proof.
+\end{proof}
+
+\subsection{Proof of \Cref{lem:kbind-eq}}
+\label{app:kbind-eq-proof}
+\begin{proof}
+We only provide a sketch. First,
+\[
+      \operatorname{Pr}
+      \left[
+      \begin{array}{c}
+      K = K'
+      \end{array}
+      :
+      \begin{array}{c}
+      (pk,sk) \gets \Gen \\
+      pk' \gets \pkspace \\
+      (c,K') \gets \Encap(pk') \\
+      K := \Decap(sk,c)
+      \end{array}
+      \right]
+\]
+and
+\begin{equation}
+\label{eq:kbind-eq-real}
+      \operatorname{Pr}
+      \left[
+      \begin{array}{c}
+      K = K'
+      \end{array}
+      :
+      \begin{array}{c}
+      (pk,sk) \gets \Gen \\
+      (pk',\star) \gets \Gen \\
+      (c,K') \gets \Encap(pk') \\
+      K := \Decap(sk,c)
+      \end{array}
+      \right]
+\tag{\textdagger}
+\end{equation}
+are negligibly close due to a reduction $\red$ to the UNI-PK property of the KEM scheme: $\red$, on input $pk'$, computes $(pk,sk) \gets \Gen$, $(c,K') \gets \Encap(pk')$, and $K := \Decap(sk,c)$, and outputs 1 if $K = K'$ and 0 otherwise.
+
+Next, we show \eqref{eq:kbind-eq-real} is negligible. Consider the following adversary $\adv$ in the OW game for the KEM scheme: $\adv$, on input $(pk',c)$, computes $(pk,sk) \gets \Gen$ and $K := \Decap(sk,c)$, and outputs $K$. $\adv$ wins the game if and only if the equation in \eqref{eq:kbind-eq-real} happens, so
+\[
+\eqref{eq:kbind-eq-real} = \Adv_{\adv}^\text{OW},
+\]
+which is negligible.
 \end{proof}
 \end{document}
