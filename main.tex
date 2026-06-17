@@ -262,6 +262,7 @@ The proof is deferred to \Cref{app:uni-ano-ro-proof}.
 \paragraph{Weak non-malleability.}
 This property roughly says that given an honest tuple of $(pk,K,c)$, the adversary cannot feasibly find another valid $(pk,K,c^*)$ tuple (i.e., a new ciphertext that works for the same public key and the same KEM key). This essentially requires that the adversary cannot merely change the \emph{format} of the ciphertext without changing its actual content, which is a very weak property (in fact it is quite a stretch to even call it ``non-malleability'').
 \begin{definition}
+\label{def:cbind}
 A KEM scheme is \emph{weakly non-malleable (WNM)} if for any PPT adversary $\adv$, the probability that $\adv$ wins the following game is negligible:
 \[
     \fcodebox{
@@ -273,7 +274,7 @@ A KEM scheme is \emph{weakly non-malleable (WNM)} if for any PPT adversary $\adv
     }
 \]
 \end{definition}
-WEM is needed in OEKE varants where $c$ is removed from $\Htag$ inputs. Then we must prevent the OEKE adversary $\adv$ from forwarding the $P$-to-$P'$ message $(s,T)$ without modification, but then modifying the $P'$-to-$P$ message $(c,\tau')$ to some $(c^*,\tau)$ which makes $P$'s check pass.\footnote{It is, in fact, unclear whether this is an ``actual'' attack: $\adv$ causes the two parties to output the same session key by changing $c$ and forwarding all other protocol messages, but $\adv$ does not learn the session key or the password. However, at least such an $\adv$ makes the UC simulation fail, since the simulator is not able to tell that $\adv$ is sending a valid $c^*$ (it does not know $sk$). The same comment is true for the attacks in the ``key binding'' paragraph below.} (If $c$ is included in $\Htag$ then $P$'s check will not pass unless $(\dots, c, \dots)$ and $(\dots, c^*, \dots)$ form a collision for $\Htag$.) This should not happen even after $\adv$ later learns $\pw$ and uses it to compute $pk := \mathsf{2F}^{\text{-}1}(\pw,(s,T))$.
+WEM is needed in OEKE varants where $c$ is removed from $\Htag$ inputs. Then we must prevent the OEKE adversary $\adv$ from forwarding the $P$-to-$P'$ message $(s,T)$ without modification, but then modifying the $P'$-to-$P$ message $(c,\tau')$ to some $(c^*,\tau)$ which makes $P$'s check pass.\footnote{\label{fn:cbind}It is, in fact, unclear whether this is an ``actual'' attack: $\adv$ causes the two parties to output the same session key by changing $c$ and forwarding all other protocol messages, but $\adv$ does not learn the session key or the password. However, at least such an $\adv$ makes the UC simulation fail, since the simulator is not able to tell that $\adv$ is sending a valid $c^*$ (it does not know $sk$). The same comment is true for the attacks in the ``key binding'' paragraph below.} (If $c$ is included in $\Htag$ then $P$'s check will not pass unless $(\dots, c, \dots)$ and $(\dots, c^*, \dots)$ form a collision for $\Htag$.) This should not happen even after $\adv$ later learns $\pw$ and uses it to compute $pk := \mathsf{2F}^{\text{-}1}(\pw,(s,T))$.
 
 \paragraph{Unpredictability.}
 This property roughly says that an adversary $\adv$ cannot feasibly output a ciphertext/KEM key pair $(c^*,K^*)$ ``out of thin air'', such that $(pk,K^*,c^*)$ is a valid tuple for an honestly generated public key $pk$ that $\adv$ does not know.
@@ -1628,6 +1629,27 @@ Overall, we conclude that the ``only hash $(s,T)$'' version is secure under the 
 
 \paragraph{The ``hash $(s,T)$ and $c$'' version.}
 If we define $\tau$ as $\Htag(s,T,c,K)$, then the second bullet of \Cref{clm:htag4} is not needed, and the protocol can be proven secure without the WNM property of the KEM scheme (but we still need KBIND, UNPRE and CBIND).
+
+\section{Future Directions}
+While we aim to provide a comprehensive and thorough analysis of all OEKE variants, there are, unfortunately (or perhaps fortunately?), still a number of open questions stemmed from this work. Below we mention four topics for future work.
+
+\paragraph{Minimal assumptions for OEKE.}
+We did not prove any results on whether the KEM security properties used in this work are \emph{minimal}, i.e., whether some weaker properties suffice for OEKE security. It appears that the properties \Cref{sec:kem-standard} are minimal, as the reductions use them in a ``tight'' manner. It remains to be formally proven that the security of OEKE (even the ``hash everything'' version) implies the KEM properties in \Cref{sec:kem-standard}, i.e., any PPT adversary that breaks these properties can be used to build an adversary that breaks the UC-security of OEKE.
+
+On the other hand, with some thoughts one can realize that the KEM properties in \Cref{sec:kem-additional} are \emph{not} minimal, and some weaker properties suffice. Take WNM as an example: even if an adversary can break WNM of the underlying KEM scheme, as long as this behavior can be caught by the simulator, the simulation would still go through. Thus, roughly speaking WNM can be weakened to the following property: for any PPT adversary $\adv$ in the game in \Cref{def:cbind}, there exists a PPT simulator $\sim$ that outputs a bit indicating whether $\adv$ wins with all but negligible accuracy. ($\sim$ does not know the secret key $sk$.) A similar weakening can be done for KBIND. The UNPRE and CR properties appear minimal.
+
+\paragraph{OEKE security in the game-based setting.}
+A natural question is whether we could rely on weaker KEM security properties if we only require game-based security (i.e., BPR) for OEKE. One important difference between BPR and UC security notions is that BPR does not require forward secrecy. From the discussion in \Cref{sec:kem-standard}, it seems that some mechanisms in the OW and ANO games (e.g., giving the public key $pk$ to the adversary) are designed solely for the purpose of achieving OEKE forward secrecy, so some weaker versions of OW-1PCA and ANO-1PCA should suffice for the BPR security of OEKE.
+
+Furthermore, it seems that the WNM and KBIND properties do not correspond to any ``real'' attack on OEKE (see \Cref{fn:cbind}), and are needed only for the simulation to go through. Therefore, it is possible that they can be removed in game-based security of (any variant of) OEKE.
+
+On the other hand, it is unclear how significant a game-based security analysis of OEKE would be. Forward secrecy is considered a standard property for PAKE nowadays, and the UC notion has superseded the game-based one(s) in general. As such, this direction does not seem to be the most urgent in the analysis of OEKE.
+
+\paragraph{Extension to EKE.}
+This entire work is on OEKE only, and one might wonder including/excluding certain items from the hash would make a difference in EKE. Note that EKE does not have the authenticator $\tau'$ to begin with, so the only question is what should be included in $\Hkey$ inputs (that derive the session key $SK$). \cite[Section~A.4]{EC:JanRoyXu25} shows that the second protocol message needs to be included and the first protocol message does not. It is not entirely clear whether hashing the password would weaken the security requirements on KEM: from the EKE security proof in \cite{EC:JanRoyXu25} it seems that hashing the password does not help, but no one has performed a formal analysis of this.
+
+\paragraph{Extension to Tempo.}
+Finally, we mention the future direction of the most practical significance. The current description and security analysis of the Tempo protocol assume the ``hash everything'' version. Given how similar the security proof for Tempo is to the proof for OEKE, we speculate that the same optimization --- removing certain items from the ROs while relying on mildly stronger security properties of the underlying KEM scheme --- can be made in Tempo, which would further protect the protocol against side-channel attacks.
 
 \bibliographystyle{alpha}
 \bibliography{bib.bib}
