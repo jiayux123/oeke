@@ -354,6 +354,8 @@ is negligible.
 \end{lemma}
 The proof is straightforward and is deferred to \Cref{app:kbind-eq-proof}.
 
+\Cref{lem:kbind-eq} shows that assuming UNI-PK and OW, we can strengthen KBIND so that $\adv$ is required to output $c^* \neq c$.
+
 \paragraph{Ciphertext binding.}
 This property roughly says that given two honestly generated public keys $pk,pk'$, an adversary cannot feasibly come up with a ciphertext $c^*$ that decapsulates to the same KEM key $K^*$ under the corresponding secret keys $sk,sk'$. In other words, an (adversarially generated) ciphertext/KEM key pair $(c^*,K^*)$ binds an (honestly generated) public/secret key pair.
 \begin{definition}
