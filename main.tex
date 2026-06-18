@@ -102,6 +102,27 @@
 
 \section{Introduction}
 \label{sec:intro}
+Ever since the seminal work by Bellovin and Merritt in 1992 \cite{SP:BelMer92}, \emph{Password-Authenticated Key Exchange (PAKE)} has been an enduring topic in cryptography. Such a protocol allows two parties to jointly establish a cryptographically strong session key in the so-called ``password-only'' setting, where the only information shared in advance is a low-entropy password; crucially, it must be secure in the presence of an MitM adversary that can modify protocol messages in an arbitrary manner. PAKE has received much attention from both theoretical and applied communities: theoretically speaking, it achieves something that might appear impossible --- bootstrapping the entropy of a shared secret in such a way that is secure against the strongest network adversary --- and recent years have witnessed multiple efforts on the standardization and deployment of PAKE protocols in practice.
+
+\paragraph{Encrypted Key Exchange (EKE).}
+Apart from introducing PAKE the concept, \cite{SP:BelMer92} also proposed a highly influential PAKE protocol called \emph{Encrypted Key Exchange (EKE)}. This is a general compiler from any Key Encapsulation Mechanism (KEM) scheme to a PAKE, and its idea is simple: the two protocol parties encrypt the KEM public key and ciphertext under their password, respectively, and send the result as protocol messages; holding the same password allows them to decrypt the protocol messages and complete the underlying KEM scheme, which yields the shared KEM key; finally, the two parties output an RO hash of the KEM key as their PAKE session key. 
+\begin{figure}[H]
+\pseudocodeblock{
+P(\pw) \< \< P'(\pw) \\ 
+(pk,sk) \gets \Gen \< \< \\
+\phi \gets \mathcal{E}(\pw,pk) \< \< \\
+\< \sendmessageright*{\phi} \< \\
+\< \< pk := \mathcal{D}(\pw,\phi) \\
+\< \< (c,K) \gets \Encap(pk) \\
+\< \< \phi' \gets \mathcal{E}(\pw,c) \\
+\< \sendmessageleft*{\phi'} \< \\
+c := \mathcal{D}(\pw,\phi') \< \< \\
+K := \Decap(sk,c) \< \< \\
+\text{output }\Hkey(K) \< \< \text{output }\Hkey(K)
+}
+\caption{The EKE protocol with KEM scheme $(\Gen,\Encap,\Decap)$ and symmetric encryption $(\mathcal{E},\mathcal{D})$}
+\end{figure}
+EKE is almost as efficient as the underlying KEM scheme, with one exception: both parties need to perform an encryption of the KEM public key/ciphertext. For a long time, this encryption mechanism is generally modeled as an Ideal Cipher (IC), which allows the security proof for EKE to go through \cite{EC:BelPoiRog00}. While IC over bitstrings can be implemented using (say) AES, EKE requires an IC \emph{over the KEM public key/ciphertext space}, e.g., a cyclic group if we use the Diffie--Hellman KEM, and it is unclear how to instantiate such an IC efficiently.
 
 \section{Preliminaries and Technical Overview}
 \label{sec:prelim}
@@ -186,14 +207,14 @@ We also need a stronger variant in which the adversary is additionally given acc
 \begin{definition}
 The definition of \emph{one-wayness under one plaintext-checking attack (OW-1PCA)} is the same as that of OW, except that the adversary $\adv$ is additionally given access to an oracle $\PC(sk,\star,\star)$, which on input $(c' \neq c, K')$ outputs 1 if $K' = \Decap(sk,c')$ and 0 otherwise. $\adv$ is allowed to query this oracle only once.
 \end{definition}
-This property is the same as what's called OW-PCA in \cite[Definition~3]{EPRINT:ArrBarJar25}, except that in our notion (1) the adversary can query its plaintext-checking oracle only once, and (2) the adversary is prohibited from querying the challenge ciphertext to its plaintext-checking oracle. The plaintext-checking oracle was first studied in \cite{PKC:AbdBenPoi15} in the context of public-key encryption schemes.
+This property is the same as what's called OW-PCA in \cite[Definition~3]{EPRINT:ArrBarJar25}, except that in our notion (1) the adversary can query its plaintext-checking oracle only once, and (2) the adversary is prohibited from querying its plaintext-checking oracle on the challenge ciphertext. The plaintext-checking oracle was first studied in \cite{PKC:AbdBenPoi15} in the context of public-key encryption schemes.
 
 OW-1PCA is needed in the scenario where the OEKE adversary $\adv$ forwards the $P$-to-$P'$ message $(s,T)$ without modification, but then modifies the $P'$-to-$P$ message $(c,\tau')$ to some other $(c^*,\tau^*)$. Consider the time when $P'$ outputs its session key $SK'$: at this point $\adv$ has not done any attack yet, so in the ideal world the PAKE functionality will set $SK'$ at random. This means that $\adv$ must not be able to compute $K'$ (otherwise it can query $\Hkey(K')$ and distinguish $SK'$ from random); furthermore, forward secrecy requires that $\adv$ should not compute $K'$ even if it learns $\pw'$ later (which allows $\adv$ to compute $pk' := \mathsf{2F}^{\text{-}1}(\pw',(s,T))$) --- which is why we give the public key to the adversary in the security game.
 
 Furthermore, later when $\adv$ modifies $(c,\tau')$ to $(c^* \neq c, \tau^* = \Htag(\dots,K^*))$ for $K^*$ of its choice, it can check if $K^* = \Decap(sk,c^*)$ by observing if $P$'s session key $SK = \Hkey(K^*)$. This corresponds to the (single) query to the plaintext-checking oracle. (This requires that $P$ and $P'$'s passwords match; otherwise $sk$ on the $P$ side does not correspond to $pk'$ on the $P'$ side.)
 
 \paragraph{Anonymity and a variant.}
-This property roughly says that given a public key and a ciphertext, an adversary cannot feasibly tell whether the ciphertext corresponds to this public key or some other (freshly sampled) public key.
+This property roughly says that given a public key and a ciphertext, an adversary cannot feasibly tell whether the ciphertext corresponds to this public key or some other (freshly generated) public key.
 \begin{definition}
 A KEM scheme is \emph{anonymous (ANO)} if for any PPT adversary $\adv$, $\Pr[b^* = 1]$ in the following two games are negligibly close:
 \[
@@ -260,7 +281,7 @@ The proof is deferred to \Cref{app:uni-ano-ro-proof}.
 \subsection{Additional KEM Properties Used in Other Versions}
 \label{sec:kem-additional}
 \paragraph{Weak non-malleability.}
-This property roughly says that given an honest tuple of $(pk,K,c)$, the adversary cannot feasibly find another valid $(pk,K,c^*)$ tuple (i.e., a new ciphertext that works for the same public key and the same KEM key). This essentially requires that the adversary cannot merely change the \emph{format} of the ciphertext without changing its actual content, which is a very weak property (in fact it is quite a stretch to even call it ``non-malleability'').
+This property roughly says that given an honest tuple of $(pk,c,K)$, the adversary cannot feasibly find another valid $(pk,c^*,K)$ tuple (i.e., a new ciphertext that works for the same public key and the same KEM key). This essentially requires that the adversary cannot merely change the \emph{format} of the ciphertext without changing its actual content, which is a very weak property (in fact it is quite a stretch to even call it ``non-malleability'').
 \begin{definition}
 \label{def:cbind}
 A KEM scheme is \emph{weakly non-malleable (WNM)} if for any PPT adversary $\adv$, the probability that $\adv$ wins the following game is negligible:
@@ -277,7 +298,7 @@ A KEM scheme is \emph{weakly non-malleable (WNM)} if for any PPT adversary $\adv
 WEM is needed in OEKE varants where $c$ is removed from $\Htag$ inputs. Then we must prevent the OEKE adversary $\adv$ from forwarding the $P$-to-$P'$ message $(s,T)$ without modification, but then modifying the $P'$-to-$P$ message $(c,\tau')$ to some $(c^*,\tau)$ which makes $P$'s check pass.\footnote{\label{fn:cbind}It is, in fact, unclear whether this is an ``actual'' attack: $\adv$ causes the two parties to output the same session key by changing $c$ and forwarding all other protocol messages, but $\adv$ does not learn the session key or the password. However, at least such an $\adv$ makes the UC simulation fail, since the simulator is not able to tell that $\adv$ is sending a valid $c^*$ (it does not know $sk$). The same comment is true for the attacks in the ``key binding'' paragraph below.} (If $c$ is included in $\Htag$ then $P$'s check will not pass unless $(\dots, c, \dots)$ and $(\dots, c^*, \dots)$ form a collision for $\Htag$.) This should not happen even after $\adv$ later learns $\pw$ and uses it to compute $pk := \mathsf{2F}^{\text{-}1}(\pw,(s,T))$.
 
 \paragraph{Unpredictability.}
-This property roughly says that an adversary $\adv$ cannot feasibly output a ciphertext/KEM key pair $(c^*,K^*)$ ``out of thin air'', such that $(pk,K^*,c^*)$ is a valid tuple for an honestly generated public key $pk$ that $\adv$ does not know.
+This property roughly says that an adversary $\adv$ cannot feasibly output a ciphertext/KEM key pair $(c^*,K^*)$ ``out of thin air'', such that $(pk,c^*,K^*)$ is a valid tuple for an honestly generated public key $pk$ that $\adv$ does not know.
 \begin{definition}
 A KEM scheme is \emph{unpredictable (UNPRE)} if for any PPT adversary $\adv$, the probability that $\adv$ wins the following game is negligible:
 \[
@@ -301,7 +322,7 @@ However, it is unclear to us what ``ciphertexts that are valid for all public ke
 \end{remark}
 
 \paragraph{Key binding.}
-This property roughly says that given an honest tuple of $(pk',\allowbreak K',c)$ and another honestly generated public key $pk$, an adversary cannot feasibly come up with a ciphertext $c^*$ such that $(pk,K',c^*)$ is also a valid tuple. In other words, the KEM key $K'$ binds a public key/ciphertext pair, although we give the adversary the capability of choosing one ciphertext only, and both public keys and the other ciphertext are simply given to the adversary. (In the actual definition, we let $pk'$ be sampled uniformly at random, rather than honestly generated. )
+This property roughly says that given an honest tuple of $(pk',\allowbreak c,K')$ and another honestly generated public key $pk$, an adversary cannot feasibly come up with a ciphertext $c^*$ such that $(pk,c^*,K')$ is also a valid tuple. In other words, the KEM key $K'$ binds a public key/ciphertext pair, although we give the adversary the power of choosing one ciphertext only, and both public keys and the other ciphertext are simply given to the adversary. (In the actual definition, we let $pk'$ be sampled uniformly at random, rather than honestly generated. )
 \begin{definition}
 A KEM scheme is \emph{key binding (KBIND)} if for any PPT adversary $\adv$, the probability that $\adv$ wins the following game is negligible:
 \[
@@ -443,7 +464,7 @@ We give a formal, UC-compatible description of the OEKE protocol in \Cref{fig:pr
 \begin{framed}
 \begin{small}
 Let $\mathcal{G}$ be a PPT algorithm that outputs a (multiplicative) Abelian group $\group$ whose order is superpolynomial, and where uniformly sampling, multiplication and inverse can be done in PPT. (We do not require $\group$ to be cyclic, and do not assume $|\group|$ to be public.) We implicitly assume that $\group \gets \mathcal{G}$ is run as part of the initialization process. Furthermore, we assume that all algorithms take $\group$ as an input, and do not explicitly write it. \\
-Let $(\Encap,\Decap)$ be a KEM scheme whose public-key space $\pkspace = \group$.
+Let $(\Gen,\Encap,\Decap)$ be a KEM scheme whose public-key space $\pkspace = \group$.
 
 \medskip
 \underline{Party $P$, step 1}
