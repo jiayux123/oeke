@@ -29,6 +29,7 @@
 \usepackage{makecell} % force line break within a table cell
 \usepackage{mathtools}
 \usepackage{multirow} % merge cells in a table
+\usepackage{ocgx} % spoiler hack
 
 \newcommand{\codebox}[1]{
     \begin{varwidth}{\linewidth}
@@ -157,13 +158,13 @@ K := \Decap(sk,c) \< \< \\
 \text{if }\tau = \tau' \text{ output }SK := \Hkey(K) \< \< \text{output }SK := \Hkey(K) \\
 \text{otherwise output }SK := \bot \< \<
 }
-\caption{The OEKE protocol with KEM scheme $(\Gen,\Encap,\Decap)$ and symmetric encryption $(\mathcal{E},\mathcal{D})$}\
+\caption{The OEKE protocol with KEM scheme $(\Gen,\Encap,\Decap)$ and symmetric encryption $(\mathcal{E},\mathcal{D})$}
 \label{fig:oeke}
 \end{figure}
 Apart from being more computationally efficient than EKE, OEKE also achieves one-side \emph{explicit authentication}: the initiator ($P$ in \Cref{fig:oeke}) can check if its counterparty holds the correct password by computing its own authenticator and comparing it with the incoming message; if the check fails, it can explicitly reject.
 
 \paragraph{Using 2-round Feistel cipher (2F) in place of IC.}
-In 2020, an orthogonal optimization of EKE was proposed by McQuoid, Rosulek and Roy \cite{CCS:McQRosRoy20}. Their trick is simple (yet overlooked by the community for over 25 years): While a 2-round Feistel cipher (2F) is not an IC, it nevertheless can be used in place of IC in EKE. In more detail, they use the following procedure
+In 2020, an orthogonal optimization of EKE was proposed by McQuoid, Rosulek and Roy \cite{CCS:McQRosRoy20}. Their trick is simple: While a 2-round Feistel cipher (2F) is distinguishable from an IC, it nevertheless can be used in place of IC in EKE. In more detail, they use the following procedure
 \begin{align*}
 & \underline{\mathsf{2F}(\pw,pk)}: \\
 & r \gets \{0,1\}^{3n}, \\
@@ -234,6 +235,62 @@ These reasons aside, perhaps the primary motivation of this work is that
 \begin{displayquote}
   \emph{The current state-of-the-art, where the community cannot converge upon a ``right'' version of OEKE and everyone does an ad hoc analysis, is just sad, especially given that (1) OEKE has been around for over 20 years, and (2) it is one of the most significant PAKE protocols as explained earlier.}
 \end{displayquote}
+Furthermore, we believe the topic we study is of theoretical interest: The requirements on the underlying KEM scheme depend on the items included in the hash, and it is very interesting to see what exact additional KEM properties are needed when we remove certain items from the hash. The security proofs require careful considerations of the order of games and how the reductions can go through.
+
+\paragraph{Why is this paper so long?}
+A common complaint about PAKE papers is that they tend to be long and hard to understand, especially if they prove UC-security. I claim that part of it is due to the nature of PAKE and/or UC, and cannot be circumvented. The main reason is that there are a number of factors to consider, including
+\begin{itemize}
+  \item Whether the MitM adversary forwards or modifies a protocol message;
+  \item If the adversary modifies a protocol message, whether the adversarial message contains a correct password guess, an incorrect password guess, or no password guess; and
+  \item Whether the two honest parties' passwords match.
+\end{itemize}
+Combined, they yield a large amount of cases that need to be covered in the security proof. For example, there has to be (at least) one game showing that if the adversary sends a message that contains an incorrect password guess, then the receiving party's session key is indistinguishable from random; another game has to show that if the adversary is passive (i.e., forwards both protocol messages without modification) and the two honest parties' passwords are different, then the two parties output independent session keys.
+
+Still, there are other reasons specific to this paper. One is, of course, that there are too many OEKE variants to analyze. The reason why the introduction and preliminaries (\Cref{sec:prelim}) sections of this paper are unusually long is the following: I wish to explain this work to such an extent that by reading \Cref{sec:intro,sec:prelim} alone, one could gain an intermediate-level understanding of the technical details --- including why certain KEM properties are needed in certain OEKE variants --- and you probably don't need to read the remaining sections. In this way, the ``effective length'' of this paper is roughly 30 pages.
+
+\subsection{Motivating Example: OEKE with Diffie--Hellman KEM}
+One might ask why removing certain items from the hash requires the underlying KEM scheme to have some additional security properties. To see the subtleties, let's work out a concrete example: OEKE-2F with the Diffie--Hellman KEM scheme. We show the ``hash nothing'' version below.
+\begin{figure}[H]
+\pseudocodeblock{
+P(\pw) \< \< P'(\pw) \\ 
+x \gets \group, X := g^x \< \< \\
+(s,T) \gets \mathsf{2F}(\pw,X) \< \< \\
+\< \sendmessageright*{s,T} \< \\
+\< \< X := \mathsf{2F}^{\text{-}1}(\pw,(s,T)) \\
+\< \< y \gets \group, Y := g^y \\
+\< \< K := X^y \\
+\< \< \tau' := \Htag(K) \\
+\< \sendmessageleft*{Y,\tau'} \< \\
+K := Y^x \< \< \\
+\tau := \Htag(K) \< \< \\
+\text{if }\tau = \tau' \text{ output }SK := \Hkey(K) \< \< \text{output }SK := \Hkey(K) \\
+\text{otherwise output }SK := \bot \< \<
+}
+\caption{The OEKE-2F protocol with Diffie--Hellman KEM}
+\label{fig:oeke-dh}
+\end{figure}
+One does not need to understand the UC PAKE functionality --- or \emph{anything} about UC --- to see that this protocol is completely insecure. The adversary $\adv$ completely disregards $P'$, and sends $(Y := 1, \tau' := \Htag(1))$ to $P$; this will cause $P$'s check to pass, and $P$ will compute its session key as $\Hkey(Y^x) = \Hkey(1)$. In other words, $\adv$ can predict $P$'s session key without knowing $P$'s password --- which shouldn't be allowed by any reasonable security notion of PAKE.
+
+There are three ways to fix this:
+\begin{itemize}
+  \item If we include $\pw$ in $\Htag$ inputs, i.e., define $\tau'$ as $\Htag(\pw,K)$, then this immediately thwarts the above attack: coming up with a valid $\tau'$ requires $\adv$ to know $\pw$.
+  \item Alternatively, we could also include the KEM public key $X$ in $\Htag$ inputs, i.e., define $\tau'$ as $\Htag(X,K)$. Then coming up with a valid $\tau'$ requires $\adv$ to know $X$, which in turn requires $\adv$ to know $\pw$ since the only way for $\adv$ to learn $X$ is to decrypt $(s,T)$ under $\pw$.
+  \item Perhaps the most straightforward fix is to disallow the identity group element 1 as a valid protocol message, i.e., $P$ should immediately reject upon receiving $Y = 1$.
+\end{itemize}
+
+If we only care about OEKE-2F with Diffie--Hellman KEM, then we are basically done here (you should probably exclude 1 in Diffie--Hellman anyway). However, keep in mind that we want to analyze a \emph{generic compiler} from KEM to PAKE, and on this level, the lesson is that
+\begin{framed}
+\begin{displayquote}
+  \emph{If we remove \textbf{both} $\pw$ and $pk$ from $\Htag$ inputs, then the underlying KEM scheme needs to satisfy an additional security property. This property is not needed as long as either $\pw$ or $pk$ is included in $\Htag$ inputs.}
+\end{displayquote}
+\end{framed}
+But what exactly is the additional property? For the specific Diffie--Hellman KEM scheme, this is clear: exclude 1. However, it is surprisingly hard to figure out the required KEM property \emph{in the general case}. Looking ahead, what's needed is \switchocg{name_int}{[click to reveal spoiler]}
+\begin{ocg}{name_ext}{name_int}{0}what we call ``collision resistance'', which we define in \Cref{def:cr}\end{ocg}.
+
+The above is only a simple example of the tradeoff between ``what's included in the hash'' and ``what properties the KEM needs to satisfy''; we will see multiple other examples below: removing $c$ from the hash requires an additional KEM property, removing \emph{both} $pk$ and $(s,T)$ from the hash requires another additional KEM property, and so on.
+\begin{remark}
+The Diffie--Hellman example above is taken from \cite[Section~3.1]{EC:JanRoyXu25}; in particular, \cite[Remark~3.3]{EC:JanRoyXu25} points out that the issue can be fixed by including either $\pw$ or $pk$.
+\end{remark}
 
 \section{Preliminaries and Technical Overview}
 \label{sec:prelim}
@@ -491,6 +548,7 @@ The proof is straightforward and is deferred to \Cref{app:kbind-eq-proof}.
 \paragraph{Ciphertext binding.}
 This property roughly says that given two honestly generated public keys $pk,pk'$, an adversary cannot feasibly come up with a ciphertext $c^*$ that decapsulates to the same KEM key $K^*$ under the corresponding secret keys $sk,sk'$. In other words, an (adversarially generated) ciphertext/KEM key pair $(c^*,K^*)$ binds an (honestly generated) public/secret key pair.
 \begin{definition}
+\label{def:cr}
 A KEM scheme is \emph{ciphertext binding (CBIND)} if for any PPT adversary $\adv$, the probability that $\adv$ wins the following game is negligible:
 \[
     \fcodebox{
@@ -527,7 +585,7 @@ It is instructive to see what cryptographic assumptions the various KEM properti
   \item CBIND says that given $(X = g^x, X' = g^{x'})$ for $x' \gets \mathbb{Z}_q$ independent of $x$, it is infeasible to come up with $(Y^*,K^*)$ such that $(Y^*)^x = (Y^*)^{x'} = K^*$. Note that \textbf{this property does NOT hold for the Diffie--Hellman KEM as described above}, since the adversary can simply output $(Y^* = 1, K^* = 1)$. To fix this, we have to dictate that the identity group element \emph{not} be a valid ciphertext, i.e., $\Decap(\star,1)$ must output $\bot$. Then CBIND is a statistical property: such $Y^*$ does not exist unless $x = x'$, which happens with negligible probability $1/q$.
 \end{itemize}
 
-Overall, we conclude that the Diffie--Hellman KEM has all desired properties under the CDH assumption, \emph{except for CBIND where we need to exclude $1$ as a valid ciphertext}. Since CBIND is needed in OEKE variants where both $\pw$ and $pk$ are excluded from $\Htag$ inputs (see \Cref{sec:kem-additional}), this precisely answers the question in \Cref{sec:intro}: the ``not hashing $\pw$ or $pk$'' version of OEKE instantiated by Diffie--Hellman (\Cref{fig:dh-no-pw-pk}) is insecure, and adding \emph{either} $\pw$ \emph{or} $pk$ fixes this issue.
+Overall, we conclude that the Diffie--Hellman KEM has all desired properties under the CDH assumption, \emph{except for CBIND where we need to exclude $1$ as a valid ciphertext}. Since CBIND is needed in OEKE variants where both $\pw$ and $pk$ are excluded from $\Htag$ inputs (see \Cref{sec:kem-additional}), this precisely answers the question in \Cref{sec:intro}: the ``not hashing $\pw$ or $pk$'' version of OEKE instantiated by Diffie--Hellman (\Cref{fig:oeke-dh}) is insecure, and adding \emph{either} $\pw$ \emph{or} $pk$ fixes this issue.
 \begin{remark}
 The argument in the WNM and KBIND paragraphs clearly requires the group order to be prime. The argument in the CBIND paragraph also makes this requirement, although it can be straightforwardly extended to the general case where the group order has at least one large prime factor (a requirement we have to make anyway, since otherwise discrete logarithm is easy in the group due to the Pohlig--Hellman algorithm). None of the other properties requires the group order to be prime.
 \end{remark}
@@ -570,9 +628,9 @@ All these three possibilities are covered by the third bullet under $\NewKey$,\f
 \cite[Fig.4]{ACNS:BCPRR23} also gives a PAKE-1EA functionality; however, their functionality is problematic and cannot be realized by (any version of) OEKE. The issue is that their functionality treats the three incorrect execution scenarios above differently: in case (1) it lets the initiator output \textsf{error}, in case (3) it lets the initiator output a uniformly random session key, and the paper does not seem to describe what the functionality should do in case (2). In the real-world protocol, the initiator can tell that authentication fails but cannot tell which is the case, so it has to either output a uniformly random session key \emph{in all cases} (which is the standard PAKE functionality) or output $\bot$ \emph{in all cases} (which is the PAKE-1EA functionality).
 \end{remark}
 
-\section{UC Description of the OEKE Protocol}
+\section{UC Description of the OEKE-2F Protocol}
 \label{sec:protocol-uc}
-We give a formal, UC-compatible description of the OEKE protocol in \Cref{fig:protocol-uc}. Note that UC PAKE considers the case that the two parties' passwords are different; therefore, we need to use different notations $\pw$ and $\pw'$ for the password of $P$ and $P'$, respectively.\footnote{\cite[Fig.4]{EPRINT:ArrBarJar25} uses $\pw$ for both parties' passwords, which is not the ``right'' protocol description in the UC setting.} We only describe the ``hash everything'' version of the protocol; in other variants one or more of $\pw$, $pk$, $(s,T)$ and $c$ can be removed from the inputs to $\Htag$. We omit $sid$ from RO inputs (e.g., we write ``$H_1(\pw,r)$'' rather than ``$H_1(sid,\pw,r)$''), although we stress that $sid$ must be included in order to achieve domain separation.
+We give a formal, UC-compatible description of the OEKE-2F protocol in \Cref{fig:protocol-uc}. Note that UC PAKE considers the case that the two parties' passwords are different; therefore, we need to use different notations $\pw$ and $\pw'$ for the password of $P$ and $P'$, respectively.\footnote{\cite[Fig.4]{EPRINT:ArrBarJar25} uses $\pw$ for both parties' passwords, which is not the ``right'' protocol description in the UC setting.} We only describe the ``hash everything'' version of the protocol; in other variants one or more of $\pw$, $pk$, $(s,T)$ and $c$ can be removed from the inputs to $\Htag$. We omit $sid$ from RO inputs (e.g., we write ``$H_1(\pw,r)$'' rather than ``$H_1(sid,\pw,r)$''), although we stress that $sid$ must be included in order to achieve domain separation.
 
 \begin{figure}[H]
 \begin{framed}
@@ -635,7 +693,7 @@ so $(c,K')$ is the result of $\Encap(pk)$ for an honestly generated $pk$. Then o
 The main theorem in this section is:
 \begin{theorem}
 \label{thm:basic}
-Suppose the UNI-PK, OW-1PCA and ANO-1PCA properties hold for the KEM scheme. Then the OEKE protocol as described in \Cref{fig:protocol-uc} UC-realizes $\Fpake$ (\Cref{fig:pake-func}), in the random oracle model for $H_1$, $H_2$, $\Hkey$ and $\Htag$.
+Suppose the UNI-PK, OW-1PCA and ANO-1PCA properties hold for the KEM scheme. Then the OEKE-2F protocol as described in \Cref{fig:protocol-uc} UC-realizes $\Fpake$ (\Cref{fig:pake-func}), in the random oracle model for $H_1$, $H_2$, $\Hkey$ and $\Htag$.
 \end{theorem}
 The rest of this section is dedicated to the proof of \Cref{thm:basic}. In \Cref{sec:simulator} we describe the simulator, and in \Cref{sec:games} we argue why the simulator generates a view indistinguishable from the real-world view.
 
