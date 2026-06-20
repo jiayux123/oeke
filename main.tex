@@ -244,7 +244,7 @@ A common complaint about PAKE papers is that they tend to be long and hard to un
   \item If the adversary modifies a protocol message, whether the adversarial message contains a correct password guess, an incorrect password guess, or no password guess; and
   \item Whether the two honest parties' passwords match.
 \end{itemize}
-Combined, they yield a large amount of cases that need to be covered in the security proof. For example, there has to be (at least) one game showing that if the adversary sends a message that contains an incorrect password guess, then the receiving party's session key is indistinguishable from random; another game has to show that if the adversary is passive (i.e., forwards both protocol messages without modification) and the two honest parties' passwords are different, then the two parties output independent session keys.
+Combined, they yield a large amount of cases that need to be covered in the security proof. For example, there has to be (at least) one game showing that if the adversary sends a message that contains an incorrect password guess, then the receiving party's session key is indistinguishable from random; another game has to show that if the adversary is passive (i.e., forwards both protocol messages without modification) and the two honest parties' passwords are different, then the two parties output independently random session keys. (This assumes implicit authentication; in explicit authentication the party(ies) should output the rejection symbol instead of a real session key.)
 
 Still, there are other reasons specific to this paper. One is, of course, that there are too many OEKE variants to analyze. The reason why the introduction and preliminaries (\Cref{sec:prelim}) sections of this paper are unusually long is the following: I wish to explain this work to such an extent that by reading \Cref{sec:intro,sec:prelim} alone, one could gain an intermediate-level understanding of the technical details --- including why certain KEM properties are needed in certain OEKE variants --- and you probably don't need to read the remaining sections. In this way, the ``effective length'' of this paper is roughly 30 pages.
 
@@ -302,7 +302,26 @@ In \Cref{sec:basic} we analyze the ``hash everything'' version of OEKE-2F, where
 Of course, the immediate question is why we analyze this protocol again. The answer is that we make multiple improvements over \cite{EPRINT:ArrBarJar25}, which we elaborate below.
 
 \paragraph{Improvement \#1: modeling explicit authentication.}
-As we have discussed, OEKE has the feature of one-side explicit authentication (1EA): the initiator can tell whether authentication succeeds or not, and output a real session key or rejection symbol accordingly. This is, unfortunately, not mentioned in \cite{EPRINT:ArrBarJar25} (nor in \cite{EC:JanRoyXu25}): 
+As we have discussed, OEKE has the feature of one-side explicit authentication (1EA): the initiator can tell whether authentication succeeds or not, and output a real session key or the rejection symbol $\bot$ accordingly. This is, unfortunately, not mentioned in \cite{EPRINT:ArrBarJar25} (nor in \cite{EC:JanRoyXu25}): if authentication fails, they let the initiator output a uniformly random string as the session key instead of $\bot$. The reason is that the standard UC PAKE functionality is implicit-authentication-only, i.e., it does not allow a protocol party to output $\bot$; thus, the protocol in \cite{EPRINT:ArrBarJar25} has to do away with 1EA in order to fit the UC PAKE functionality.
+
+In this work, we propose a UC functionality for PAKE-1EA, and show that the original OEKE-2F protocol --- where the initiator outputs a real session key or $\bot$ --- realizes it. In this way, we prove for the first time in the literature that (any variant of) OEKE satisfies the 1EA property.\footnote{\cite{ACNS:BCPRR23} also gives a PAKE-1EA functionality, but their functionality is problematic and cannot be realized by OEKE (see \Cref{rem:ocake} below).} Our PAKE-1EA functionality only involves a minor modification to the standard PAKE functionality.
+
+\paragraph{Improvement \#2: weaker KEM properties.}
+The last paragraph of \cite{EPRINT:ArrBarJar25}, titled ``minimum requirements for the KEM'', claims that the ``hash everything'' version of OEKE-2F is UC-secure assuming the underlying KEM scheme has the following three properties:
+\begin{itemize}
+  \item Pseudorandom public keys (UNI-PK),
+  \item One-wayness under one plaintext-checking attack (OW-1PCA), and
+  \item Anonymity under one plaintext-checking attack (ANO-1PCA).
+\end{itemize}
+Close scrutiny shows that both of their definitions of OW-1PCA and ANO-1PCA are too strong, and weaker properties (which we still call OW-1PCA and ANO-1PCA) suffice for OEKE-2F security. Roughly speaking, in OW-1PCA we could disallow the adversary from querying the challenge ciphertext to the plaintext-checking oracle, and in ANO-1PCA we could give the adversary only one public key instead of both. We refer to \Cref{sec:kem-standard} for a formal discussion.
+
+\paragraph{Improvement \#3: fixing flaws.}
+We believe the security proof in \cite{EPRINT:ArrBarJar25} is mostly correct; in particular, it considers a number of subtleties carefully. However, in the following two cases:
+\begin{itemize}
+  \item The two parties' passwords are different, and the adversary is passive; and
+  \item The two parties' passwords are equal, and the adversary is passive except that it modifies the authenticator $\tau'$,
+\end{itemize}
+the proof in \cite{EPRINT:ArrBarJar25} fails to do a game hop that changes the UC environment's view to the ideal world. We refer to Games 12 and 14 in \Cref{sec:games} for a detailed explanation.
 
 \section{Preliminaries and Technical Overview}
 \label{sec:prelim}
@@ -637,6 +656,7 @@ We refer the reader to \cite[Section~2.1]{EPRINT:Xu25} for an explanation of the
 \end{enumerate}
 All these three possibilities are covered by the third bullet under $\NewKey$,\footnote{The third bullet also covers the possibility that the adversary does not perform an online attack on party $P$ (i.e., $P$'s session record is $\fresh$), and $P$ outputs its session key before its counterparty does. However, in this case $P$ cannot be the initiator, since the initiator outputs after the respondent.} in which case we let the initiator output $\bot$. There is no change from the standard UC PAKE functionality on the respondent side, since the respondent always outputs an $n$-bit session key (i.e., the respondent only performs implicit authentication).
 \begin{remark}
+\label{rem:ocake}
 \cite[Fig.4]{ACNS:BCPRR23} also gives a PAKE-1EA functionality; however, their functionality is problematic and cannot be realized by (any version of) OEKE. The issue is that their functionality treats the three incorrect execution scenarios above differently: in case (1) it lets the initiator output \textsf{error}, in case (3) it lets the initiator output a uniformly random session key, and the paper does not seem to describe what the functionality should do in case (2). In the real-world protocol, the initiator can tell that authentication fails but cannot tell which is the case, so it has to either output a uniformly random session key \emph{in all cases} (which is the standard PAKE functionality) or output $\bot$ \emph{in all cases} (which is the PAKE-1EA functionality).
 \end{remark}
 
