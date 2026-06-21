@@ -27,7 +27,6 @@
 \usepackage[capitalise]{cleveref}
 \Crefname{claim}{Claim}{Claims}
 \usepackage{makecell} % force line break within a table cell
-\usepackage{mathtools}
 \usepackage{multirow} % merge cells in a table
 \usepackage{wasysym} % black circle in Table 2
 \usepackage{ocgx} % spoiler hack
@@ -92,10 +91,11 @@
 
 \title{The Most Efficient Protocol for PAKE: \\
 \medskip
-\large{What Exact Stuff Do You Need to Hash at the End?}}
+\large{What Exact Stuff Do You Need to Hash at the End?}
+\thanks{The \texttt{.tex} code of this paper is available at \url{https://github.com/jiayux123/oeke}. \\ Some minor \LaTeX\;hacks, such as line 21--25, might be useful to beginners.}
+}
 
-\author{Jiayu Xu}
-\affil{Oregon State University, \texttt{xujiay@oregonstate.edu}}
+\author{Jiayu Xu\footnote{Oregon State University, \texttt{xujiay@oregonstate.edu}}}
 \date{}
 
 \maketitle
@@ -109,7 +109,7 @@ Unfortunately, the community cannot agree upon what the OEKE-2F protocol exactly
   \item The first protocol message, and
   \item The KEM ciphertext.
 \end{itemize}
-This yields 16 potential variants of OEKE-2F; among them, only the two extremes --- the ``hash everything above'' and ``hash nothing above'' versions --- have been studied in the literature, and the pros and cons of each version are poorly understood.
+This yields 16 potential variants of OEKE-2F; only two of them have been studied in the literature, and the pros and cons of each version are poorly understood.
 
 In this work, we present a comprehensive analysis of \emph{all 16 variants} of OEKE-2F, proving the UC-security of each of them. The general takeaway is that the ``hash everything'' version requires the fewest security properties of the underlying KEM scheme, and the more items we remove from the hash, the more security requirements the KEM scheme has to satisfy --- although all of the additional KEM properties are still mild. We pinpoint the exact KEM properties each version of OEKE-2F needs, and thoroughly explain the rationales.
 
@@ -223,7 +223,7 @@ paper & protocol name & items hashed & \makecell{encryption \\ mechanism} & secu
 \caption{Existing works on OEKE. The KEM key $K$ is always hashed and omitted from the table. We omit the machine-aided analysis in \cite{CSF:Blanchet12} and the post-quantum analysis in \cite{EPRINT:HHKR25}, as they are not the focus of this work}
 \label{table:timeline}
 \end{table}
-This is a confusing, and frankly embarrassing, situation: everyone gives their own OEKE security analysis with some items included in the hash, which is a seemingly arbitrary choice by the authors; it has never been studied --- or even sufficiently explained in an informal manner --- what exact items need to be included, and \emph{why}. In particular, for the state-of-the-art OEKE-2F, only the ``hash everything'' and ``hash nothing'' versions have been analyzed, and it is unclear whether, or why, those items need to be included in the hash. (Another confusing point is that everyone has their own name for OEKE.)
+This is a confusing, and frankly embarrassing, situation: everyone gives their own OEKE security analysis with some items included in the hash, which is a seemingly arbitrary choice by the authors; it has never been studied --- or even sufficiently explained in an informal manner --- what exact items need to be included, and \emph{why}. In particular, for the state-of-the-art OEKE-2F, only the ``hash everything'' and ``hash nothing but $K$'' versions have been analyzed, and it is unclear whether, or why, those items need to be included in the hash. (Another confusing point is that everyone has their own name for OEKE.)
 
 \paragraph{Why not simply hash everything?}
 An immediate question is whether this topic matters at all --- why not simply hash everything like what \cite{EPRINT:ArrBarJar25} did? This question, in fact, has been partially answered in \cite[Section~5]{EPRINT:ArrBarJar25}, and below we summarize our understanding:
@@ -251,7 +251,7 @@ Still, there are other reasons specific to this paper. One is, of course, that t
 
 \subsection{Motivating Example: OEKE-2F with Diffie--Hellman KEM}
 \label{sec:oeke-dh}
-One might ask why removing certain items from the hash requires the underlying KEM scheme to have some additional security properties. To see the subtleties, let's work out a concrete example: OEKE-2F with the Diffie--Hellman KEM scheme. We show the ``hash nothing'' version below.
+One might ask why removing certain items from the hash requires the underlying KEM scheme to have some additional security properties. To see the subtleties, let's work out a concrete example: OEKE-2F with the Diffie--Hellman KEM scheme. We show the ``hash nothing but $K$'' version below.
 \begin{figure}[H]
 \pseudocodeblock{
 P(\pw) \< \< P'(\pw) \\ 
@@ -295,7 +295,7 @@ The Diffie--Hellman example above is taken from \cite[Section~3.1]{EC:JanRoyXu25
 \end{remark}
 
 \subsection{Our Contributions}
-As mentioned above, any number of $\pw,pk,(s,T),c$ can be included in $\Htag$ inputs, resulting in 16 variants of OEKE-2F; among them, only the ``hash nothing'' and ``hash everything'' versions have been previously studied (in \cite{EC:JanRoyXu25} and \cite{EPRINT:ArrBarJar25}, respectively). This work provides a comprehensive and thorough study of \emph{all 16 variants}, revealing the requirements on the underlying KEM scheme for each of them. Below we summarize our contributions.
+As mentioned above, any number of $\pw,pk,(s,T),c$ can be included in $\Htag$ inputs, resulting in 16 variants of OEKE-2F; among them, only the ``hash nothing but $K$'' and ``hash everything'' versions have been previously studied (in \cite{EC:JanRoyXu25} and \cite{EPRINT:ArrBarJar25}, respectively). This work provides a comprehensive and thorough study of \emph{all 16 variants}, revealing the requirements on the underlying KEM scheme for each of them. Below we summarize our contributions.
 
 \subsubsection{Reanalysis of the ``Hash Everything'' Version}
 In \Cref{sec:basic} we analyze the ``hash everything'' version of OEKE-2F, where the authenticator $\tau'$ is defined as $\Htag(\pw,pk,s,T,c,K)$. We choose this protocol as our first target because it is the ``easiest'' one: it requires the fewest properties of the KEM scheme, and it has already been analyzed in \cite{EPRINT:ArrBarJar25}.
@@ -1056,7 +1056,7 @@ In the first event, by \Cref{clm:htag} $P'$ does not query $\Htag(\pw,pk,s,T,c^*
 
 \emph{{\color{red}This game corresponds to games $\mathsf{G}_6$ and $\mathsf{G}_7$ in \cite{EPRINT:ArrBarJar25}, except that the $\Htag$ collision cases (events (2) and (3) above) were ruled out in game $\mathsf{G}_2$ in \cite{EPRINT:ArrBarJar25} (as aborting condition [A1]). \\
 \indent\ul{The proof of \mbox{\Cref{clm:htag}}
-% has to do this \mbox trick since \ul directly on \Cref does not compile
+% have to do this \mbox trick since \ul directly on \Cref does not compile
 critically relies on $\pw,s,T,c$ being included in $\Htag$ inputs.}}}
 
 \medskip\noindent\emph{Game 3:} In the case where $\pw = \pw' \land (s^*,T^*) = (s,T)$, sample $SK',\tau' \gets \{0,1\}^n$. ($c$ is still computed as before.)
@@ -1564,7 +1564,7 @@ We have
 \end{enumerate}
 }}
 
-% has to do two separate \emph commands since otherwise \indent immediately after \end{enumerate} does not show up
+% have to do two separate \emph commands since otherwise \indent immediately after \end{enumerate} does not show up
 \emph{{\color{red}We believe it is much cleaner to define a tailored KEM property that allows a \emph{single} reduction to go through, which is UNI-ANO-RO. In this way, we can separate out the multiple reductions to basic KEM properties, as well as the hybrid argument, on the level of KEM; this makes our OEKE security argument easier to understand.\footnote{In principle, we could also combine Game 3 and Game 4, as well as Game 6 and Game 7, via a single reduction to some ``integrated'' KEM properties. We choose not to do it as we wish to follow the proof structure in \cite{EPRINT:ArrBarJar25} as much as possible. In contrast, \cite[Definition~3.6]{EC:JanRoyXu25} has a combined KEM property called ``pseudorandom non-malleability''.}}}
 
 \paragraph{Summary.}
