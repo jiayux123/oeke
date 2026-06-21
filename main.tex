@@ -1989,7 +1989,9 @@ In sum, we have
 Overall, we conclude that the ``only hash $(s,T)$'' version is secure under the CBIND, UNPRE, KBIND and CR properties of the KEM scheme.
 
 \paragraph{The ``hash $(s,T)$ and $c$'' version.}
-If we define $\tau$ as $\Htag(s,T,c,K)$, then the second bullet of \Cref{clm:htag4} is not needed, and the protocol can be proven secure without the CBIND property of the KEM scheme (but we still need UNPRE, KBIND and CR).
+If we define $\tau$ as $\Htag(s,T,c,K)$, then the second bullet of \Cref{clm:htag4} is not needed, and the protocol can be proven secure without the CBIND property of the KEM scheme.
+
+We claim that the KBIND property can also be removed. KBIND appears in the first bullet of \Cref{clm:htag4}. We now have $\pw \neq \pw' \land c^* = c$, so in the corresponding reduction $\adv$ is forced to send $(c^*,\tau^*)$ for $c^* = c$. That is, instead of reducing to KBIND, we only need to reduce to the property in \Cref{lem:kbind-eq}, which is implied by UNI-PK and OW. Overall we only need UNPRE and CR in this version.
 
 \section{Future Directions}
 \label{sec:future-work}
@@ -2833,6 +2835,9 @@ Items (1) and (4) introduce the check on $P'$'s $\Htag$ query and then drop it, 
   \item If the record is unique, and $\pw^* \neq \pw$, then we set $SK := \bot$ [item (5)].
 \end{itemize}
 This exactly matches step 2 of the simulator in \Cref{fig:oeke-sim-hash-nothing}, so new Game IV is identical to the ideal world. This completes the proof.
+
+\paragraph{The ``hash $c$'' version.}
+If we define $\tau$ as $\Htag(c,K)$, then the reduction to CBIND in \Cref{clm:htag8} is not needed, and the protocol can be proven secure under the UNPRE, KBIND and CR properties of the KEM scheme.
 
 \section{Comparison with \cite{EC:JanRoyXu25}}
 \label{app:jrx-comparison}
