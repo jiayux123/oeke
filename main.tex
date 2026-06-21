@@ -29,6 +29,7 @@
 \usepackage{makecell} % force line break within a table cell
 \usepackage{mathtools}
 \usepackage{multirow} % merge cells in a table
+\usepackage{wasysym} % black circle in Table 2
 \usepackage{ocgx} % spoiler hack
 
 \newcommand{\codebox}[1]{
@@ -203,7 +204,7 @@ The above appears to be the happy ending of the whole story, and the reader migh
 \end{itemize}
 
 The two protocols analyzed in \cite{EC:JanRoyXu25,EPRINT:ArrBarJar25} are two extremes on a spectrum of OEKE variants: For each of the four items above, one could choose to include or exclude it in the ROs, resulting in $2^4 = 16$ versions of OEKE. By examining the literature on OEKE, an immediate impression is that \textbf{people simply cannot agree upon what the OEKE protocol exactly is}. Below we list all existing security analyses of OEKE, and what exact items are hashed.
-\begin{table}[H]
+\begin{table}[H]\centering
 \begin{tabular}{ |c|c|c|c|c| }
 \hline
 paper & protocol name & items hashed & \makecell{encryption \\ mechanism} & security notion \\
@@ -218,7 +219,7 @@ paper & protocol name & items hashed & \makecell{encryption \\ mechanism} & secu
 \hline
 \cite{EPRINT:ArrBarJar25} & NoIC & $\pw,pk,\phi,c$ & 2F & UC \\
 \hline
-\end{tabular}%
+\end{tabular}
 \caption{Existing works on OEKE. The KEM key $K$ is always hashed and omitted from the table. We omit the machine-aided analysis in \cite{CSF:Blanchet12} and the post-quantum analysis in \cite{EPRINT:HHKR25}, as they are not the focus of this work}
 \label{table:timeline}
 \end{table}
@@ -323,6 +324,93 @@ We believe the security proof in \cite{EPRINT:ArrBarJar25} is mostly correct; in
 \end{itemize}
 the proof in \cite{EPRINT:ArrBarJar25} fails to do a game hop that changes the UC environment's view to the ideal world. We refer to Games 12 and 14 in \Cref{sec:games} for a detailed explanation.
 
+\paragraph{Improvement \#4: more detailed presentation of the security proof.}
+Perhaps our most significant improvement over \cite{EPRINT:ArrBarJar25} lies in the presentation of the security proof. (The aforementioned three technical improvements are necessary but relatively minor.) The most complicated and subtle step of the proof is the last game (our Game 17 in \Cref{sec:games}, their games $\mathsf{G}_{18}$ and $\mathsf{G}_{19}$ in Section 5); the argument in \cite{EPRINT:ArrBarJar25} has a ``reduction within reduction'', i.e., the reduction simulates the game in a manner that is indistinguishable from, but not identical to, the real game, and a second ``inner'' reduction is needed to show this indistinguishability. This complicated proof technique makes their argument hard to follow, and is in fact unnecessary: we show how to make a cleaner argument by defining a separate, tailored KEM property, which is implied by standard properties and which we reduce to in the game.
+
+We list some other improvements on the presentation below:
+\begin{itemize}
+  \item We drastically simplify the description of the UC simulator by removing unnecessary records.
+  \item A few other reductions, including the ones to OW-1PCA and ANO-1PCA, are also quite complicated, and we give detailed descriptions instead of the sketches in \cite{EPRINT:ArrBarJar25}. (From our descriptions of these reductions, it is immediately clear why the OW-1PCA and ANO-1PCA properties in \cite{EPRINT:ArrBarJar25} are stronger than necessary.)
+  \item Our Game 9 in \Cref{sec:games}, which is equivalent to game $\mathsf{G}_{13}$ in \cite[Section~5]{EPRINT:ArrBarJar25}, essentially says that the simulator can simulate the $P$-to-$P'$ message $(s,T)$ at random and then program the ROs later if necessary. Our statistical argument why this game hop goes through is much cleaner than theirs.
+\end{itemize}
+
+\subsubsection{Analysis of the Other 15 Variants}
+Once we fully work out the ``basic'' security proof for the ``hash everything'' version of OEKE, in \Cref{sec:other-variants-1,app:other-variants-2} we turn to other variants of the protocol. Since the only difference lies in how the $P'$-to-$P$ authenticator $\tau'$ is defined, a large portion of the argument --- e.g., password extraction from the adversarial $P$-to-$P'$ message, and $P'$'s reaction upon receiving this message --- is irrelevant to which OEKE variant we are analyzing and can be reused. However, as seen in \Cref{sec:oeke-dh}, removing certain items from the hash puts more requirements on the KEM scheme, and figuring out these additional properties is highly non-trivial. Below we list the KEM properties needed for all 16 OEKE variants.
+\begin{table}[H]\centering
+\begin{tabular}{ |c|c|c|c|c|c| }
+\hline
+\multicolumn{4}{|c|}{items hashed} & \multirow{2}{*}{KEM properties needed} & \multirow{2}{*}{analyzed in...} \\
+\cline{1-4}
+$\pw$ & $pk$ & $(s,T)$ & $c$ & & \\
+\hline
+\CIRCLE & \CIRCLE & \CIRCLE & \CIRCLE & & \Cref{sec:basic} \\
+\hline
+\CIRCLE & \CIRCLE & \CIRCLE & & CBIND & \Cref{sec:hash-pw-pk-st} \\
+\hline
+\CIRCLE & & \CIRCLE & & CBIND, UNPRE & \Cref{sec:hash-pw-st} \\
+\hline
+\CIRCLE & & \CIRCLE & \CIRCLE & UNPRE & \Cref{sec:hash-pw-st} \\
+\hline
+ & \CIRCLE & \CIRCLE & & CBIND & \Cref{sec:hash-pk-st} \\
+\hline
+ & \CIRCLE & \CIRCLE & \CIRCLE & & \Cref{sec:hash-pk-st} \\
+\hline
+ & & \CIRCLE & & CBIND, UNPRE, KBIND, CR & \Cref{sec:hash-st} \\
+\hline
+ & & \CIRCLE & \CIRCLE & UNPRE, CR & \Cref{sec:hash-st} \\
+\hline
+\CIRCLE & \CIRCLE & & & CBIND & \Cref{app:hash-pw-pk} \\
+\hline
+\CIRCLE & \CIRCLE & & \CIRCLE & & \Cref{app:hash-pw-pk} \\
+\hline
+\CIRCLE & & & & CBIND, UNPRE, KBIND & \Cref{app:hash-pw} \\
+\hline
+\CIRCLE & & & \CIRCLE & UNPRE, KBIND & \Cref{app:hash-pw} \\
+\hline
+& \CIRCLE & & & CBIND & \Cref{app:hash-pk} \\
+\hline
+& \CIRCLE & & \CIRCLE & & \Cref{app:hash-pk} \\
+\hline
+& & & & CBIND, UNPRE, KBIND, CR & \Cref{app:hash-nothing} \\
+\hline
+& & & \CIRCLE & UNPRE, KBIND, CR & \Cref{app:hash-nothing} \\
+\hline
+\multicolumn{6}{|l|}{\makecell{$K$ is always hashed, which is omitted above \\ UNI-PK, OW-1PCA and ANO-1PCA properties are always required}} \\
+\hline
+\end{tabular}
+\caption{List of OEKE variants}
+\label{table:oeke-variants}
+\end{table}
+We will explain the various additional KEM properties in \Cref{sec:kem-additional}, but at a high level, they are different types of binding properties. For example, if the KEM ciphertext $c$ is included in the hash, then modifying $c$ but forwarding $\tau'$ will immediately cause $P$ to reject; however, if $c$ is removed from the hash, then we need some additional ``cihpertext binding'' property to prevent the adversary from doing this. We show the full names of the KEM properties below.
+\begin{table}[H]\centering
+\begin{tabular}{ |c|c|c|c|c|c| }
+\hline
+name & full name & \makecell{needed if ... is \\ excluded from the hash} & defined in... \\
+\hline
+UNI-PK & pseudorandom public keys & (needed in all variants) & \Cref{def:uni-pk} \\
+\hline
+OW-1PCA & \makecell{one-wayness under \\ one plaintext-checking attack} & (needed in all variants) & \Cref{def:ow-1pca} \\
+\hline
+ANO-1PCA & \makecell{anonymity under \\ one plaintext-checking attack} & (needed in all variants) & \Cref{def:ano-1pca} \\
+\hline
+CBIND & ciphertext binding & $c$ & \Cref{def:cbind} \\
+\hline
+UNPRE & unpredictability & $pk$ & \Cref{def:unpre} \\
+\hline
+KBIND & key binding & $\pw,pk,c$; or $pk,(s,T)$ & \Cref{def:kbind} \\
+\hline
+CR & collision resistance & $\pw,pk$ & \Cref{def:cr} \\
+\hline
+\end{tabular}
+\caption{KEM properties needed for OEKE variants}
+\end{table}
+The information above could be overwhelming, but the general takeaway is:
+\begin{itemize}
+  \item In general, the more items we remove from the hash, the more properties are needed for the KEM scheme.
+  \item The maximal items that can be removed from the hash ``for free'' are $\pw$ and $(s,T)$. In other words, if $\tau'$ is defined as $\Htag(pk,c,K)$ then no additional KEM properties are needed compared to $\Htag(\pw,pk,s,T,c,K)$.
+  \item Removing or not removing $(s,T)$ does not make a difference, \emph{except} that if $pk$ is also removed, then we additionally need KBIND. (This is why we put all variants where $(s,T)$ are removed in the appendices.) 
+\end{itemize}
+
 \section{Preliminaries and Technical Overview}
 \label{sec:prelim}
 Let $n$ be the security parameter; we assume that all algorithms take $1^n$ as an input, and do not explicitly write it.
@@ -372,6 +460,7 @@ In all KEM properties below, we use $\Adv_\adv^\text{property}$ to denote the ad
 \paragraph{Pseudorandom public keys.}
 This property roughly says that an honestly generated public key is indistinguishable from uniformly random.
 \begin{definition}
+\label{def:uni-pk}
 A KEM scheme has \emph{pseudorandom public keys (UNI-PK)} if for any PPT adversary $\adv$, $\Pr[b^* = 1]$ in the following two games are negligibly close:\footnote{The challenge bit $b$ is not actually used in the definition, but it will come in handy in the later security proofs (we sometimes need concise names for these security games).}
 \[
     \fcodebox{
@@ -404,6 +493,7 @@ A KEM scheme is \emph{one-way (OW)} if for any PPT adversary $\adv$, the probabi
 \end{definition}
 We also need a stronger variant in which the adversary is additionally given access to a \emph{plaintext-checking oracle}, which tells the adversary whether a ciphertext decapsulates to a certain key.
 \begin{definition}
+\label{def:ow-1pca}
 The definition of \emph{one-wayness under one plaintext-checking attack (OW-1PCA)} is the same as that of OW, except that the adversary $\adv$ is additionally given access to an oracle $\PC(sk,\star,\star)$, which on input $(c' \neq c, K')$ outputs 1 if $K' = \Decap(sk,c')$ and 0 otherwise. $\adv$ is allowed to query this oracle only once.
 \end{definition}
 This property is the same as what's called OW-PCA in \cite[Definition~3]{EPRINT:ArrBarJar25}, except that in our notion (1) the adversary can query its plaintext-checking oracle only once, and (2) the adversary is prohibited from querying its plaintext-checking oracle on the challenge ciphertext. The plaintext-checking oracle was first studied in \cite{PKC:AbdBenPoi15} in the context of public-key encryption schemes.
@@ -435,6 +525,7 @@ A KEM scheme is \emph{anonymous (ANO)} if for any PPT adversary $\adv$, $\Pr[b^*
 \end{definition}
 Similar to OW-1PCA, we also need the 1PCA variant of ANO.
 \begin{definition}
+\label{def:ano-1pca}
 The definition of \emph{anonymity under one plaintext-checking attack (ANO-1PCA)} is the same as that of ANO, except that the adversary $\adv$ is additionally given access to an oracle $\PC(sk,\star,\star)$, which on input $(c' \neq c, K')$ outputs 1 if $K' = \Decap(sk,c')$ and 0 otherwise. $\adv$ is allowed to query this oracle only once.
 \end{definition}
 This property is the same as what's called ANO-PCA in \cite[Definition~4]{EPRINT:ArrBarJar25}, except that in our notion (1) the adversary can query its plaintext-checking oracle only once, and (2) the adversary is not given $pk'$ (whereas in their notion $pk'$ is generated and given to the adversary in both games).
@@ -499,6 +590,7 @@ CBIND is needed in OEKE varants where $c$ is removed from $\Htag$ inputs. Then w
 \paragraph{Unpredictability.}
 This property roughly says that an adversary $\adv$ cannot feasibly output a ciphertext/KEM key pair $(c^*,K^*)$ ``out of thin air'', such that $(pk,c^*,K^*)$ is a valid tuple for an honestly generated public key $pk$ that $\adv$ does not know.
 \begin{definition}
+\label{def:unpre}
 A KEM scheme is \emph{unpredictable (UNPRE)} if for any PPT adversary $\adv$, the probability that $\adv$ wins the following game is negligible:
 \[
     \fcodebox{
@@ -523,6 +615,7 @@ However, it is unclear to us what ``ciphertexts that are valid for all public ke
 \paragraph{Key binding.}
 This property roughly says that given an honest tuple of $(pk',\allowbreak c,K')$ and another honestly generated public key $pk$, an adversary cannot feasibly come up with a ciphertext $c^*$ such that $(pk,c^*,K')$ is also a valid tuple. In other words, the KEM key $K'$ binds a public key/ciphertext pair, although we give the adversary the power of choosing one ciphertext only, and both public keys and the other ciphertext are simply given to the adversary. (In the actual definition, we let $pk'$ be sampled uniformly at random, rather than honestly generated.)
 \begin{definition}
+\label{def:kbind}
 A KEM scheme is \emph{key binding (KBIND)} if for any PPT adversary $\adv$, the probability that $\adv$ wins the following game is negligible:
 \[
     \fcodebox{
@@ -608,7 +701,7 @@ It is instructive to see what cryptographic assumptions the various KEM properti
 \begin{itemize}
   \item UNI-PK says that $X = g^x$ is indistinguishable from uniformly random, which holds perfectly.
   \item OW says that given $(X = g^x, Y = g^y)$ it is infeasible to compute $K = g^{xy}$, which is the Computational Diffie--Hellman (CDH) assumption.
-  \item OW-1PCA says that given $(X = g^x, Y = g^y)$ and an oracle that on input $(Y' \neq Y, K')$ checks if $(Y')^x = K'$ (which the adversary can query only once), it is infeasible to compute $K = g^{xy}$. This is the Gap Diffie--Hellman (GDH) assumption, except that (1) when the adversary makes a DH oracle query, its first input is fixed to be $X$, (2) when the adversary makes a DH oracle query, its second input must not be equal to $Y$, and (3) the adversary can query the (restricted) DH oracle only once.\footnote{Some definitions of GDH (e.g., \cite[Section~2]{CiC:LLMT25}) have restriction (1) in place, namely the oracle only takes two inputs $(Y',Z)$ and checks if $Z = (Y')^x$.} This limited version of GDH can be reduced to CDH (on the single oracle query, the reduction to CDH returns 1 with probability 1/2 and 0 with probability 1/2; in this way the reduction has a 1/2 chance of simulating the game correctly).
+  \item OW-1PCA says that given $(X = g^x, Y = g^y)$ and an oracle that on input $(Y' \neq Y, K')$ checks if $(Y')^x = K'$ (which the adversary can query only once), it is infeasible to compute $K = g^{xy}$. This is the Gap Diffie--Hellman (GDH) assumption, except that (1) when the adversary makes a DH oracle query, its first input is fixed to be $X$, (2) when the adversary makes a DH oracle query, its second input must not be equal to $Y$, and (3) the adversary can query the (restricted) DH oracle only once.\footnote{GDH with restriction (1) in place, namely the oracle only takes two inputs $(Y',Z)$ and checks if $Z = (Y')^x$, is sometimes called ``Strong Diffie--Hellman (SDH)'' \cite[Definition~9]{RSA:AbdBelRog01}. Some people (e.g., \cite[Section~2]{CiC:LLMT25}) use the term ``GDH'' to refer to SDH.} This limited version of GDH can be reduced to CDH (on the single oracle query, the reduction to CDH returns 1 with probability 1/2 and 0 with probability 1/2; in this way the reduction has a 1/2 chance of simulating the game correctly).
   \item ANO says that $(X = g^x, Y = g^y)$ and $(X = g^x, Y' = g^{y'})$ for another $y' \gets \mathbb{Z}_q$ are indistinguishable, which holds perfectly. (This property holds perfectly for any KEM scheme where the ciphertext does not rely on the public key.) It of course holds perfectly even if the adversary is additionally given the plaintext-checking oracle.
   \item CBIND says that given $(X = g^x, Y = g^y)$ it is infeasible to come up with $Y^* \neq Y$ such that $(Y^*)^x = X^y$, which holds perfectly.
   \item UNPRE says that it is infeasible to come up with $(Y^*,K^*)$ such that $K^* = (Y^*)^x$, which holds statistically.
@@ -1354,7 +1447,7 @@ The aborting condition is met only in the following three cases:
       \[
       r^* \oplus t^* = (r^*)' \oplus (t^*)'
       \]
-      (so $\adv$ can set $s^*$ to be this value). Note that all four values in the equation are determined by two (different) $H_1$ queries and one $H_2$ query, and for each set of these queries, there is a $1/2^{3n}$ chance that the equation will hold. Therefore, the probability of this case is upper-bounded by $q_1(q_1-1)q_2/2^{3n}$. %\footnote{A sloppier argument would say that there are $q_1$ possible $r^*$ values and $q_2$ possible $t^*$ values, so there are $q_1q_2$ possible $r^* \oplus t^*$ values and the probability of a collision is upper-bounded by $q_1q_2(q_1q_2-1)/2^{3n+1}$. This yields a looser bound since those $r^* \oplus t^*$ values are not all independent of each other. The same goes for the two cases below.}
+      (so $\adv$ can set $s^*$ to be this value). Note that all four values in the equation are determined by two (different) $H_1$ queries and one $H_2$ query, and for each set of these queries, there is a $1/2^{3n}$ chance that the equation will hold. Therefore, the probability of this case is upper-bounded by $q_1(q_1-1)q_2/2^{3n}$.
   \item There is a collision in type (2) above, i.e., there are $\pw^*,t^*,(\pw^*)',(t^*)'$ such that
       \[
       H_2(\pw^*,T) \oplus t^* = H_2((\pw^*)',T) \oplus (t^*)'
@@ -1466,13 +1559,13 @@ We have
   \item \cite{EPRINT:ArrBarJar25} reduces to OW-PCA and ANO-PCA\footnote{\cite{EPRINT:ArrBarJar25} actually mentions ANO-CPA, which appears to be a typo.}, which is unnecessary: OW and ANO suffice.
   \item Their simulation strategy is slightly different from ours: they use $pk'$ generated by $\Gen$, rather than sampled uniformly at random. Note that in this ``incorrect password guess'' case, in the real world $pk' = T^*/H_1(\pw',r')$ is already uniformly random, so this is fundamentally a KEM property about encapsulation of uniformly random (rather than honestly generated) public keys and we believe it is clearer to present it in this way.\footnote{By contrast, in the $(s^*,T^*) = (s,T)$ case $pk'$ has to be generated honestly, which is our Games 3, 4, 6 and 7: If $\pw = \pw' \land (s^*,T^*) = (s,T)$ then $sk$ corresponding to $pk = pk'$ is used on the $P$ side (in decapsulation), so $pk'$ cannot be changed to uniformly random; and the $\pw \neq \pw' \land (s^*,T^*) = (s,T)$ case cannot be separated from the $\pw = \pw' \land (s^*,T^*) = (s,T)$ case (since the simulator never knows if $\pw = \pw'$ or not), so $pk'$ cannot be changed to uniformly random in this case either.}
   \item Their honest generation of $pk'$ also means that their reductions cannot simulate the games perfectly, since they program $H_1(\pw',r')$ using $pk'$ which is not uniformly random --- while it ``should'' be uniformly random. As such, they have do a reduction to UNI-PK within the OW-PCA/ANO-PCA reduction.
-  \item What makes things even worse is that none of their (or our) reductions knows which of the $H_1(\pw',r')$ queries should be programmed using $pk'$, since $\adv$ can make many decryption efforts, resulting in many $H_1$ values to be programmed, \emph{before} sending $(s^*,T^*)$ to $P'$ (cf. discussion after \Cref{def:uni-ano-ro}). This means that their UNI-PK reduction cannot be moved ``out of'' the OW-PCA/ANO-PCA reduction by defining a separate game that uses honestly generated $pk'$ to program $H_1(\pw',r')$, as that would require the \emph{game} to make a guess! This ``reduction within a reduction'' would better be filtered out as a separate helper security property (cf. our \Cref{lem:uni-ow,lem:uni-ano}), which is not mentioned in \cite{EPRINT:ArrBarJar25}.
+  \item What makes things even worse is that none of their (or our) reductions knows which of the $H_1(\pw',r')$ queries should be programmed using $pk'$, since $\adv$ can make many decryption efforts, resulting in many $H_1$ values to be programmed, \emph{before} sending $(s^*,T^*)$ to $P'$ (cf. discussion after \Cref{def:uni-ano-ro}). This means that their UNI-PK reduction cannot be moved ``out of'' the OW-PCA/ANO-PCA reduction by defining a separate game that uses honestly generated $pk'$ to program $H_1(\pw',r')$, as that would require the \emph{game} to make a guess! This ``reduction within a reduction'' would better be filtered out as a separate helper security property, which is not mentioned in \cite{EPRINT:ArrBarJar25}.
   \item Finally, the reductions in \cite{EPRINT:ArrBarJar25} appear to never check for the ``related key attack'', i.e., from their proof it is unclear what will go wrong if we remove what's our Game 16 (or their game $\mathsf{G}_{17}$).
 \end{enumerate}
 }}
 
 % has to do two separate \emph commands since otherwise \indent immediately after \end{enumerate} does not show up
-\emph{{\color{red}We believe it is much cleaner to define a tailored KEM property that allows a \emph{single} reduction to go through, which is UNI-ANO-RO. In this way, we can separate out the multiple reductions to basic KEM properties, as well as the hybrid argument, on the level of KEM; this makes our OEKE security argument easier to understand.\footnote{In principle, we could also combine Game 3 and Game 4, as well as Game 6 and Game 7, via a single reduction to some ``integrated'' KEM properties. We choose not to do it as having many new, tailored KEM properties could be confusing.}}}
+\emph{{\color{red}We believe it is much cleaner to define a tailored KEM property that allows a \emph{single} reduction to go through, which is UNI-ANO-RO. In this way, we can separate out the multiple reductions to basic KEM properties, as well as the hybrid argument, on the level of KEM; this makes our OEKE security argument easier to understand.\footnote{In principle, we could also combine Game 3 and Game 4, as well as Game 6 and Game 7, via a single reduction to some ``integrated'' KEM properties. We choose not to do it as we wish to follow the proof structure in \cite{EPRINT:ArrBarJar25} as much as possible. In contrast, \cite[Definition~3.6]{EC:JanRoyXu25} has a combined KEM property called ``pseudorandom non-malleability''.}}}
 
 \paragraph{Summary.}
 We summarize the changes since Game 11 (i.e., after \Cref{fig:intermediate-game}):
@@ -1589,7 +1682,9 @@ $\adv$'s $H_2(\star,T)$ queries & & line 46--51 & the only step \\
 \end{table}
 
 From \Cref{tab:ideal-world-comparison} (and after going through some simple but tedious checks), we can see that Game 17 and the ideal world are exactly identical. This completes the proof.
+
 \section{Security Analyses of Other Versions (I): Including $(s,T)$ in the hash}
+\label{sec:other-variants-1}
 We assume the reader is familiar with the security proof in \Cref{sec:basic}, as the simulator and many games there will be frequently referred to or reused.
 
 \subsection{What Will Go Wrong If You Don't Hash Everything?}
@@ -1879,7 +1974,7 @@ In sum, we have
 Overall, we conclude that the ``only hash $(s,T)$'' version is secure under the CBIND, UNPRE, KBIND and CR properties of the KEM scheme.
 
 \paragraph{The ``hash $(s,T)$ and $c$'' version.}
-If we define $\tau$ as $\Htag(s,T,c,K)$, then the second bullet of \Cref{clm:htag4} is not needed, and the protocol can be proven secure without the CBIND property of the KEM scheme (but we still need KBIND, UNPRE and CR).
+If we define $\tau$ as $\Htag(s,T,c,K)$, then the second bullet of \Cref{clm:htag4} is not needed, and the protocol can be proven secure without the CBIND property of the KEM scheme (but we still need UNPRE, KBIND and CR).
 
 \section{Future Directions}
 While we aim to provide a comprehensive and thorough analysis of all OEKE-2F variants, there are, unfortunately (or perhaps fortunately?), still a number of open questions stemmed from this work. Below we mention four topics for future work.
@@ -1890,7 +1985,7 @@ We did not prove any results on whether the KEM security properties used in this
 On the other hand, with some thoughts one can realize that the KEM properties in \Cref{sec:kem-additional} are \emph{not} minimal, and some weaker properties suffice. Take CBIND as an example: even if an adversary can break CBIND of the underlying KEM scheme, as long as this behavior can be caught by the simulator, the simulation would still go through. Thus, roughly speaking CBIND can be weakened to the following property: for any PPT adversary $\adv$ in the game in \Cref{def:cbind}, there exists a PPT simulator $\sim$ that outputs a bit indicating whether $\adv$ wins with all but negligible accuracy. ($\sim$ does not know the secret key $sk$.) A similar weakening can be done for KBIND. The UNPRE and CR properties appear minimal.
 
 \paragraph{OEKE-2F security in the game-based setting.}
-A natural question is whether we could rely on weaker KEM security properties if we only require game-based security (i.e., BPR) for OEKE-2F. One important difference between BPR and UC security notions is that BPR does not require forward secrecy. From the discussion in \Cref{sec:kem-standard}, it seems that some mechanisms in the OW and ANO games (e.g., giving the public key $pk$ to the adversary) are designed solely for the purpose of achieving forward secrecy, so some weaker versions of OW-1PCA and ANO-1PCA should suffice for the BPR security of OEKE-2F.
+A natural question is whether we could rely on weaker KEM security properties if we only require game-based security for OEKE-2F. The standard game-based security notion for PAKE is the one in \cite{EC:BelPoiRog00} (henceforth BPR). One important difference between the BPR and UC security notions is that BPR does not require forward secrecy. From the discussion in \Cref{sec:kem-standard}, it seems that some mechanisms in the OW and ANO games (e.g., giving the public key $pk$ to the adversary) are designed solely for the purpose of achieving forward secrecy, so some weaker versions of OW-1PCA and ANO-1PCA should suffice for the BPR security of OEKE-2F.
 
 Furthermore, it seems that the CBIND and KBIND properties do not correspond to any ``real'' attack on OEKE-2F (see \Cref{fn:cbind}), and are needed only for the simulation to go through. Therefore, it is possible that they can be removed in game-based security of (any variant of) OEKE-2F.
 
@@ -1906,6 +2001,7 @@ Finally, we mention the future direction of the most practical significance. The
 \bibliography{bib.bib}
 \newpage
 \appendix
+\crefalias{section}{appendix} % change ``Section A'' to ``Appendix A'' while using \Cref command; see https://tex.stackexchange.com/a/121055
 \section{Comparison Between Our Simulator and the One in \cite{EPRINT:ArrBarJar25}}
 \label{app:comparison}
 Our simulator in \Cref{sec:sim} is, by and large, the same as the one in \cite[Fig.5~and~6]{EPRINT:ArrBarJar25}, although we completely rewrite it to improve readability. We first summarize some of the notational differences in \Cref{tab:sim-notations}.
@@ -1940,10 +2036,10 @@ The simulator in \cite{EPRINT:ArrBarJar25} has more bookkeeping and aborts more 
 The only (more or less) essential difference lies in the {\color{red}red} text in \Cref{fig:oeke-sim1}: in the case where the adversary makes an incorrect password guess on $P'$, we compute $c$ from a uniformly random KEM public key $pk'$, whereas they compute $c$ from an honestly generated $pk'$. While both methods work, our method simplifies the reduction; this is further explained in the comment after Game 18 in \Cref{sec:games}, item (2).
 
 \section{Security Analyses of Other Versions (II): Removing $(s,T)$ from the Hash}
-\label{app:no-st}
+\label{app:other-variants-2}
 \subsection{The ``Hash $\pw$ and $pk$'' Version}
 \label{app:hash-pw-pk}
-We start from the version where $\tau$ is defined as $\Htag(\pw,pk,K)$, i.e., $(s,T)$ and $c$ are removed from the hash compared with the ``hash everything'' version. This would best be compared with the protocol (and its security proof) in \Cref{sec:hash-pw-st}, where $\tau$ is defined as $\Htag(\pw,pk,s,T,K)$. Removing $(s,T)$ from the hash introduces a new case that the simulator must take into consideration, which we start from.
+We start from the version where $\tau$ is defined as $\Htag(\pw,pk,K)$, i.e., $(s,T)$ and $c$ are removed from the hash compared with the ``hash everything'' version. This would best be compared with the protocol (and its security proof) in \Cref{app:hash-pw-st}, where $\tau$ is defined as $\Htag(\pw,pk,s,T,K)$. Removing $(s,T)$ from the hash introduces a new case that the simulator must take into consideration, which we start from.
 
 \subsubsection{Changes to the Simulator}
 The new situation emerges when the adversary $\adv$ decrypts the $P$-to-$P'$ message $(s,T)$ to recover $pk := \mathsf{2F}^{\text{-}1}(\pw,(s,T))$, and then re-encrypts the same $pk$ under the same $\pw'$ to get $(s^*,T^*) \gets \mathsf{2F}(\pw,pk)$. Note that unlike IC, \emph{the $\mathsf{2F}$ encryption is randomized}, so $\adv$'s re-encryption likely results in a different $(s^*,T^*) \neq (s,T)$. Then $\adv$ sends $(s^*,T^*)$ to $P'$, and forwards the $P'$-to-$P$ message $(c,\tau')$ without modification. We show this whole process in \Cref{fig:attack-no-st}.
@@ -2189,7 +2285,7 @@ This exactly matches step 2 of the simulator in \Cref{fig:oeke-sim-hash-pw}, so 
 If we define $\tau$ as $\Htag(\pw,pk,c,K)$, then \Cref{clm:htag5} unconditionally holds, and the protocol can be proven secure without the CBIND property of the KEM scheme (i.e., under the same assumptions as in the ``hash everything'' version).
 
 \subsection{The ``Hash $\pw$'' Version}
-\label{sec:hash-pw}
+\label{app:hash-pw}
 We now consider the variant where $pk$ is further removed from $\Htag$ inputs, i.e., $\tau$ is defined as $\Htag(\pw,K)$. This would best be compared with the protocol (and its security proof) in \Cref{sec:hash-pw-st}, where $\tau$ is defined as $\Htag(\pw,s,T,K)$; as well as the protocol (and its security proof) in \Cref{app:hash-pw-pk}, where $\tau$ is defined as $\Htag(\pw,pk,K)$. As we have seen in \Cref{app:hash-pw-pk}, removing $(s,T)$ from the hash introduces a new ``re-encryption'' case that the simulator must take into consideration. After further removing $pk$, there is a more general ``attack'' we need to take into account, which we start from.
 
 \subsubsection{Changes to the Simulator}
@@ -2285,7 +2381,7 @@ The proof of this claim is essentially part of the proof of \Cref{clm:htag2}. $P
 The remaining argument is essentially identical to that in the old Game 2.
 
 \medskip
-Games 3--16 are essentially unchanged from the corresponding games in \Cref{sec:hash-pw-st}.
+Games 3--16 are essentially unchanged from the corresponding games in \Cref{app:hash-pw-st}.
 
 \medskip\noindent\emph{New Game I:} Now that $(\pw')^*$ --- the password guess extracted from $(s^*,T^*)$ --- is defined (in Game 15), we can finally add (part of) what's in step 2 of \Cref{fig:oeke-sim-hash-pw}. Concretely, we change the game as follows:
 
@@ -2350,7 +2446,7 @@ The remaining case is that $(\pw')^* = \pw' \land \tau^* = \tau'$, there is a $\
 \Dist_\env^{\text{newI},\text{newII}} \leq (q_2+1)\Adv_{\red_\text{KBIND}}^\text{KBIND}.
 \]
 
-Game 17 is essentially unchanged from the corresponding game in \Cref{sec:hash-pw-st}.
+Game 17 is essentially unchanged from the corresponding game in \Cref{app:hash-pw-st}.
 
 \medskip\noindent\emph{New Game III:}
 In the case where $(s^*,T^*) \neq (s,T) \land (\pw')^* = \pw' \neq \pw \land \tau^* = \tau'$, there is a record $\langle\pw',\star,sk\rangle$, and $\Decap(sk,c^*) = K'$, set $SK := \bot$. (This corresponds to step 2(c)(i) in \Cref{fig:oeke-sim-hash-pw}.)
@@ -2377,14 +2473,14 @@ Items (1) and (3) introduce the check on $P'$'s $\Htag$ query and then drop it, 
 This exactly matches step 2 of the simulator in \Cref{fig:oeke-sim-hash-pw}, so new Game III is identical to the ideal world. This completes the proof.
 
 \paragraph{The ``hash $\pw$ and $c$'' version.}
-If we define $\tau$ as $\Htag(\pw,c,K)$, then \Cref{clm:htag6} unconditionally holds, and the protocol can be proven secure under the UNPRE property of the KEM scheme (without the CBIND property).
+If we define $\tau$ as $\Htag(\pw,c,K)$, then \Cref{clm:htag6} unconditionally holds, and the protocol can be proven secure under the UNPRE and KBIND properties of the KEM scheme (without the CBIND property).
 
 \subsection{The ``Hash $pk$'' Version}
-\label{sec:hash-pk}
+\label{app:hash-pk}
 We now move on to the variant where $\pw$, but not $pk$, is further removed from $\Htag$ inputs, i.e., $\tau$ is defined as $\Htag(pk,K)$. This would best be compared with the protocol (and its security proof) in \Cref{sec:hash-pk-st}, where $\tau$ is defined as $\Htag(pk,s,T,K)$; as well as the protocol (and its security proof) in \Cref{app:hash-pw-pk}, where $\tau$ is defined as $\Htag(\pw,pk,K)$. Again there is a new scenario that requires additional care from the simulator, so we start from the changes to the simulator.
 
 \subsubsection{Changes to the Simulator}
-Similar to \Cref{sec:hash-pw}, once we remove $pk$ from $\Htag$, the adversary $\adv$ can force the two parties' session keys to be the same without performing a ``real'' attack. However, this time the two parties' passwords may or may not be the same (and $\adv$ needs to know both of them), and $\adv$ should forward both $c$ and $\tau'$ from $P'$ without modification. We show this scenario in \Cref{fig:attack-no-pw}.
+Similar to \Cref{app:hash-pw}, once we remove $pk$ from $\Htag$, the adversary $\adv$ can force the two parties' session keys to be the same without performing a ``real'' attack. However, this time the two parties' passwords may or may not be the same (and $\adv$ needs to know both of them), and $\adv$ should forward both $c$ and $\tau'$ from $P'$ without modification. We show this scenario in \Cref{fig:attack-no-pw}.
 
 \begin{figure}[H]
 \pseudocodeblock{
@@ -2480,7 +2576,7 @@ which  yields the claim.
 The remaining argument is essentially identical to that in the old Game 2.
 
 \medskip
-Games 3--16 are essentially unchanged from the corresponding games in \Cref{sec:hash-pw-st}.
+Games 3--16 are essentially unchanged from the corresponding games in \Cref{app:hash-pw-st}.
 
 \medskip\noindent\emph{New game I:} Now that $(\pw')^*$ --- the password guess extracted from $(s^*,T^*)$ --- is defined (in Game 15), we can finally add (part of) what's in step 2 of \Cref{fig:oeke-sim-hash-pk}. In this game we first add the aborting condition. Concretely, in the case where $(s^*,T^*) \neq (s,T) \land (\pw')^* = \pw' \land (c^*,\tau^*) = (c,\tau')$, there must be a $pk'$ defined on the $P'$ side. If there is more than one record $\langle\pw^*,pk',\star\rangle$, abort. If $(\pw')^*$ is undefined, treat it as if $(\pw')^* \neq \pw'$. (This corresponds to step 2(a) in the simulator in \Cref{fig:oeke-sim-hash-pk}.)
 
@@ -2528,7 +2624,7 @@ The remaining case is that $(\pw')^* = \pw' \land \tau^* = \tau'$, there is a un
 \Dist_\env^{\text{newII},\text{newIII}} \leq p_\text{guess}.
 \]
 
-Game 17 is essentially unchanged from the corresponding game in \Cref{sec:hash-pw-st}.
+Game 17 is essentially unchanged from the corresponding game in \Cref{app:hash-pw-st}.
 
 \medskip\noindent\emph{New Game IV:} In the case where $(s^*,T^*) \neq (s,T) \land (c^*,\tau^*) = (c,\allowbreak\tau')$, there is a unique record $\langle\pw^*,pk',\star\rangle$, and $\pw^* \neq \pw$, set $SK := \bot$. (This corresponds to step 2(c)(i) in \Cref{fig:oeke-sim-hash-pk}.)
 
@@ -2559,7 +2655,7 @@ This exactly matches step 2 of the simulator in \Cref{fig:oeke-sim-hash-pk}, so 
 If we define $\tau$ as $\Htag(pk,c,K)$, then \Cref{clm:htag7} unconditionally holds, and the protocol can be proven secure without the CBIND property of the KEM scheme (i.e., under the same assumptions as in the ``hash everything'' version).
 
 \subsection{The ``Hash Nothing But $K$'' Version}
-\label{sec:hash-nothing}
+\label{app:hash-nothing}
 
 The last variant we consider is that both $\pw$ and $pk$ (as well as $c$) are removed from $\Htag$ inputs, i.e., $\tau$ is defined as the ``bare'' $\Htag(K)$. There is an even more general ``attack'' against this version that the simulator must take into consideration, which we start from.
 
@@ -2581,9 +2677,9 @@ P(\pw) \< \< \adv \< \< P'(\pw') \\
 \label{fig:attack-no-pw-pk}
 \end{figure}
 
-In this ``attack'', the two parties' passwords may or may not be the same. Assuming $\adv$ knows both, it can decrypt $P$’s message to recover $X = g^x$, and then re-encrypt $X^2$ under $\pw'$; this causes $P'$ to output $SK' = \Hkey(g^{2xy})$ and send $(Y = g^y, \tau' = \Htag(g^{2xy}))$. Then $\adv$ sends $(Y^2,\tau')$ to $P$, causing $P$'s check to pass and $P$ will also output $\Hkey(g^{2xy})$. This is a generalization of both ``attacks'' in \Cref{sec:hash-pw} (where $\adv$ can change $pk$ but not $\pw$ during re-encryption) and \Cref{sec:hash-pk} (where $\adv$ can change $\pw$ but not $pk$ during re-encryption); here, since neither $\pw$ nor $pk$ is included in $\Htag$ inputs, $\adv$ can change \emph{both} of them.
+In this ``attack'', the two parties' passwords may or may not be the same. Assuming $\adv$ knows both, it can decrypt $P$’s message to recover $X = g^x$, and then re-encrypt $X^2$ under $\pw'$; this causes $P'$ to output $SK' = \Hkey(g^{2xy})$ and send $(Y = g^y, \tau' = \Htag(g^{2xy}))$. Then $\adv$ sends $(Y^2,\tau')$ to $P$, causing $P$'s check to pass and $P$ will also output $\Hkey(g^{2xy})$. This is a generalization of both ``attacks'' in \Cref{app:hash-pw} (where $\adv$ can change $pk$ but not $\pw$ during re-encryption) and \Cref{app:hash-pk} (where $\adv$ can change $\pw$ but not $pk$ during re-encryption); here, since neither $\pw$ nor $pk$ is included in $\Htag$ inputs, $\adv$ can change \emph{both} of them.
 
-The simulation strategy in this scenario is essentially a combination of the simulators in \Cref{sec:hash-pw,sec:hash-pk}. When $\adv$ decrypts $(s,T)$ under $\pw$, $\sim$ records $\langle\pw,pk,sk\rangle$ (although there might be a large number of such decryption attempts, and $\sim$ does not know which is the ``right'' one at this point). $\sim$ also computes $K'$ while simulating the $P'$ side. Later, when $\adv$ sends $(c^*,\tau')$, $\sim$ can tell if $\adv$ is performing the aforementioned attack by checking if there exists a record $\langle\pw,pk,sk\rangle$ that satisfies $\Decap(sk,c^*) = K'$ (using the specific example in \Cref{fig:attack-no-pw-pk}: When $\adv$ sends $(Y^2,\tau')$, $\sim$ finds the record $\langle\pw,X,x\rangle$ that satisfies $(Y^2)^x = K'$, where $K' = (X^2)^y$ was computed while encapsulating $X^2$ on $(s^*,T^*)$ from $\adv$). In this way $\sim$ can extract the password guess $\pw$ on the $P$ side.
+The simulation strategy in this scenario is essentially a combination of the simulators in \Cref{app:hash-pw,app:hash-pk}. When $\adv$ decrypts $(s,T)$ under $\pw$, $\sim$ records $\langle\pw,pk,sk\rangle$ (although there might be a large number of such decryption attempts, and $\sim$ does not know which is the ``right'' one at this point). $\sim$ also computes $K'$ while simulating the $P'$ side. Later, when $\adv$ sends $(c^*,\tau')$, $\sim$ can tell if $\adv$ is performing the aforementioned attack by checking if there exists a record $\langle\pw,pk,sk\rangle$ that satisfies $\Decap(sk,c^*) = K'$ (using the specific example in \Cref{fig:attack-no-pw-pk}: When $\adv$ sends $(Y^2,\tau')$, $\sim$ finds the record $\langle\pw,X,x\rangle$ that satisfies $(Y^2)^x = K'$, where $K' = (X^2)^y$ was computed while encapsulating $X^2$ on $(s^*,T^*)$ from $\adv$). In this way $\sim$ can extract the password guess $\pw$ on the $P$ side.
 
 We show the new simulator in \Cref{fig:oeke-sim-hash-nothing}. (Only the steps after receiving $(c^*,\tau^*)$ are included.)
 
@@ -2690,7 +2786,7 @@ The remaining case is that $(\pw')^* = \pw' \land \tau^* = \tau'$, there is a un
 \Dist_\env^{\text{newII},\text{newIII}} \leq (q_2+1)\Adv_{\red_\text{KBIND2}}^\text{KBIND}.
 \]
 
-Game 17 is essentially unchanged from the corresponding game in \Cref{sec:hash-pw-st}.
+Game 17 is essentially unchanged from the corresponding game in \Cref{app:hash-pw-st}.
 
 \medskip\noindent\emph{New Game IV:} In the case where $(s^*,T^*) \neq (s,T) \land \tau^* = \tau'$, if there is a unique record $\langle\pw^*,\star,sk^*\rangle$ such that $\Decap(sk^*,c^*) = K'$, but $\pw^* \neq \pw$, set $SK := \bot$. (This corresponds to step 2(c)(i) in \Cref{fig:oeke-sim-hash-nothing}.)
 
@@ -2718,7 +2814,7 @@ Items (1) and (4) introduce the check on $P'$'s $\Htag$ query and then drop it, 
 This exactly matches step 2 of the simulator in \Cref{fig:oeke-sim-hash-nothing}, so new Game IV is identical to the ideal world. This completes the proof.
 
 \section{Comparison with \cite{EC:JanRoyXu25}}
-We believe our security proof for the ``hashing nothing but $K$'' in \Cref{sec:hash-nothing} is fundamentally similar to the OEKE security proof in \cite{EC:JanRoyXu25}; however, the structure and presentation of their proof is drastically different from ours. Below we give a high-level comparison with \cite{EC:JanRoyXu25}, although a game-by-game comparison --- like what we did in \Cref{sec:games} --- seems impossible.
+We believe our security proof for the ``hashing nothing but $K$'' in \Cref{app:hash-nothing} is fundamentally similar to the OEKE security proof in \cite{EC:JanRoyXu25}; however, the structure and presentation of their proof is drastically different from ours. Below we give a high-level comparison with \cite{EC:JanRoyXu25}, although a game-by-game comparison --- like what we did in \Cref{sec:games} --- seems impossible.
 
 \paragraph{Modular structure of \cite{EC:JanRoyXu25}.}
 While our proof is a monolith, the proof in \cite{EC:JanRoyXu25} is split into three levels:
