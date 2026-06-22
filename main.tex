@@ -507,7 +507,7 @@ A KEM scheme has \emph{pseudorandom public keys (UNI-PK)} if for any PPT adversa
     }
     \]
 \end{definition}
-This property is the same as what's called UNI-PK in \cite[Definition~5]{EPRINT:ArrBarJar25}. It is needed because otherwise --- as an extreme example, suppose $\Gen$ is so biased that half of the elements in $\pkspace$ (call the set of them $U$) are unreachable by $\Gen$ --- the OEKE adversary $\adv$ can run an offline dictionary attack as follows: $\adv$ tries to decrypt $\mathsf{2F}^{\text{-}1}(\pw^*,(s,T))$ using various $\pw^*$ values, and if the result is in $U$ then $\adv$ knows that $\pw^*$ is not the real password $\pw$. In this way $\adv$ can rule out half of all candidate passwords in expectation.
+This property is the same as what's called UNI-PK in \cite[Definition~5]{EPRINT:ArrBarJar25}. It is needed because otherwise --- as an extreme example, suppose $\Gen$ is so biased that half of the elements in $\pkspace$ (call the set of them $U$) are unreachable by $\Gen$ --- the OEKE adversary\footnote{All attacks in this section work even for OEKE with IC, so we use ``OEKE adversary'' rather than ``OEKE-2F adversary''.} $\adv$ can run an offline dictionary attack as follows: $\adv$ tries to decrypt $\mathsf{2F}^{\text{-}1}(\pw^*,(s,T))$ using various $\pw^*$ values, and if the result is in $U$ then $\adv$ knows that $\pw^*$ is not the real password $\pw$. In this way $\adv$ can rule out half of all candidate passwords in expectation.
 
 \paragraph{One-wayness and a variant.}
 This property roughly says that given a public key and a ciphertext, an adversary cannot feasibly find the key encapsulated in the ciphertext.
@@ -784,7 +784,7 @@ All these three possibilities are covered by the third bullet under $\NewKey$,\f
 
 \section{UC Description of the OEKE-2F Protocol}
 \label{sec:protocol-uc}
-We give a formal, UC-compatible description of the OEKE-2F protocol in \Cref{fig:protocol-uc}. Note that UC PAKE considers the case that the two parties' passwords are different; therefore, we need to use different notations $\pw$ and $\pw'$ for the password of $P$ and $P'$, respectively.\footnote{\cite[Fig.4]{EPRINT:ArrBarJar25} uses $\pw$ for both parties' passwords, which is not the ``right'' protocol description in the UC setting.} We only describe the ``hash everything'' version of the protocol; in other variants one or more of $\pw$, $pk$, $(s,T)$ and $c$ can be removed from the inputs to $\Htag$. We omit $sid$ from RO inputs (e.g., we write ``$H_1(\pw,r)$'' rather than ``$H_1(sid,\pw,r)$''), although we stress that $sid$ must be included in order to achieve domain separation.
+We give a formal, UC-compatible description of the OEKE-2F protocol in \Cref{fig:protocol-uc}. Note that UC PAKE considers the case that the two parties' passwords are different; therefore, we need to use different notations $\pw$ and $\pw'$ for the password of $P$ and $P'$, respectively.\footnote{\cite[Fig.4]{EPRINT:ArrBarJar25} uses $\pw$ for both parties' passwords, which is not the ``right'' protocol description since the UC notion considers the scenario where the two parties' passwords are diffetent.} We only describe the ``hash everything'' version of the protocol; in other variants one or more of $\pw$, $pk$, $(s,T)$ and $c$ can be removed from the inputs to $\Htag$. We omit $sid$ from RO inputs (e.g., we write ``$H_1(\pw,r)$'' rather than ``$H_1(sid,\pw,r)$''), although we stress that $sid$ must be included in order to achieve domain separation.
 
 \begin{figure}[H]
 \begin{framed}
