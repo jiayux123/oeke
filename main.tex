@@ -294,7 +294,10 @@ But what exactly is the additional property? For the specific Diffie--Hellman KE
 
 The above is only a simple example of the tradeoff between ``what's included in the hash'' and ``what properties the KEM needs to satisfy''; we will see multiple other examples below: removing $c$ from the hash requires an additional KEM property, removing \emph{both} $pk$ and $(s,T)$ from the hash requires another additional KEM property, and so on.
 \begin{remark}
-The Diffie--Hellman example above is taken from \cite[Section~3.1]{EC:JanRoyXu25}; in particular, \cite[Remark~3.3]{EC:JanRoyXu25} points out that the issue can be fixed by including either $\pw$ or $pk$.
+The above assumes that the session key $SK$ is defined as $\Hkey(K)$. If $SK = \Hkey(\pw,K)$ and $\tau' = \Htag(K)$, then the attack results in $P$ outputting a session key uniformly random in $\adv$'s view (since $\adv$ does not know $\pw$). In general the attack can be thwarted as long as \emph{one of} $\Hkey$ and $\Htag$ has $\pw$ or $pk$ as input, although including the input in $\Htag$ is ``better'' since it allows for explicit authentication. For simplicity, below we always assume $SK = \Hkey(K)$, i.e., $\Hkey$ takes the ``bare'' input $K$, and only consider what's included in $\Htag$.
+\end{remark}
+\begin{remark}
+The Diffie--Hellman example in this section is taken from \cite[Section~3.1]{EC:JanRoyXu25}; in particular, \cite[Remark~3.3]{EC:JanRoyXu25} points out that the issue can be fixed by including either $\pw$ or $pk$.
 \end{remark}
 
 \subsection{Our Contributions}
@@ -415,7 +418,7 @@ The information above could be overwhelming, but the general takeaway is:
 \end{itemize}
 
 \subsection{How to Read This Paper}
-I certainly don't expect anyone to read through all 105 pages of this paper. (Well, perhaps the 2-page table of contents and the 3-page references shouldn't count, but even then it's still 100 pages.) As I said right before \Cref{sec:oeke-dh}, I have organized the paper in such a way that you should gain an intermediate level of understanding of the technical details after reading \Cref{sec:intro,sec:prelim}. In particular, \Cref{sec:kem-standard,sec:kem-additional} explain why certain KEM properties are needed in certain OEKE variants.
+I certainly don't expect anyone to read through all 107 pages of this paper. (Well, perhaps the 2-page table of contents and the 3.5-page references shouldn't count, but even then it's still over 100 pages.) As I said right before \Cref{sec:oeke-dh}, I have organized the paper in such a way that you should gain an intermediate level of understanding of the technical details after reading \Cref{sec:intro,sec:prelim}. In particular, \Cref{sec:kem-standard,sec:kem-additional} explain why certain KEM properties are needed in certain OEKE variants.
 
 Below I discuss who should read further:
 \begin{itemize}
