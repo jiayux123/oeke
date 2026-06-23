@@ -301,7 +301,7 @@ If we only care about OEKE-2F with Diffie--Hellman KEM, then we are basically do
   \emph{If we remove \textbf{both} $\pw$ and $pk$ from $\Htag$ inputs, then the underlying KEM scheme needs to satisfy an additional security property. This property is not needed as long as either $\pw$ or $pk$ is included in $\Htag$ inputs.}
 \end{displayquote}
 \end{framed}
-But what exactly is the additional property? For the specific Diffie--Hellman KEM scheme, this is clear: exclude 1. However, it is surprisingly hard to figure out the required KEM property \emph{in the general case}. Looking ahead, what's needed is \switchocg{name_int}{[click to reveal spoiler]}
+But what exactly is the additional property? For the specific Diffie--Hellman KEM scheme, this is clear: exclude 1. However, it is non-trivial to figure out the required KEM property \emph{in the general case}. Looking ahead, what's needed is \switchocg{name_int}{[click to reveal spoiler]}
 \begin{ocg}{name_ext}{name_int}{0}what we call ``unpredictability'', which we define in \Cref{def:unpre}\end{ocg}.
 
 The above is only a simple example of the tradeoff between ``what's included in the hash'' and ``what properties the KEM needs to satisfy''; we will see multiple other examples below: removing $c$ from the hash requires an additional KEM property, removing \emph{both} $pk$ and $(s,T)$ from the hash requires another additional KEM property, and so on.
@@ -343,7 +343,7 @@ We believe the security proof in \cite{EPRINT:ArrBarJar25} is mostly correct; in
 the proof in \cite{EPRINT:ArrBarJar25} fails to argue that changes the UC environment's views in the real world and the ideal world are indistinguishhable. We refer to Games 12 and 14 in \Cref{sec:games} for a detailed explanation.
 
 \paragraph{Improvement \#4: more detailed presentation of the security proof.}
-Perhaps our most significant improvement over \cite{EPRINT:ArrBarJar25} lies in the presentation of the security proof. The most complicated and subtle step of the proof is the last game (our Game 17 in \Cref{sec:games}, their games $\mathsf{G}_{18}$ and $\mathsf{G}_{19}$ in Section 5); the argument in \cite{EPRINT:ArrBarJar25} has a ``reduction within reduction'', i.e., the reduction simulates the game in a manner that is indistinguishable from, but not identical to, the real game, and a second ``inner'' reduction is needed to show this indistinguishability. This complicated proof technique makes their argument hard to follow, and is in fact unnecessary: we show how to make a cleaner argument by defining a separate, tailored KEM property, which is implied by standard properties and which we reduce to in the game.
+Perhaps our most significant improvement over \cite{EPRINT:ArrBarJar25} lies in the presentation of the security proof. The most complicated and subtle step of the proof is the last game (our Game 17 in \Cref{sec:games}, their games $\mathsf{G}_{18}$ and $\mathsf{G}_{19}$ in Section 5); the argument in \cite{EPRINT:ArrBarJar25} has a ``reduction within reduction'', i.e., the reduction simulates the game in a manner that is indistinguishable from, but not identical to, the real game, and a second ``inner'' reduction is needed to show this indistinguishability. This complicated proof strategy makes their argument hard to follow, and is in fact unnecessary: we show how to make a cleaner argument by defining a separate, tailored KEM property, which is implied by standard properties and which we reduce to in the game.
 
 We list some other improvements on the presentation below:
 \begin{itemize}
@@ -525,7 +525,7 @@ A KEM scheme is \emph{one-way (OW)} if for any PPT adversary $\adv$, the probabi
 We also need a stronger variant in which the adversary is additionally given one-time access to a \emph{plaintext-checking oracle}, which tells the adversary whether a ciphertext decapsulates to a certain key.
 \begin{definition}
 \label{def:ow-1pca}
-The definition of \emph{one-wayness under one plaintext-checking attack (OW-1PCA)} is the same as that of OW, except that the adversary $\adv$ is additionally given access to an oracle $\PC(sk,\star,\star)$, which on input $(c' \neq c, K')$ outputs 1 if $K' = \Decap(sk,c')$ and 0 otherwise. $\adv$ is allowed to query this oracle only once.
+The definition of \emph{one-wayness under one plaintext-checking attack (OW-1PCA)} is the same as that of OW, except that the adversary $\adv$ is additionally given access to an oracle $\PC_{sk}(\star,\star)$, which on input $(c' \neq c, K')$ outputs 1 if $K' = \Decap(sk,c')$ and 0 otherwise. $\adv$ is allowed to query this oracle only once.
 \end{definition}
 This property is the same as what's called OW-PCA in \cite[Definition~3]{EPRINT:ArrBarJar25}, except that in our notion (1) the adversary can query its plaintext-checking oracle only once, and (2) the adversary is prohibited from querying its plaintext-checking oracle on the challenge ciphertext. The plaintext-checking oracle was first studied in \cite{PKC:AbdBenPoi15} in the context of public-key encryption schemes.
 
@@ -557,7 +557,7 @@ A KEM scheme is \emph{anonymous (ANO)} if for any PPT adversary $\adv$, $\Pr[b^*
 Similar to OW-1PCA, we also need the 1PCA variant of ANO.
 \begin{definition}
 \label{def:ano-1pca}
-The definition of \emph{anonymity under one plaintext-checking attack (ANO-1PCA)} is the same as that of ANO, except that the adversary $\adv$ is additionally given access to an oracle $\PC(sk,\star,\star)$, which on input $(c' \neq c, K')$ outputs 1 if $K' = \Decap(sk,c')$ and 0 otherwise. $\adv$ is allowed to query this oracle only once.
+The definition of \emph{anonymity under one plaintext-checking attack (ANO-1PCA)} is the same as that of ANO, except that the adversary $\adv$ is additionally given access to an oracle $\PC_{sk}(\star,\star)$, which on input $(c' \neq c, K')$ outputs 1 if $K' = \Decap(sk,c')$ and 0 otherwise. $\adv$ is allowed to query this oracle only once.
 \end{definition}
 This property is the same as what's called ANO-PCA in \cite[Definition~4]{EPRINT:ArrBarJar25}, except that in our notion (1) the adversary can query its plaintext-checking oracle only once, and (2) the adversary is not given $pk'$ (whereas in their notion $pk'$ is generated and given to the adversary in both games).
 
@@ -784,7 +784,7 @@ All these three possibilities are covered by the third bullet under $\NewKey$,\f
 
 \section{UC Description of the OEKE-2F Protocol}
 \label{sec:protocol-uc}
-We give a formal, UC-compatible description of the OEKE-2F protocol in \Cref{fig:protocol-uc}. Note that UC PAKE considers the case that the two parties' passwords are different; therefore, we need to use different notations $\pw$ and $\pw'$ for the password of $P$ and $P'$, respectively.\footnote{\cite[Fig.4]{EPRINT:ArrBarJar25} uses $\pw$ for both parties' passwords, which is not the ``right'' protocol description since the UC notion considers the scenario where the two parties' passwords are diffetent.} We only describe the ``hash everything'' version of the protocol; in other variants one or more of $\pw$, $pk$, $(s,T)$ and $c$ can be removed from the inputs to $\Htag$. We omit $sid$ from RO inputs (e.g., we write ``$H_1(\pw,r)$'' rather than ``$H_1(sid,\pw,r)$''), although we stress that $sid$ must be included in order to achieve domain separation.
+We give a formal, UC-compatible description of the OEKE-2F protocol in \Cref{fig:protocol-uc}. Note that UC PAKE considers the case that the two parties' passwords are different; therefore, we need to use different notations $\pw$ and $\pw'$ for the password of $P$ and $P'$, respectively.\footnote{\cite[Fig.4]{EPRINT:ArrBarJar25} uses $\pw$ for both parties' passwords, which is not the ``right'' protocol description in the UC setting.} We only describe the ``hash everything'' version of the protocol; in other variants one or more of $\pw$, $pk$, $(s,T)$ and $c$ can be removed from the inputs to $\Htag$. We omit $sid$ from RO inputs (e.g., we write ``$H_1(\pw,r)$'' rather than ``$H_1(sid,\pw,r)$''), although we stress that $sid$ must be included in order to achieve domain separation.
 
 \begin{figure}[H]
 \begin{framed}
@@ -851,7 +851,7 @@ Suppose the UNI-PK, OW-1PCA and ANO-1PCA properties hold for the KEM scheme. The
 \end{theorem}
 The rest of this section is dedicated to the proof of \Cref{thm:basic}. In \Cref{sec:simulator} we describe the simulator, and in \Cref{sec:games} we argue why the simulator generates a view indistinguishable from the real-world view.
 
-As standard in UC proofs, w.l.o.g. we only construct a simulator $\sim$ for the ``dummy'' adversary $\adv$ that merely forwards all messages between the environment $\env$ and protocol parties \cite[Claim~11]{FOCS:Canetti01}. We omit $sid$ in protocol messages and honest parties' outputs (e.g., we say ``$P$ outputs $SK$'' rather than ``$P$ outputs $(sid,SK)$'').
+As standard in UC proofs, w.l.o.g. we only construct a simulator $\sim$ for the ``dummy'' adversary $\adv$ that merely forwards all messages between the environment $\env$ and protocol parties \cite[Claim~11]{FOCS:Canetti01}. We omit $sid$ in protocol messages and honest parties' outputs (e.g., we write ``$P$ outputs $SK$'' rather than ``$P$ outputs $(sid,SK)$'').
 
 \subsection{The Simulator}
 \label{sec:simulator}
@@ -859,11 +859,11 @@ As standard in UC proofs, w.l.o.g. we only construct a simulator $\sim$ for the 
 \label{sec:sim-intuition}
 A large portion of the simulator is routine; below we explain the idea behind the non-trivial parts.
 \paragraph{Simulating honest $P$-to-$P'$ message.}
-When $P$'s session begins, $\sim$ must simulate its message $(s,T)$ to $P'$. This can be easily done: just sample $(s,T)$ at random. However, every time $\adv$ queries $H_2(\pw^*,T)$ (let the result be $t^*$), $\sim$ needs to generate a KEM key pair $(pk^*,sk^*)$ for later use (see the ``Extracting password guess from malicious $P'$'' paragraph below) and make sure that $(pk^*,sk^*)$ is consistent with the RO queries. This can be done as follows: $\sim$ computes
+When $P$'s session begins, $\sim$ must simulate its message $(s,T)$ to $P'$. This can be easily done: just sample $(s,T)$ at random. However, every time $\adv$ queries $H_2(\pw^*,T)$ (let the result be $t^*$), $\sim$ needs to generate a KEM key pair $(pk^*,sk^*)$ for later use (see the ``extracting password guess from malicious $P'$'' paragraph below) and make sure that $(pk^*,sk^*)$ is consistent with the RO queries. This can be done as follows: $\sim$ computes
 \[
 r^* := s \oplus t^*, \quad R^* := T/pk^*,
 \]
-and programs $H_1(\pw^*,r^*) := R^*$. This also allows $\sim$ to store the association between $\pw^*$ and $(pk^*,sk^*)$. (Note that $(pk^*,sk^*)$ needs to be freshly generated every time $\adv$ queries $H_2(\star,T)$; otherwise $R^*$ never changes and $\adv$ can easily find collisions in $H_1$.)
+and programs $H_1(\pw^*,r^*) := R^*$. This also allows $\sim$ to store the association between $\pw^*$ and $(pk^*,sk^*)$. (Note that $(pk^*,sk^*)$ need to be freshly generated every time $\adv$ queries $H_2(\star,T)$; otherwise $R^*$ never changes and $\adv$ can easily find collisions in $H_1$.)
 \paragraph{Extracting password guess from malicious $P$.}
 When the adversary $\adv$ sends a message $(s^*,T^*)$ to $P'$, if it is different from the honest message $(s,T)$, the simulator $\sim$ must extract a password guess (if any) and send a corresponding $\TestPwd$ command to $\Fpake$. There are two types of attack, which need to be addressed separately:
 \begin{enumerate}
@@ -874,17 +874,17 @@ When the adversary $\adv$ sends a message $(s^*,T^*)$ to $P'$, if it is differen
       \end{align*}
       and sends $(s^*,T^*)$ to $P'$. \\
       It takes a while to realize how to extract $\pw^*$ from $(s^*,T^*)$. First, $\sim$ should scan all $H_2(\star,T^*)$ queries, which yields multiple $\pw^*$ values; $\sim$ must decide which one is the ``actual'' password guess. This can be done via the following. For every $H_2(\pw^*,T^*)$ query (let the result be $t^*$), $\sim$ computes the corresponding $r^* := s^* \oplus t^*$, and checks if (and when) $H_1(\pw^*,r^*)$ was queried. \emph{With overwhelming probability, there is at most one such $H_1$ query made before the $H_2(\pw^*,T^*)$ query}, from which $\sim$ can extract the ``actual'' password guess $\pw^*$.
-  \item \emph{Related key attack:} This attack works only after $\adv$ receive an honest $(s,T)$ pair from $P$. $\adv$ skips generating $pk^*$ or sampling $r^*$; instead, $\adv$ picks any $\Delta \in \group$, computes $T^* := T \cdot \Delta$ and
+  \item \emph{Related key attack:} This attack works only after $\adv$ receives an honest $(s,T)$ pair from $P$. $\adv$ skips generating $pk^*$ or sampling $r^*$; instead, $\adv$ picks any $\Delta \in \group$, computes $T^* := T \cdot \Delta$ and
       \begin{align*}
       t^* &:= H_2(\pw^*,T), &(t^*)' &:= H_2(\pw^*,T^*), \\
-      \delta &:= t^* \oplus (t')^*, &s^* &:= s \oplus \delta,
+      \delta &:= t^* \oplus (t^*)', &s^* &:= s \oplus \delta,
       \end{align*}
       and sends $(s^*,T^*)$ to $P'$. \\
       Let us first explain what $\adv$ is trying to achieve here. The same randomness $r$ yields two valid messages, $(s,T)$ and $(s^*,T^*)$, such that
       \[
       s \oplus s^* = H_2(\pw,T) \oplus H_2(\pw,T^*),
       \]
-      which allows $\adv$ to pick $T^*$ and ``reverse engineer'' the corresponding $s^*$ if it guesses $\pw$ correctly. $(s^*,T^*)$ implicitly encrypts $pk^* = T^*/H_1(\pw,r)$, which $\adv$ can compute as $pk \cdot (T^*/T)$. \\
+      which allows $\adv$ to pick $T^*$ and ``reverse engineer'' the corresponding $s^*$ if its password guess $\pw^* = \pw$. $(s^*,T^*)$ implicitly encrypts $pk^* = T^*/\allowbreak H_1(\pw,r)$, which $\adv$ can compute as $pk \cdot (T^*/T)$. \\
       To extract $\pw^*$ from $(s^*,T^*)$, $\sim$ should scan all $H_2(\star,T)$ and $H_2(\star,T^*)$ queries (which yield multiple candidate $\pw^*$ values) and check which ones satisfy
       \[
       H_2(\pw^*,T) \oplus H_2(\pw^*,T^*) = s \oplus s^*.
@@ -896,17 +896,18 @@ When the adversary $\adv$ sends a message $(s^*,T^*)$ to $P'$, if it is differen
 The term ``anchor query'' was coined in \cite[Section~3.3]{CCS:McQRosRoy20}, where it refers to the special $H_1(\pw^*,r^*)$ query made before the $H_2(\pw^*,T^*)$ query in case (1) above; case (2) is completely missing in \cite{CCS:McQRosRoy20}. This error is fixed in \cite{EC:JanRoyXu25}, which uses ``anchor query'' to refer to something else: the $H_2(\pw^*,T^*)$ query in either case (1) or (2) (see \cite[Section~4.3.1]{EC:JanRoyXu25} and \cite[Figure~11,~step~4]{EC:JanRoyXu25}). This term is not used in \cite{EPRINT:ArrBarJar25}.
 
 \paragraph{Extracting password guess from malicious $P'$.}
-When the adversary $\adv$ sends a message $(c^*,\tau^*)$ to $P$, if $\adv$ is not passive (i.e., it is not the case that $(s^*,T^*) = (s,T)$ \emph{and} $(c^*,\tau^*) = (c,\tau)$), the simulator $\sim$ must extract a password guess (if any) and send a corresponding $\TestPwd$ command to $\Fpake$.
+When the adversary $\adv$ sends a message $(c^*,\tau^*)$ to $P$, if $\adv$ is not passive (i.e., it is not the case that $(s^*,T^*) = (s,T)$ \emph{and} $(c^*,\tau^*) = (c,\tau')$), the simulator $\sim$ must extract a password guess (if any) and send a corresponding $\TestPwd$ command to $\Fpake$.
 
-$\sim$ should find the $\Htag$ query resulting in $\tau^*$, which contains $(\pw^*,pk^*,K^*)$. However, $\pw^*$ constitutes a password guess only if it is consistent with $pk^*$ and $K^*$, i.e., $K^* = \Decap(sk^*,c^*)$ for $sk^*$ corresponding to $pk^*$. $\sim$ can check this condition because it has stored the correspondence between $\pw^*$ and $(pk^*,sk^*)$ (see the ``Simulating honest $P$-to-$P'$ message'' paragraph above), and can use $sk^*$ to check if the equation holds. (This extraction strategy does not work anymore if \emph{either} $\pw^*$ \emph{or} $pk^*$ is not included in $\Htag$. In later sections we will explain how to simulate other versions of the protocol.)
+$\sim$ should find the $\Htag$ query resulting in $\tau^*$, which contains $(\pw^*,pk^*,K^*)$. However, $\pw^*$ constitutes a password guess only if it is consistent with $pk^*$ and $K^*$, i.e., $K^* = \Decap(sk^*,c^*)$ for $sk^*$ corresponding to $pk^*$. $\sim$ can check this condition because it has stored the correspondence between $\pw^*$ and $(pk^*,sk^*)$ (see the ``simulating honest $P$-to-$P'$ message'' paragraph above), and can use $sk^*$ to check if the equation holds. (This extraction strategy does not work anymore if \emph{either} $\pw^*$ \emph{or} $pk^*$ is not included in $\Htag$. In later sections we will explain how to simulate other versions of the protocol.)
 
 \subsubsection{Formal Description of the Simulator}
 \label{sec:sim}
 
 Below we use $\func$ as a shorthand for $\Fpake$. Please see \Cref{fig:oeke-sim1,fig:oeke-sim2} for the simulator $\sim$.
 
-As notational conventions, we write ``$\sim$ sends message $m$ from $P$ to $P'$'' as a shorthand for ``$\sim$ sends $m$ to $\env$ that pretends to be a real-world protocol message from $P$ to $P'$, intercepted by $\adv$ which in turn forwards it to $\env$''. Similarly, we write ``$\sim$ receives message $m$ from $\adv$ to $P$'' for ``$\env$ instructs $\adv$ to send $m$ to $P$, and in the ideal world it is $\sim$ who receives $m$ from $\env$''.
+As notational conventions, we write ``$\sim$ sends message $m$ from $P$ to $P'$'' as a shorthand for ``$\sim$ sends $m$ to $\env$ that pretends to be a real-world protocol message from $P$ to $P'$, intercepted by $\adv$ which in turn forwards it to $\env$''. Similarly, we write ``$\sim$ receives message $m$ from $\adv$ to $P$'' for ``$\env$ instructs $\adv$ to send $m$ to $P$, and in the ideal world $\adv$ does not exist and it is $\sim$ who receives $m$ from $\env$''.
 
+Our simulator is, by and large, the same as the one in \cite[Fig.5~and~6]{EPRINT:ArrBarJar25}, although we completely rewrite it to improve readability. For those who would like to go over both our simulator and the one in \cite{EPRINT:ArrBarJar25}, we include a comparison in \Cref{app:comparison}.
 \begin{figure}[H]
 \begin{framed}
 \begin{small}
@@ -921,7 +922,7 @@ On $(\NewSession, sid, P, P', \text{``initiator''})$ from $\func$, sample $s \ge
 \medskip
 On $(\NewSession, sid, P', P, \text{``respondent''})$ from $\func$ and $(s^*,T^*)$ from $\adv$ to $P'$, simulate $P'$'s output and the $P'$-to-$P$ message as follows:
 \begin{enumerate}
-  \item If $(s^*,T^*) = (s,T)$, send $(\NewKey, sid, P', 0^n)$ to $\func$; generate $(pk',\star) \gets \Gen$, compute $(c,\star) \gets \Encap(pk')$, sample $\tau' \gets \{0,1\}^{2n}$, and send $(c',\tau')$ from $P'$ to $P$.
+  \item If $(s^*,T^*) = (s,T)$, send $(\NewKey, sid, P', 0^n)$ to $\func$; generate $(pk',\star) \gets \Gen$, compute $(c,\star) \gets \Encap(pk')$, sample $\tau' \gets \{0,1\}^{2n}$, and send $(c,\tau')$ from $P'$ to $P$.
   \item Otherwise find $\adv$'s $H_2((\pw')^*,T^*)$ query (let the result be $t^*$) that satisfies \emph{either} of the following:
       \begin{itemize}
         \item \emph{Type (1):} $\adv$ queried $H_1((\pw')^*,r^*)$ \emph{before} the $H_2((\pw')^*,T^*)$ query, where $r^* = s^* \oplus t^*$.
@@ -961,16 +962,16 @@ On $(\NewSession, sid, P', P, \text{``respondent''})$ from $\func$ and $(s^*,T^*
 \medskip
 On $(c^*,\tau^*)$ from $\func$, simulate $P$'s output as follows:
 \begin{enumerate}
-  \item If $(s^*,T^*) = (s,T) \land (c^*,\tau^*) = (c,\tau')$, send $(\NewKey, sid, P', 0^n)$ to $\func$. \quad \textcolor[gray]{0.5}{// $\adv$ is passive}
+  \item If $(s^*,T^*) = (s,T) \land (c^*,\tau^*) = (c,\tau')$, send $(\NewKey, sid, P, 0^n)$ to $\func$. \quad \textcolor[gray]{0.5}{// $\adv$ is passive}
   \item Otherwise find $\adv$'s $\Htag(\pw^*,pk^*,s,T,c^*,K^*)$ query resulting in $\tau^*$.
       \begin{enumerate}
-        \item If there is no such query or more than one such query, send $(\TestPwd, sid, P', \bot)$ and then $(\NewKey, sid, P', 0^n)$ to $\func$.
-        \item If there is exactly one such query, retrieve record $\langle\pw^*,pk^*,sk^*\rangle$. If there is no such record, send $(\TestPwd, sid, P', \bot)$ and then $(\NewKey, sid, P', 0^n)$ to $\func$.
-        \item Compute $K := \Decap(sk^*,c^*)$. If $K^* \neq K$, send $(\TestPwd, sid, P', \bot)$ and then $(\NewKey, sid, P', 0^n)$ to $\func$.
-        \item Send $(\TestPwd, sid, P', \pw^*)$ to $\func$.
+        \item If there is no such query or more than one such query, send $(\TestPwd, sid, P, \bot)$ and then $(\NewKey, sid, P, 0^n)$ to $\func$.
+        \item If there is exactly one such query, retrieve record $\langle\pw^*,pk^*,sk^*\rangle$. If there is no such record, send $(\TestPwd, sid, P, \bot)$ and then $(\NewKey, sid, P, 0^n)$ to $\func$.
+        \item Compute $K := \Decap(sk^*,c^*)$. If $K^* \neq K$, send $(\TestPwd, sid, P, \bot)$ and then $(\NewKey, sid, P', 0^n)$ to $\func$.
+        \item Send $(\TestPwd, sid, P, \pw^*)$ to $\func$.
             \begin{enumerate}
-              \item If $\func$ replies with ``wrong guess'', send $(\NewKey, sid, P', 0^n)$ to $\func$.
-              \item If $\func$ replies with ``correct guess'', compute $SK := \Hkey(K)$ and send $(\NewKey, sid, P', SK)$ to $\func$.
+              \item If $\func$ replies with ``wrong guess'', send $(\NewKey, sid, P, 0^n)$ to $\func$.
+              \item If $\func$ replies with ``correct guess'', compute $SK := \Hkey(K)$ and send $(\NewKey, sid, P, SK)$ to $\func$.
             \end{enumerate}
       \end{enumerate}
 \end{enumerate}
@@ -989,8 +990,6 @@ If $H_1(\pw^*,r^*)$ has already been defined and it is not $R^*$, abort. Otherwi
 \caption{UC simulator $\sim$ for OEKE (part 2)}
 \label{fig:oeke-sim2}
 \end{figure}
-
-Our simulator is, by and large, the same as the one in \cite[Fig.5~and~6]{EPRINT:ArrBarJar25}, although we completely rewrite it to improve readability. For those who would like to go over both our simulator and the one in \cite{EPRINT:ArrBarJar25}, we include a comparison in \Cref{app:comparison}.
 
 \subsection{Game-Hop Argument}
 \label{sec:games}
@@ -1048,7 +1047,7 @@ K := \Decap(sk,c^*) \< \< \< \< \\
   \item If $\tau^* = \tau'$ (i.e., $\adv$ is passive), set $SK := SK'$.
   \item If $\tau^* \neq \tau'$, set $SK := \bot$.
 \end{itemize}
-By correctness of the protocol (see \Cref{sec:protocol-uc}), in Game 0 $\tau = \tau'$ except with probability $\varepsilon_\text{correctness}$. This means that except with probability $\varepsilon_\text{correctness}$, $P$'s check $\tau^* \stackrel{?}{=} \tau$ in Game 0 is equivalent to $P$'s check $\tau^* \stackrel{?}{=} \tau'$ in Game 1. If the check passes then both games set $SK := \Hkey(K)$, otherwise both games set $SK := \bot$. We have
+By correctness of the KEM scheme (cf. \Cref{sec:protocol-uc}), in Game 0 $K = K'$, and thus $\tau = \tau'$, except with probability $\varepsilon_\text{correctness}$. This means that except with probability $\varepsilon_\text{correctness}$, $P$'s check $\tau^* \stackrel{?}{=} \tau$ in Game 0 is equivalent to $P$'s check $\tau^* \stackrel{?}{=} \tau'$ in Game 1. If the check passes then both games set $SK := \Hkey(K)$, otherwise both games set $SK := \bot$. We have
 \[
 \Dist_\env^{0,1} = \varepsilon_\text{correctness}.
 \]
@@ -1090,42 +1089,42 @@ critically relies on $\pw,s,T,c$ being included in $\Htag$ inputs.}}}
 
 \medskip\noindent\emph{Game 3:} In the case where $\pw = \pw' \land (s^*,T^*) = (s,T)$, sample $SK',\tau' \gets \{0,1\}^n$. ($c$ is still computed as before.)
 
-Let $\Query_1$ be the event that $\adv$ queries \emph{either} $\Hkey(K')$ \emph{or} $\Htag(\pw,pk,s,T,c,\allowbreak K')$. Clearly Game 2 and Game 3 are identical unless $\Query_1$ happens. We upper-bound $\Pr[\Query_1]$ via a reduction $\red_\text{OW-1PCA1}$ to the OW-1PCA property of the KEM scheme:
+In Game 2 $P'$ computes $SK' := \Hkey(K')$ and $\tau' := \Htag(\pw',pk',s^*,T^*,c,K') \allowbreak = \Htag(\pw,pk,s,T,c,K')$. Let $\Query_1$ be the event that $\adv$ queries \emph{either} $\Hkey(K')$ \emph{or} $\Htag(\pw,pk,s,T,c,K')$; clearly Game 2 and Game 3 are identical unless $\Query_1$ happens. We upper-bound $\Pr[\Query_1]$ via a reduction $\red_\text{OW-1PCA}$ to the OW-1PCA property of the KEM scheme:
 
-\medskip\noindent\textbf{\underline{Reduction $\red_\mathrm{OW\text{-}1PCA1}$}:} \quad \textcolor[gray]{0.5}{// \fbox{Boxed text} indicates the single $\PC$ oracle query; same for reductions below}
+\medskip\noindent\textbf{\underline{Reduction $\red_\mathrm{OW\text{-}1PCA}$}:} \quad \textcolor[gray]{0.5}{// \fbox{Boxed text} indicates the single $\PC$ oracle query; same for reductions below}
 
 \medskip\noindent
 Sample $i \gets [\qkey+\qtag]$ as a guess that $\adv$'s $i$-th $\Hkey$ or $\Htag$ query triggers $\Query_1$. \\
 On input $(pk,c)$,
 \begin{enumerate}
-  \item Invoke $\env$. On $(\NewSession, sid, P, P', \pw, \text{``initiator''})$ from $\env$, run $P$'s algorithm to compute $(s,T)$, except that $\red_\text{ANO-1PCA}$ uses its input $pk$ instead of $(pk,\star) \gets \Gen$. (Note that computing $(s,T)$ does not require knowing $sk$.) Send $(s,T)$ to $\adv$.
-  \item On $(\NewSession, sid, P', P, \pw', \text{``respondent''})$ from $\env$ and $(s^*,T^*)$ from $\adv$, if $\neg(\pw = \pw' \land (s^*,T^*) = (s,T))$, abort. Otherwise sample $SK' \gets \{0,1\}^n, \tau' \gets \{0,1\}^{2n}$, output $SK'$ to $\env$, and send $(c,\tau')$ to $\adv$. ($c$ is part of $\red_\text{OW-1PCA1}$'s input.)
+  \item Invoke $\env$. On $(\NewSession, sid, P, P', \pw, \text{``initiator''})$ from $\env$, run $P$'s algorithm to compute $(s,T)$, except that $\red_\text{OW-1PCA}$ uses its input $pk$ instead of $(pk,\star) \gets \Gen$. (Note that computing $(s,T)$ does not require knowing $sk$.) Send $(s,T)$ to $\adv$.
+  \item On $(\NewSession, sid, P', P, \pw', \text{``respondent''})$ from $\env$ and $(s^*,T^*)$ from $\adv$, if $\neg(\pw = \pw' \land (s^*,T^*) = (s,T))$, abort. Otherwise sample $SK' \gets \{0,1\}^n, \tau' \gets \{0,1\}^{2n}$, output $SK'$ to $\env$, and send $(c,\tau')$ to $\adv$. ($c$ is part of $\red_\text{OW-1PCA}$'s input.)
   \item On $(c^*,\tau^*)$ from $\adv$,
       \begin{enumerate}
         \item If $c^* = c$, do what's described in Game 1.
         \item If $c^* \neq c$, find $\adv$'s $\Htag(\pw,pk,s,T,c^*,K^*)$ query resulting in $\tau^*$. If there is none or more than one, output $SK := \bot$ to $\env$. (This matches Game 2.)
-        \item \fbox{Query $\PC(sk,c^*,K^*)$}. \quad // \textcolor[gray]{0.5}{This is a valid query since we do this step only if $c^* \neq c$} \\
+        \item \fbox{Query $\PC_{sk}(c^*,K^*)$}. \quad // \textcolor[gray]{0.5}{This is a valid query since we do this step only if $c^* \neq c$} \\
             If the result is 1, output $SK := \Hkey(K^*)$ to $\env$. \\
             If the result is 0, output $SK := \bot$ to $\env$.
       \end{enumerate}
   \item On $\adv$'s $i$-th $\Hkey$ or $\Htag$ query, if it is in the form of $\Hkey((K')^*)$ or $\Htag(\pw,pk,s,T,c,(K')^*)$ for some $(K')^*$, output $(K')^*$; otherwise abort.
 \end{enumerate}
 
-Assuming $\Query_1$ happens, the only difference between Game 2/3 and $\red_\text{OW-1PCA1}$'s simulation (until $\Query_1$ happens) is that $\red_\text{OW-1PCA1}$ uses its input $pk$ on the $P$ side, and then uses its input $c \gets \Encap(pk)$ on the $P'$ side. Since we assume $\pw = \pw' \land (s^*,T^*) = (s,T)$, in Game 2/3 $P'$'s algorithm will recover $pk' = pk$, so there $c$ is also computed as $\Encap(pk)$ and thus $\red_\text{OW-1PCA1}$ simulates Game 2/3 perfectly. Furthermore, if $\red_\text{OW-1PCA1}$'s guess is correct then it wins the OW-1PCA game. We have
+Assuming $\Query_1$ happens, the only difference between Game 2/3 and $\red_\text{OW-1PCA}$'s simulation (until $\Query_1$ happens) is that $\red_\text{OW-1PCA}$ uses its input $pk$ on the $P$ side, and then uses its input $c \gets \Encap(pk)$ on the $P'$ side. Since we assume $\pw = \pw' \land (s^*,T^*) = (s,T)$, in Game 2/3 $P'$'s algorithm will recover $pk' = pk$, so there $c$ is also computed as $\Encap(pk)$ and thus $\red_\text{OW-1PCA}$ simulates Game 2/3 perfectly. Furthermore, if $\red_\text{OW-1PCA}$'s guess is correct then it wins the OW-1PCA game. We have
 \[
-\Dist_\env^{2,3} \leq \Pr[\Query_1] \leq (\qkey+\qtag)\Adv_{\red_\text{OW-1PCA1}}^\text{OW-1PCA}.
+\Dist_\env^{2,3} \leq \Pr[\Query_1] \leq (\qkey+\qtag)\Adv_{\red_\text{OW-1PCA}}^\text{OW-1PCA}.
 \]
 
 \emph{{\color{red}This game corresponds to game $\mathsf{G}_8$ in \cite{EPRINT:ArrBarJar25}. However, there are two differences:
 \begin{enumerate}
-  \item \cite{EPRINT:ArrBarJar25} reduces to OW-PCA (where the KEM adversary can query its plaintext-checking oracle polynomially many times), rather than OW-1PCA. In this case, step 4 of the reduction above can query $\PC(sk,c,(K')^*)$ $\qkey+\qtag$ times to check which of $\adv$'s queries (if any) triggers $\Query_1$, hence avoiding the $\qkey+\qtag$ loss in its advantage.
-  \item The above also means that the plaintext-checking oracle in their OW-PCA game has to allow for $\PC(sk,c,\star)$ queries, whereas our reduction to OW-1PCA never makes a query in this form and thus the plaintext-checking oracle in our OW-1PCA game can disallow such queries.
+  \item \cite{EPRINT:ArrBarJar25} reduces to OW-PCA (where the KEM adversary can query its plaintext-checking oracle polynomially many times), rather than OW-1PCA. In this case, step 4 of the reduction above can query $\PC_{sk}(c,(K')^*)$ $\qkey+\qtag$ times to check which of $\adv$'s queries (if any) triggers $\Query_1$, hence avoiding the $\qkey+\qtag$ loss in its advantage.
+  \item The above also means that the plaintext-checking oracle in their OW-PCA game has to allow for $\PC_{sk}(c,\star)$ queries, whereas our reduction to OW-1PCA never makes a query in this form and thus the plaintext-checking oracle in our OW-1PCA game can disallow such queries.
 \end{enumerate}
 }}
 
 \medskip\noindent\emph{Game 4:} Again in the case where $\pw = \pw' \land (s^*,T^*) = (s,T)$, generate $P'$'s KEM public key $(pk',\star) \gets \Gen$ and compute $(c,\star) \gets \Encap(pk')$. (Note that $K'$ is not used anywhere since Game 3 --- in particular, $P'$ does not use $K'$ to compute $SK'$ or $\tau'$ anymore --- so we do not need to explicitly mention it.)
 
-The difference between Game 3 and Game 4 is that in Game 3 both $P$ and $P'$ use the same $pk$, whereas in Game 4 $P$ uses $pk$ and $P'$ uses an independent $pk'$. We construct a reduction $\red_\text{ANO-1PCA}$ to the ANO-1PCA property of the KEM scheme. This reduction, in fact, is identical to the reduction $\red_\text{OW-1PCA1}$ to the OW-1PCA property in Game 3 except the last step; for completeness, we still present the full reduction and highlight the difference in {\color{blue}blue}:
+The difference between Game 3 and Game 4 is that in Game 3 both $P$ and $P'$ use the same $pk$, whereas in Game 4 $P$ uses $pk$ and $P'$ uses an independent $pk'$. We construct a reduction $\red_\text{ANO-1PCA}$ to the ANO-1PCA property of the KEM scheme. This reduction, in fact, is identical to the reduction $\red_\text{OW-1PCA}$ to the OW-1PCA property in Game 3 except the last step; for completeness, we still present the full reduction and highlight the difference in {\color{blue}blue}:
 
 \medskip\noindent\textbf{\underline{Reduction $\red_\mathrm{ANO\text{-}1PCA}$}:}
 
@@ -1138,7 +1137,7 @@ On input $(pk,c)$,
       \begin{enumerate}
         \item If $c^* = c$, do what's described in Game 1.
         \item If $c^* \neq c$, find $\adv$'s $\Htag(\pw,pk,s,T,c^*,K^*)$ query resulting in $\tau^*$. If there is none or more than one, output $SK := \bot$ to $\env$.
-        \item \fbox{Query $\PC(sk,c^*,K^*)$}. \quad // \textcolor[gray]{0.5}{This is a valid query since we do this step only if $c^* \neq c$} \\
+        \item \fbox{Query $\PC_{sk}(c^*,K^*)$}. \quad // \textcolor[gray]{0.5}{This is a valid query since we do this step only if $c^* \neq c$} \\
             If the result is 1, output $SK := \Hkey(K^*)$ to $\env$. \\
             If the result is 0, output $SK := \bot$ to $\env$.
       \end{enumerate}
@@ -1168,7 +1167,7 @@ If $H_1(\pw^*,r^*)$ has already been defined and it is not $R^*$, abort. Otherwi
 
 Furthermore, in the case where $\pw \neq \pw' \land (s^*,T^*) = (s,T)$, when $P'$ queries $H_2(\pw',T)$, use the method described above to generate $pk',r',R'$ and program $H_1$. However, no record is stored in this case. (Note that the case where $\pw = \pw' \land (s^*,T^*) = (s,T)$ has already been addressed in Game 3 and Game 4, and $P'$ does not need to make an $H_2$ query there.)\footnote{A slightly confusing case is when $s^* \neq s \land T^* = T$, causing $P'$ to query $t' := H_2(\pw',T)$; and $\adv$ also queries $H_2(\pw',T)$. In this case $P'$'s $r' = s^* \oplus t'$ and $\adv$'s $r^* = s \oplus t'$ are different, causing $P'$'s values $R',pk'$ and $\adv$'s values $R^*,pk^*$ to be independent of each other. Therefore, the game should run $P'$'s algorithm as usual when $P'$ queries $H_2(\pw',T)$ (which generates $R',pk'$), and use the new method described in Game 5 when $\adv$ makes the same query (which generates $R^*,pk^*$).}
 
-In the analysis below, we combine $\adv$'s $H_2(\pw^*,T)$ queries and $P'$'s (possible) $H_2(\pw',T)$ query, and call all of them ``$H_2(\pw^*,T)$''. We first upper-bound the aborting probability. For every fresh $H_2(\pw^*,T)$ query, an independent $t^* \gets \{0,1\}^{3n}$ value is sampled, which results in an independent $r^* \gets \{0,1\}^{3n}$ (regardless of the distribution of $s$). As such, there are up to $q_2+1$ independent and uniformly random $r^*$ values. The probability that one of $\adv$'s $q_1$ $H_1(\pw^*,r^*)$ queries happens \emph{before} the $H_2(\pw^*,T)$ query (when $r^*$ is generated) is upper-bounded by $q_1(q_2+1)/2^{3n}$.\footnote{$P$ also makes an $H_1$ query, but it is on $(\pw,r)$ where $\pw \neq \pw^*$ per the condition of this game (so this $H_1$ query is impossible to trigger an abortion).}
+In the analysis below, we combine $\adv$'s $H_2(\pw^*,T)$ queries and $P'$'s (possible) $H_2(\pw',T)$ query, and call all of them ``$H_2(\pw^*,T)$''. We first upper-bound the aborting probability. For every fresh $H_2(\pw^*,T)$ query, an independent $t^* \gets \{0,1\}^{3n}$ value is sampled, which results in an independent $r^* \gets \{0,1\}^{3n}$ (regardless of the distribution of $s$). As such, there are up to $q_2+1$ independent and uniformly random $r^*$ values. The probability that one of $\adv$'s $q_1$ $H_1(\pw^*,r^*)$ queries happens \emph{before} the $H_2(\pw^*,T)$ query (when $r^*$ is generated) is upper-bounded by $q_1(q_2+1)/2^{3n}$.\footnote{$P$ also makes an $H_1$ query, but it is on $(\pw,r)$ where $\pw \neq \pw^*$ per the condition of this game (so it is impossible for this $H_1$ query to trigger an abortion).}
 
 Now suppose the aborting condition does not happen. The difference between Game 4 and Game 5 is that Game 4 samples $H_1(\pw^*,r^*)$ uniformly at random, whereas Game 5 defines it as $T/pk^*$. Note that
 \begin{itemize}
@@ -1195,7 +1194,7 @@ A standard hybrid argument shows that (assuming the aborting condition does not 
 
 \medskip\noindent\emph{Game 6:} In the case where $\pw \neq \pw' \land (s^*,T^*) = (s,T)$, sample $SK',\tau' \gets \{0,1\}^n$. ($c$ is still computed as before.)
 
-Let $\Query_2$ be the event that $\adv$ queries \emph{either} $\Hkey(K')$ \emph{or} $\Htag(\pw',pk',s,T,\allowbreak c,K')$. Clearly Game 5 and Game 6 are identical unless $\Query_2$ happens. We upper-bound $\Pr[\Query_2]$ via a reduction $\red_\text{OW1}$ to the OW property of the KEM scheme. This is somewhat similar to the reduction $\red_\text{OW-1PCA}$ to the OW-1PCA property in Game 3, and we highlight the differences in {\color{blue}blue}:
+In Game 5 $P'$ computes $SK' := \Hkey(K')$ and $\tau' := \Htag(\pw',pk',s^*,T^*,c,K') \allowbreak = \Htag(\pw',pk',s,T,c,K')$. Let $\Query_2$ be the event that $\adv$ queries \emph{either} $\Hkey(K')$ \emph{or} $\Htag(\pw',pk',s,T,c,K')$; clearly Game 5 and Game 6 are identical unless $\Query_2$ happens. We upper-bound $\Pr[\Query_2]$ via a reduction $\red_\text{OW1}$ to the OW property of the KEM scheme. This is somewhat similar to the reduction $\red_\text{OW-1PCA}$ to the OW-1PCA property in Game 3, and we highlight the differences in {\color{blue}blue}:
 
 \medskip\noindent\textbf{\underline{Reduction $\red_\mathrm{OW1}$}:}
 
@@ -1203,7 +1202,7 @@ Let $\Query_2$ be the event that $\adv$ queries \emph{either} $\Hkey(K')$ \emph{
 Sample $i \gets [\qkey+\qtag]$ as a guess that $\adv$'s $i$-th $\Hkey$ or $\Htag$ query triggers $\Query_2$, {\color{blue}and $j \gets [q_2+1]$ as a guess that the $j$-th $H_2$ query (by either $\adv$ or $P'$) is $H_2(\pw',T)$}. \\
 On input $(pk',c)$,
 \begin{enumerate}
-  \item Invoke $\env$. On $(\NewSession, sid, P, P', \pw, \text{``initiator''})$ from $\env$, run $P$'s algorithm to compute $(s,T)$. Send $(s,T)$ to $\adv$.
+  \item Invoke $\env$. On $(\NewSession, sid, P, P', \pw, \text{``initiator''})$ from $\env$, run $P$'s algorithm to compute $(s,T)$. (This in particular defines $sk$.) Send $(s,T)$ to $\adv$.
   \item {\color{blue}Whenever there is an $H_2(\star,T)$ query (by either $\adv$ or $\red_\mathrm{OW1}$ itself on behalf of $P'$ --- see step 3 below), do what's described in Game 5. However, if this is the $j$-th query, use $\red_\mathrm{OW1}$'s input $pk'$ instead of generating $pk^*$ freshly.}
   \item On $(\NewSession, sid, P', P, \pw', \text{``respondent''})$ from $\env$ and $(s^*,T^*)$ from $\adv$, if $\neg({\color{blue}\pw \neq \pw'} \land (s^*,T^*) = (s,T))$, abort. Otherwise
       \begin{enumerate}
@@ -1239,7 +1238,7 @@ It is very subtle why the reduction needs to guess the index $j$ and lose a fact
 To simulate Game 5/6 correctly, $\red_\text{OW1}$ must use its input $pk'$ to program $H_1(\pw',r') := T/pk'$ in step 3. The problem is that \emph{$\red_\mathrm{OW1}$ does not know $\pw'$ until step 4, so it has no idea which $H_1(\pw',r')$ query in step 3 needs to be programmed using $pk'$}! The only way to get around is to make a guess over all $H_2(\star,T)$ queries, which incurs a loss up to $q_2+1$. (If we require $\env$ to always initiate $P$ and $P'$'s sessions simultaneously, this loss can be avoided since in step 3 $\red_\mathrm{OW1}$ must have already learned $\pw'$. However, the UC PAKE functionality does not place this restriction on $\env$.)
 \end{remark}
 
-\medskip\emph{{\color{red}This game corresponds to game $\mathsf{G}_{11}$ in \cite{EPRINT:ArrBarJar25}, except that they reduce to OW-PCA and avoids the $\qkey+\qtag$ loss (cf. the comment after Game 3).}}
+\medskip\emph{{\color{red}This game corresponds to game $\mathsf{G}_{11}$ in \cite{EPRINT:ArrBarJar25}, except that they reduce to OW-PCA and avois the $\qkey+\qtag$ loss (cf. the comment after Game 3).}}
 
 \medskip\noindent\emph{Game 7:} Again in the case where $\pw \neq \pw' \land (s^*,T^*) = (s,T)$, recall Game 6 does the following on the $P'$ side: {\color{brown}Generate $(pk',\star) \gets \Gen$, query $t' := H_2(\pw',T)$, and compute
 \[
@@ -1259,7 +1258,7 @@ which $\adv$ can compute, whereas in Game 7 $c$ is computed from an independentl
 Sample $j \gets [q_2+1]$ as a guess that the $j$-th $H_2$ query (by either $\adv$ or $P'$) is $H_2(\pw',T)$. \\
 On input $(pk',c)$,
 \begin{enumerate}
-  \item Invoke $\env$. On $(\NewSession, sid, P, P', \pw, \text{``initiator''})$ from $\env$, run $P$'s algorithm to compute $(s,T)$. Send $(s,T)$ to $\adv$.
+  \item Invoke $\env$. On $(\NewSession, sid, P, P', \pw, \text{``initiator''})$ from $\env$, run $P$'s algorithm to compute $(s,T)$. (This in particular defines $sk$.) Send $(s,T)$ to $\adv$.
   \item Whenever there is an $H_2(\star,T)$ query (by either $\adv$ or $\red_\mathrm{ANO1}$ itself on behalf of $P'$ --- see step 3 below), do what's described in Game 5. However, if this is the $j$-th query, use $\red_\mathrm{ANO}$'s input $pk'$ instead of generating $pk^*$ freshly.
   \item On $(\NewSession, sid, P', P, \pw', \text{``respondent''})$ from $\env$ and $(s^*,T^*)$ from $\adv$, if $\neg(\pw \neq \pw' \land (s^*,T^*) = (s,T))$, output 1 and halt. Otherwise
       \begin{enumerate}
@@ -1283,12 +1282,12 @@ Assume $\red_\text{ANO}$'s guess of index $j$ is correct. If $b = 0$ then $c \ge
 
 \medskip\noindent\emph{Game 8:} Again in the case where $\pw \neq \pw' \land (s^*,T^*) = (s,T)$, we outright skip the computation of $t',r',R'$ and the programming of $H_1$ (the {\color{brown}brown} text in Game 7). (Since $pk'$ is not generated anymore, we can rename $pk''$ --- the KEM public key from which $c$ is computed --- to $pk'$.)
 
-Note that the aborting condition, which was originally introduced in Game 5, is removed (for the specific $H_2(\pw',T)$ query by $P'$). By an analysis similar to that in Game 5, the aborting probability in Game 7 is upper-bounded by $q_1/2^{3n}$. If the aborting condition does not happen, the {\color{brown}brown} text is independent of the rest of the game, so removing it does not affect the distribution of $\env$'s output. We have
+Note that the aborting condition, which was originally introduced in Game 5, is removed (for the specific $H_2(\pw',T)$ query by $P'$). By an analysis similar to that in Game 5, the aborting probability in Game 7 is upper-bounded by $q_1/2^{3n}$. If the aborting condition is not met, the {\color{brown}brown} text is independent of the rest of the game, so removing it does not affect the distribution of $\env$'s output. We have
 \[
 \Dist_\env^{7,8} \leq \frac{q_1}{2^{3n}}.
 \]
 
-\emph{{\color{red}The two games above combined correspond to game $\mathsf{G}_{12}$ in \cite{EPRINT:ArrBarJar25}. \cite{EPRINT:ArrBarJar25} does not have the intermediate Game 7 in our proof, and outright removes the brown text from what's our Game 6. We believe it is clearer to include our Game 7, where $H_2$ is still queried and $H_1$ is still programmed: in this way it is easier to see why the reduction to ANO simulates the games correctly. Also, \cite{EPRINT:ArrBarJar25} reduces to ANO-PCA\footnote{\cite{EPRINT:ArrBarJar25} actually mentions ANO-CPA, which appears to be a typo.}, although it also says that the plaintext-checking oracle is not needed.}}
+\emph{{\color{red}The two games above combined correspond to game $\mathsf{G}_{12}$ in \cite{EPRINT:ArrBarJar25}. \cite{EPRINT:ArrBarJar25} does not have the intermediate Game 7 in our proof, and outright removes the brown text from what's our Game 6. We believe it is clearer to include our Game 7, where $H_2$ is still queried and $H_1$ is still programmed: in this way it is easier to see why the reduction to ANO simulates the games correctly. Also, \cite{EPRINT:ArrBarJar25} reduces to ANO-PCA,\footnote{\cite{EPRINT:ArrBarJar25} actually mentions ANO-CPA, which appears to be a typo.} although it also says that the plaintext-checking oracle is not needed.}}
 
 \paragraph{Computation of the $P$-to-$P'$ message.}
 \mbox{}
@@ -1297,7 +1296,7 @@ Note that the aborting condition, which was originally introduced in Game 5, is 
 \[
 r := s \oplus t, \quad R := T/pk.
 \]
-If $H_1(\pw,r)$ has already been defined and it is not $R$, abort. Otherwise program $H_1(\pw,r) := R$ and store $\langle\pw,pk,sk\rangle$.}
+If $H_1(\pw,r)$ has already been defined and it is not $R$, also abort. Otherwise program $H_1(\pw,r) := R$ and store $\langle\pw,pk,sk\rangle$.}
 
 We first upper-bound the aborting probability. The probability that one of $\adv$'s $H_2$ query inputs (before $T$ is sampled) happens to contain $T$ is upper-bounded by $q_2/|\group|$. By an analysis similar to that in Game 5 and Game 8, the probability of the second aborting event is upper-bounded by $q_1/2^{3n}$.
 
@@ -1335,7 +1334,7 @@ Let's pause a bit and review the changes we have made so far:
       \begin{enumerate}
         \item If $\pw = \pw' \land (s^*,T^*) = (s,T) \land c^* = c$, Game 10 outright sets $SK := SK'$ if $\tau^* = \tau'$ and $SK := \bot$ otherwise. [changed in Game 1]
         \item Otherwise if $\adv$ makes no $\Htag(\pw,pk,s,T,c^*,K^*)$ query resulting in $\tau^*$, or more than one such query, Game 10 outright sets $SK := \bot$. [changed in Game 2]
-        \item Otherwise if $sk$ has not been defined yet, Game 10 queries $H_2(\pw,T)$ on behalf of $P$, which generates $sk$ (see below). Then Game 10 computes $K := \Decap(sk,c^*)$, and sets $SK := \Hkey(K)$ if $K^* = K$ and $SK := \bot$ otherwise. [changed in Game 2]
+        \item Otherwise if $sk$ has not been defined yet, Game 10 queries $H_2(\pw,T)$ on behalf of $P$, which generates $sk$ (see step 4 below). Then Game 10 computes $K := \Decap(sk,c^*)$, and sets $SK := \Hkey(K)$ if $K^* = K$ and $SK := \bot$ otherwise. [changed in Game 2]
       \end{enumerate}
   \item \emph{$H_2$ queries:} When either $\adv$ or $P$ makes a fresh query $H_2(\pw^*,T)$ (let the result be $t^*$), Game 10 runs the following procedure: Generate $(pk^*,sk^*) \gets \Gen$, and compute
       \[
@@ -1404,13 +1403,13 @@ s \gets \{0,1\}^{3n}; T \gets \group \< \< \< \< \\
 
 \medskip\noindent\emph{Game 11:} In the case where $\neg(\pw = \pw' \land (s^*,T^*) = (s,T) \land c^* = c)$, if there is no $\langle\pw,pk,sk\rangle$ record, set $SK := \bot$ (i.e., replace the {\color{brown}brown} text in \Cref{fig:intermediate-game} with ``$SK := \bot$'').
 
-Game 10 and Game 11 differ only if $\adv$ does not make an $H_2(\pw,T)$ query, but makes an $\Htag(\pw,pk,s,T,c^*,K^*)$ query resulting in $\tau^*$ (for $c^*,K^*,\tau^*$ of $\adv$'s choice and $pk$ generated in the {\color{brown}brown} text). This in particular requires $\adv$ to know $pk$, which is freshly generated by $\Gen$. Therefore, the probability that (even a computationally unbounded) $\adv$ can predict $pk$ is upper-bounded by $p_\text{guess}$. We have
+Game 10 and Game 11 differ only if $\adv$ does not make an $H_2(\pw,T)$ query, but makes an $\Htag(\pw,pk,s,T,c^*,K^*)$ query resulting in $\tau^*$ (for $c^*,K^*,\tau^*$ of $\adv$'s choice and $pk$ generated in the {\color{brown}brown} text). This in particular requires $\adv$ to know $pk$, which is freshly generated by $\Gen$. Therefore, the probability that $\adv$ can predict $pk$ is upper-bounded by $p_\text{guess}$. We have
 \[
 \Dist_\env^{10,11} \leq p_\text{guess}.
 \]
 
 \emph{{\color{red}The game above corresponds to game $\mathsf{G}_{15}$ in \cite{EPRINT:ArrBarJar25}. \cite{EPRINT:ArrBarJar25} does not include the condition $\neg(\pw = \pw' \land (s^*,T^*) = (s,T) \land c^* = c)$, i.e., it appears that this game rewrites what our Game 1 does, which is incorrect. \\
-\indent \cite{EPRINT:ArrBarJar25} uses the notation $H_\infty(pk : (pk,\star) \gets \Gen)$ instead of $p_\text{guess}$, without explaining what it means. By default it is the min-entropy of $pk$, namely $-\log p_\text{guess}$ (which is a value greater than $1$). But this is clearly not what \cite{EPRINT:ArrBarJar25} means. \\
+\indent \cite{EPRINT:ArrBarJar25} uses the notation $H_\infty(pk : (pk,\star) \gets \Gen)$ instead of $p_\mathrm{guess}$. By default this is the min-entropy of $pk$, namely $-\log p_\mathrm{guess}$ (which is a value greater than $1$). We believe $1/2^{H_\infty(pk)}$, or simply $p_\mathrm{guess}$, is a better notation. \\
 \indent\ul{The argument in this game critically relies on $pk$ being included in $\Htag$ inputs.}
 }}
 
@@ -1423,7 +1422,7 @@ In Game 11 $SK$ is outright set to $\bot$, whereas here it is treated the same a
 
 \emph{{\color{red}The game above is missing in \cite{EPRINT:ArrBarJar25}. Note that in the ideal world, the simulator cannot tell if $\pw = \pw'$, so when it sees $(s^*,T^*) = (s,T) \land c^* = c \land \tau^* \neq \tau'$, it has to always try to extract a password guess; hence, the game above has to be here. (In the $\pw = \pw' \land (s^*,T^*) = (s,T) \land c^* = c \land \tau^* \neq \tau'$ case, we first outright set $SK := \bot$ in Game 1 and then ``walk back'' in Game 12, since the change in Game 1 is necessary for the reductions in Games 3 and 4 to go through.)}}
 
-\medskip\noindent\emph{Game 13:} In the case where $\neg(\pw = \pw' \land (s^*,T^*) = (s,T) \land (c^*,\tau^*) = (c,\tau))$, find $\adv$'s $\Htag(\pw^*,pk^*,s,T,c^*,K^*)$ query resulting in $\tau^*$. (The difference is that Game 12 only goes over all of $\adv$'s queries in the form of $\Htag(\pw,pk,s,T,c^*,\star)$, whereas this game goes over all of $\adv$'s queries in the form of $\Htag(\star,\star,s,T,c^*,\star)$.) If there is none or more than one, set $SK := \bot$. Otherwise there is a unique such $\Htag(\pw^*,pk^*,s,T,c^*,K^*)$ query, and
+\medskip\noindent\emph{Game 13:} In the case where $\neg(\pw = \pw' \land (s^*,T^*) = (s,T) \land (c^*,\tau^*) = (c,\tau'))$, find $\adv$'s $\Htag(\pw^*,pk^*,s,T,c^*,K^*)$ query resulting in $\tau^*$. (The difference is that Game 12 only goes over all of $\adv$'s queries in the form of $\Htag(\pw,pk,s,T,c^*,\star)$, whereas this game goes over all of $\adv$'s queries in the form of $\Htag(\star,\star,s,T,c^*,\star)$.) If there is none or more than one, set $SK := \bot$. Otherwise there is a unique such $\Htag(\pw^*,pk^*,s,T,c^*,K^*)$ query, and
 \begin{itemize}
   \item If $\pw^* \neq \pw$, set $SK := \bot$.
   \item If $\pw^* = \pw$, there is no change from Game 12. That is, the game runs the following procedure:
@@ -1444,7 +1443,7 @@ We conclude that
 \Dist_\env^{12,13} \leq \frac{\qtag(\qtag-1)}{2^{2n+1}}.
 \]
 
-\emph{{\color{red}The game above is also missing in \cite{EPRINT:ArrBarJar25}. The $\Htag$ collision case was ruled out in game $\mathsf{G}_2$ in \cite{EPRINT:ArrBarJar25} (as aborting condition [A1])\footnote{In our game hops, we ruled out $\Htag$ collisions for different $K^*$ values in Game 2, and then additionally rule out $\Htag$ collisions for different $(\pw^*,pk^*,K^*)$ tuples in Game 13. We could have done both in Game 2 and avoided the additional loss here; however, we believe the current approach is clearer.}; however, conceptually speaking there still needs to be such a bridge game, to make sure that the game hops match the ideal world at the end. \\
+\emph{{\color{red}The game above is also missing in \cite{EPRINT:ArrBarJar25}. The $\Htag$ collision case was ruled out in game $\mathsf{G}_2$ in \cite{EPRINT:ArrBarJar25} (as aborting condition [A1]);\footnote{In our game hops, we ruled out $\Htag$ collisions for different $K^*$ values in Game 2, and then additionally rule out $\Htag$ collisions for different $(\pw^*,pk^*,K^*)$ tuples in Game 13. We could have done both in Game 2 and avoided the additional loss here; however, we believe the current approach is clearer.} however, conceptually speaking there still needs to be such a bridge game, to make sure that the game hops match the ideal world at the end. \\
 \indent\ul{The definition of this game, together with its argument, critically rely on $\pw$ being included in $\Htag$ inputs.}
 }}
 
@@ -1465,7 +1464,7 @@ In this case $\tau^* = \tau'$ is uniformly random and independent of the rest of
   \item $\adv$ queried $H_1(\pw^*,r^*)$ \emph{before} the $H_2(\pw^*,T^*)$ query, where $r^* = s^* \oplus t^*$.
   \item $\adv$ also queried $H_2(\pw^*,T)$, and
       \[
-      s \oplus s^* = H_2(\pw^*,T) \oplus t^*.\footnote{Note that in this case $T^* \neq T$ since otherwise $T^* = T \Rightarrow H_2(\pw^*,T) = t^* \Rightarrow s^* = s \oplus H_2(\pw^*,T) \oplus t^* = s$, so $(s^*,T^*) = (s,T)$ which violates the condition of this game.}
+      s \oplus s^* = H_2(\pw^*,T) \oplus t^*.
       \]
 \end{enumerate}
 (This $H_2(\pw^*,T^*)$ query is what's called the ``anchor query'' in \cite{EC:JanRoyXu25}.) If there is more than one such query, abort. (Intuitively $\pw^*$ is $\adv$'s password guess contained in $(s^*,T^*)$.)
@@ -1481,7 +1480,7 @@ The aborting condition is met only in the following three cases:
       \[
       H_2(\pw^*,T) \oplus t^* = H_2((\pw^*)',T) \oplus (t^*)'
       \]
-      (so $\adv$ can set $s^*$ to be $s \oplus H_2(\pw^*,T) \oplus t^*$). Note that all four values in the equation are determined by three (different) $H_2$ queries $H_2(\pw^*,T)$, $H_2((\pw^*)',T)$ and $H_2(\pw^*,T^*)$ (they are different since $T^* \neq T$ as argued above); by an argument similar to above, the probability of this case is upper-bounded by $q_2(q_2-1)(q_2-2)/2^{3n}$.
+      (so $\adv$ can set $s^*$ to be $s \oplus H_2(\pw^*,T) \oplus t^*$). Note that all four values in the equation are determined by three (different) $H_2$ queries $H_2(\pw^*,T)$, $H_2((\pw^*)',T)$ and $H_2(\pw^*,T^*)$;\footnote{Note that in this case $T^* \neq T$ since otherwise $T^* = T \Rightarrow H_2(\pw^*,T) = t^* \Rightarrow s^* = s \oplus H_2(\pw^*,T) \oplus t^* = s$, so $(s^*,T^*) = (s,T)$ which violates the condition of this game.} by an argument similar to above, the probability of this case is upper-bounded by $q_2(q_2-1)(q_2-2)/2^{3n}$.
   \item There is a collision between type (1) and type (2), i.e., there are $r^*,t^*,(\pw^*)',\allowbreak(t^*)'$ such that
       \[
       r^* \oplus t^* = s \oplus H_2((\pw^*)',T) \oplus (t^*)'
@@ -1540,9 +1539,9 @@ On input $(pk_{1,1},\dots,pk_{q_1+1,q_2+1})$,
             At any time, if there is more than one $\langle\mathsf{PasswordGuess},\star,s^*,T^*\rangle$ record with the same $s^*,T^*$, abort.
         \item Otherwise program $H_1(\pw^*,r^*) := R^*$.
       \end{enumerate}
-  \item On $(\NewSession, sid, P', P, \pw', \text{``respondent''})$ from $\env$ and $(s^*,T^*)$ from $\adv$, if $(s^*,T^*) = (s,T)$, output 1. If there is a record $\langle\mathsf{PasswordGuess},\pw',s^*,T^*\rangle$, also output 1. Otherwise \quad // \textcolor[gray]{0.5}{Incorrect or no password guess (the case that matters in this game hop)}
+  \item On $(\NewSession, sid, P', P, \pw', \text{``respondent''})$ from $\env$ and $(s^*,T^*)$ from $\adv$, if $(s^*,T^*) = (s,T)$, output 1 and halt. If there is a record $\langle\mathsf{PasswordGuess},\allowbreak\pw',s^*,T^*\rangle$, also output 1 and halt. Otherwise \quad // \textcolor[gray]{0.5}{Incorrect or no password guess (the case that matters in this game hop)}
       \begin{enumerate}
-        \item If $\adv$ has not queried $H_2(\pw',T^*)$ or $H_1(\pw',r')$ (where $r' = s^* \oplus H_2(\pw',T^*)$), make these queries on behalf of $P'$.
+        \item If $\adv$ has not queried $H_2(\pw',T^*)$ and/or $H_1(\pw',r')$ (where $r' = s^* \oplus H_2(\pw',T^*)$), make these queries on behalf of $P'$.
         \item Say $H_2(\pw',T^*)$ is the $j^*$-th query to $H_2$ and $H_1(\pw',r')$ is the $i^*$-th query to $H_1$ in the form of $H_1(\pw',\star)$. Output $(i^*,j^*)$ to the challenger and receive $(c,SK',\tau')$.
         \item Output $SK'$ to $\env$, and send $(c,\tau')$ to $\adv$.
       \end{enumerate}
@@ -1566,7 +1565,7 @@ We first argue that the $\pw^*$ as in record $\langle\mathsf{PasswordGuess},\pw^
       \]
       which is exactly type (2) in Game 15.
 \end{itemize}
-Therefore, $\red_\text{UNI-ANO-RO}$ accurately decides whether the condition in this game, namely ``$\pw^* \neq \pw'$ or no $\pw^*$ is defined'', is satisfied or not.
+Therefore, in step 3 $\red_\text{UNI-ANO-RO}$ accurately decides whether the condition in this game, namely ``$\pw^* \neq \pw'$ or no $\pw^*$ is defined'', is satisfied or not.
 
 Next, we argue that $\red_\text{UNI-ANO-RO}$ simulates Game 16/17 correctly:
 \begin{itemize}
@@ -1576,7 +1575,7 @@ Next, we argue that $\red_\text{UNI-ANO-RO}$ simulates Game 16/17 correctly:
       \]
       if we sample $H_1(\pw',r') \gets \group$ then we get Game 16, whereas if we sample $pk' \gets \group$ (as $pk_{i^*,j^*}$) then we get $\red_\text{UNI-ANO-RO}$'s simulation. Thus, the distribution of $pk'$ is identical in Game 16 and in $\red_\text{UNI-ANO-RO}$'s simulation. Later, $pk'$ is used to compute $c,K'$ in both Game 16 and $\red_\text{UNI-ANO-RO}$'s simulation. \\
       Regarding other $H_2(\pw^*,T^*)$ and $H_1(\pw^*,r^*)$ queries, the $pk_{i,j}$ that $\red_\text{UNI-ANO-RO}$ uses while programming $H_1(\pw^*,r^*)$ is uniformly random and independent of the rest of the game, so $H_1(\pw^*,r^*)$ is programmed to a uniformly random value --- again the same as Game 16.
-  \item Suppose $\red_\text{UNI-ANO-RO}$'s challenge bit $b = 1$, i.e., $(c,K') \gets \Encap(pk')$ and $SK' = \Hkey(K'), \tau' = \Htag(\dots,K')$ for a freshly sampled $pk'$. \emph{All} $pk_{i,j}$ values that $\red_\text{UNI-ANO-RO}$ uses while programming $H_1$ are uniformly random and independent of the rest of the game, so $H_1$ is always programmed to a uniformly random value --- the same as Game 17. Later, a freshly sampled $pk'$ is used to compute $c,K'$ in both Game 17 and $\red_\text{UNI-ANO-RO}$'s simulation.
+  \item Suppose $\red_\text{UNI-ANO-RO}$'s challenge bit $b = 1$, i.e., $(c,\star) \gets \Encap(pk')$ for a freshly sampled $pk'$ and $SK' \gets \{0,1\}^n, \tau' \gets \{0,1\}^{2n}$. \emph{All} $pk_{i,j}$ values that $\red_\text{UNI-ANO-RO}$ uses while programming $H_1$ are uniformly random and independent of the rest of the game, so $H_1$ is always programmed to a uniformly random value --- the same as Game 17. Later, in both Game 17 and $\red_\text{UNI-ANO-RO}$'s simulation a freshly sampled $pk'$ is used to compute $c$, and $SK'$ and $\tau'$ are sampled uniformly at random.
 \end{itemize}
 We have
 \[
@@ -1585,16 +1584,16 @@ We have
 
 \emph{{\color{red}This game corresponds to games $\mathsf{G}_{18}$ and $\mathsf{G}_{19}$ in \cite{EPRINT:ArrBarJar25}. \cite{EPRINT:ArrBarJar25} has two games: $\mathsf{G}_{18}$ that changes $SK'$ and $\tau'$ (via a reduction to the OW-PCA property of the KEM scheme), and $\mathsf{G}_{19}$ that changes $c$ (via a reduction to the ANO-PCA property of the KEM scheme). While we believe their argument is fundamentally correct, it could be significantly improved:
 \begin{enumerate}
-  \item \cite{EPRINT:ArrBarJar25} reduces to OW-PCA and ANO-PCA\footnote{\cite{EPRINT:ArrBarJar25} actually mentions ANO-CPA, which appears to be a typo.}, which is unnecessary: OW and ANO suffice.
+  \item \cite{EPRINT:ArrBarJar25} reduces to OW-PCA and ANO-PCA,\footnote{\cite{EPRINT:ArrBarJar25} actually mentions ANO-CPA, which appears to be a typo.} which is unnecessary: OW and ANO suffice.
   \item Their simulation strategy is slightly different from ours: they use $pk'$ generated by $\Gen$, rather than sampled uniformly at random. Note that in this ``incorrect password guess'' case, in the real world $pk' = T^*/H_1(\pw',r')$ is already uniformly random, so this is fundamentally a KEM property about encapsulation of uniformly random (rather than honestly generated) public keys and we believe it is clearer to present it in this way.\footnote{By contrast, in the $(s^*,T^*) = (s,T)$ case $pk'$ has to be generated honestly, which is our Games 3, 4, 6 and 7: If $\pw = \pw' \land (s^*,T^*) = (s,T)$ then $sk$ corresponding to $pk = pk'$ is used on the $P$ side (in decapsulation), so $pk'$ cannot be changed to uniformly random; and the $\pw \neq \pw' \land (s^*,T^*) = (s,T)$ case cannot be separated from the $\pw = \pw' \land (s^*,T^*) = (s,T)$ case (since the simulator never knows if $\pw = \pw'$ or not), so $pk'$ cannot be changed to uniformly random in this case either.}
   \item Their honest generation of $pk'$ also means that their reductions cannot simulate the games perfectly, since they program $H_1(\pw',r')$ using $pk'$ which is not uniformly random --- while it ``should'' be uniformly random. As such, they have do a reduction to UNI-PK within the OW-PCA/ANO-PCA reduction.
-  \item What makes things even worse is that none of their (or our) reductions knows which of the $H_1(\pw',r')$ queries should be programmed using $pk'$, since $\adv$ can make many decryption efforts, resulting in many $H_1$ values to be programmed, \emph{before} sending $(s^*,T^*)$ to $P'$ (cf. discussion after \Cref{def:uni-ano-ro}). This means that their UNI-PK reduction cannot be moved ``out of'' the OW-PCA/ANO-PCA reduction by defining a separate game that uses honestly generated $pk'$ to program $H_1(\pw',r')$, as that would require the \emph{game} to make a guess! This ``reduction within a reduction'' would better be filtered out as a separate helper security property, which is not mentioned in \cite{EPRINT:ArrBarJar25}.
-  \item Finally, the reductions in \cite{EPRINT:ArrBarJar25} appear to never check for the ``related key attack'', i.e., from their proof it is unclear what will go wrong if we remove what's our Game 16 (or their game $\mathsf{G}_{17}$).
+  \item What complicates things even further is that none of their (or our) reductions knows which of the $H_1(\pw',r')$ queries should be programmed using $pk'$, since $\adv$ can make many 2F decryption efforts, resulting in many $H_1$ values to be programmed, \emph{before} sending $(s^*,T^*)$ to $P'$ (cf. the discussion after \Cref{def:uni-ano-ro}). This means that their UNI-PK reduction cannot be moved ``out of'' the OW-PCA/ANO-PCA reduction by defining a separate game that uses honestly generated $pk'$ to program $H_1(\pw',r')$, as that would require the \emph{game} to make a guess! This ``reduction within a reduction'' would better be filtered out as a separate helper security property.
+  \item Finally, the reductions in \cite{EPRINT:ArrBarJar25} appear to never check for the ``related key attack'', i.e., from their proof it is unclear what our Game 16 (or their game $\mathsf{G}_{17}$) is for.
 \end{enumerate}
 }}
 
 % have to do two separate \emph commands since otherwise \indent immediately after \end{enumerate} does not show up
-\emph{{\color{red}We believe it is much cleaner to define a tailored KEM property that allows a \emph{single} reduction to go through, which is UNI-ANO-RO. In this way, we can separate out the multiple reductions to basic KEM properties, as well as the hybrid argument, on the level of KEM; this makes our OEKE security argument easier to understand.\footnote{In principle, we could also combine Game 3 and Game 4, as well as Game 6 and Game 7, via a single reduction to some ``integrated'' KEM properties. We choose not to do it as we wish to follow the proof structure in \cite{EPRINT:ArrBarJar25} as much as possible. In contrast, \cite[Definition~3.6]{EC:JanRoyXu25} has a combined KEM property called ``pseudorandom non-malleability''.}}}
+\emph{{\color{red}We believe it is much cleaner to define a tailored KEM property that allows a \emph{single} reduction to go through, which is UNI-ANO-RO. In this way, we can separate out the multiple reductions to basic KEM properties, as well as the hybrid argument, on the level of KEM; this makes our OEKE security argument easier to understand.\footnote{In principle, we could also combine Games 3 and 4, as well as Games 6 and 7, via a single reduction to some ``integrated'' KEM properties. We choose not to do it as we wish to follow the proof structure in \cite{EPRINT:ArrBarJar25} as much as possible. In contrast, \cite[Definition~3.6]{EC:JanRoyXu25} has a combined KEM property called ``pseudorandom non-malleability''.}}}
 
 \paragraph{Summary.}
 We summarize the changes since Game 11 (i.e., after \Cref{fig:intermediate-game}):
