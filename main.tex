@@ -190,7 +190,7 @@ Interestingly, \cite{CCS:McQRosRoy20} did not mention OEKE, and an immediate fut
 
 Apart from its computational efficiency, OEKE-2F has received much attention for two other reasons:
 \begin{itemize}
-  \item Since OEKE-2F is a generic compiler from \emph{any} KEM scheme (with certain reasonable security properties) to PAKE, plugging in a post-quantum KEM scheme immediately yields a PAKE protocol secure under post-quantum assumptions.
+  \item Since OEKE-2F is a generic compiler from \emph{any} KEM scheme (with certain reasonable security properties) to PAKE, plugging in a post-quantum KEM scheme immediately yields a PAKE protocol secure under post-quantum assumptions. In particular, it is a key building block of the CPaceOQUAKE hybrid PAKE protocol, currently under consideration for standardization \cite{draft:hybrid-pake}. 
   \item A recent variant of OEKE-2F called Tempo \cite{TCHES:ArrBarJar26} is resilient to timing attacks, while mostly retaining the efficiency of OEKE-2F.
 \end{itemize}
 \begin{remark}
@@ -1711,7 +1711,7 @@ $\adv$'s $H_2(\star,T)$ queries & & lines 46--51 & the only step \\
 
 From \Cref{tab:ideal-world-comparison} (and after going through some simple but tedious checks), we can see that Game 17 and the ideal world are exactly identical. This completes the proof.
 
-\section{Security Analyses of Other Versions (I): Including $(s,T)$ in the hash}
+\section{Security Analyses of Other Versions (I): Including $(s,T)$ in the Hash}
 \label{sec:other-variants-1}
 We assume the reader is familiar with the security proof in \Cref{sec:basic}, as the simulator and many games there will be frequently referred to or reused.
 
@@ -2854,7 +2854,7 @@ If we define $\tau$ as $\Htag(c,K)$, then the reduction to CBIND in \Cref{clm:ht
 
 \section{Comparison with \cite{EC:JanRoyXu25}}
 \label{app:jrx-comparison}
-We believe our security proof for the ``hashing nothing but $K$'' in \Cref{app:hash-nothing} is fundamentally similar to the OEKE security proof in \cite{EC:JanRoyXu25}; however, the structure and presentation of their proof is drastically different from ours. Below we give a high-level comparison with \cite{EC:JanRoyXu25}, although a game-by-game comparison --- like what we did in \Cref{sec:games} --- seems impossible.
+We believe our security proof for the ``hashing nothing but $K$'' version in \Cref{app:hash-nothing} is fundamentally similar to the OEKE security proof in \cite{EC:JanRoyXu25}; however, the structure and presentation of their proof is drastically different from ours. Below we give a high-level comparison with \cite{EC:JanRoyXu25}, although a game-by-game comparison --- like what we did with \cite{EPRINT:ArrBarJar25} in \Cref{sec:games} --- seems impossible.
 
 \paragraph{Modular structure of \cite{EC:JanRoyXu25}.}
 While our proof is a monolith, the proof in \cite{EC:JanRoyXu25} is split into three levels:
