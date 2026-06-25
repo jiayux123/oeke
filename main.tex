@@ -399,7 +399,7 @@ $\pw$ & $pk$ & $(s,T)$ & $c$ & & \\
 \caption{List of OEKE variants}
 \label{table:oeke-variants}
 \end{table}
-We will define the various additional KEM properties in \Cref{sec:kem-additional}, but at a high level, they are different types of binding properties. For example, if the KEM ciphertext $c$ is included in the hash, then modifying $c$ but forwarding $\tau'$ will immediately cause $P$ to reject; however, if $c$ is removed from the hash, then we need some additional ``cihpertext binding'' property to prevent the adversary from doing this. We show the full names of the KEM properties below.
+We will define the various additional KEM properties in \Cref{sec:kem-additional}, but at a high level, they are different types of binding properties. For example, if the KEM ciphertext $c$ is included in the hash, then modifying $c$ but forwarding $\tau'$ will immediately cause $P$ to reject; however, if $c$ is removed from the hash, then we need some additional ``ciphertext binding'' property to prevent the adversary from doing this. We show the full names of the KEM properties below.
 \begin{table}[H]\centering
 \begin{tabular}{ |c|c|c|c|c|c| }
 \hline
@@ -618,6 +618,8 @@ A KEM scheme is \emph{ciphertext binding (CBIND)} if for any PPT adversary $\adv
 \end{definition}
 CBIND is needed in OEKE variants where $c$ is removed from $\Htag$ inputs. Then we must prevent the OEKE adversary $\adv$ from forwarding the $P$-to-$P'$ message $(s,T)$ without modification, but then modifying the $P'$-to-$P$ message $(c,\tau')$ to some $(c^*,\tau')$ which makes $P$'s check pass.\footnote{\label{fn:cbind}It is, in fact, unclear whether this is an ``actual'' attack: $\adv$ causes the two parties to output the same session key by changing $c$ and forwarding all other protocol messages, but $\adv$ does not learn the session key or the password. However, at least such an $\adv$ makes the UC simulation fail, since the simulator is not able to tell that $\adv$ is sending a valid $c^*$ (it does not know $sk$). The same comment is true for the attacks in the ``key binding'' paragraph below.} (If $c$ is included in $\Htag$ then $P$'s check will not pass unless $(\dots, c, \dots)$ and $(\dots, c^*, \dots)$ form a collision for $\Htag$.) This should not happen even after $\adv$ later learns $\pw$ and uses it to compute $pk := \mathsf{2F}^{\text{-}1}(\pw,(s,T))$.
 
+In the actual definition of CBIND we additionally give $K$ to the adversary. This is because the \emph{reduction} in our OEKE security proof (see \Cref{clm:htag2}) needs the KEM key to simulate $P'$'s output $SK'$ and the authenticator $\tau'$. It is possible that a reduction to a weaker CBIND property (where $K$ is not given the adversary) can go through by sampling $SK',\tau'$ at random, but that would require changing the order of the games in the security proof, and we do not explore this possibility.
+
 \paragraph{Unpredictability.}
 This property roughly says that an adversary $\adv$ cannot feasibly output a ciphertext/KEM key pair $(c^*,K^*)$ ``out of thin air'', such that $(pk,c^*,K^*)$ is a valid tuple for an honestly generated public key $pk$ that $\adv$ does not know.
 \begin{definition}
@@ -669,7 +671,7 @@ Furthermore, KBIND is also needed if $pk$ and $(s,T)$ are \emph{both} removed fr
 \end{enumerate}
 In this attack, $\adv$ modifies the $P$-to-$P'$ message $(s,T)$, but still forwards $\tau'$. Again, this poses a problem to the UC simulator since the simulator cannot tell if $\adv$ is sending a valid $c^*$ or not (it does not know $sk$). (If $pk$ is included in $\Htag$ then $P$'s check will not pass unless either (1) the uniformly random and independent $pk'$ happens to be equal to $pk$, or (2) $(\dots, pk, \dots)$ and $(\dots, pk', \dots)$ form a collision for $\Htag$. If $(s,T)$ are included in $\Htag$ then $P$'s check will not pass unless $(\dots, s,T, \dots)$ and $(\dots, s^*,T^*, \dots)$ form a collision for $\Htag$.)
 
-Note that the OEKE adversaries above only know $pk'$ and $c$, whereas in the definition of KBIND we additionally give $pk$ and $K'$ to the adversary. This is because the \emph{reduction} in our OEKE security proof (see \Cref{clm:htag4}) needs $pk$ to simulate the $P$-to-$P'$ message $(s,T)$, and needs $K'$ to simulate $P'$'s output $SK'$. It is possible that a reduction to a weaker KBIND property (where $pk,K'$ are not given the adversary) can go through by sampling $s,T,K'$ at random, but that would require changing the order of the games in the security proof, and we do not explore this possibility.
+Note that the OEKE adversaries above only know $pk'$ and $c$, whereas in the definition of KBIND we additionally give $pk$ and $K'$ to the adversary. This is because the \emph{reduction} in our OEKE security proof (see \Cref{clm:htag4}) needs $pk$ to simulate the $P$-to-$P'$ message $(s,T)$, and needs $K'$ to simulate $P'$'s output $SK'$ and the authenticator $\tau'$ (cf. the ``ciphertext binding'' paragraph).
 
 \medskip
 We also consider a much weaker variant of KBIND, where the adversary $\adv$ is forced to output $c^* = c$. Since $\adv$ is passive now, this is in fact a statistical property, and we show that it is implied by UNI-PK and OW:
@@ -1747,26 +1749,28 @@ Looking more closely, only \Cref{clm:htag} in Game 2 needs a new proof: the argu
 Suppose the CBIND property holds for the KEM scheme. In the case where $\neg(\pw = \pw' \land (s^*,T^*) = (s,T) \land c^* = c)$, the probability that $P'$ queries $\Htag(\pw,pk,s,T,K)$ is negligible.
 \end{claim}
 \begin{proof}
-$P'$ makes a single $\Htag$ query, on $(\pw',pk',s,T,K')$. If $\pw \neq \pw' \lor (s^*,T^*) \neq (s,T)$, then of course $P'$'s query is not $\Htag(\pw,pk,s,T,K)$. Now assume $\pw = \pw' \land (s^*,T^*) = (s,T)$. This implies $pk = pk'$ by the definitions of $pk$ and $pk'$, and $c^* \neq c$ by the condition of the claim.
+$P'$ makes a single $\Htag$ query, on $(\pw',pk',s^*,T^*,K')$. If $\pw \neq \pw' \lor (s^*,T^*) \neq (s,T)$, then of course $P'$'s query is not $\Htag(\pw,pk,s,T,K)$. Now assume $\pw = \pw' \land (s^*,T^*) = (s,T)$. This implies $pk = pk'$ by the definitions of $pk$ and $pk'$, and $c^* \neq c$ by the condition of the claim.
 
 We now upper-bound $\Pr[K = K']$. Recall that $K$ is defined as $\Decap(sk,c^*)$, so $\Pr[K = K'] = \Pr[\Decap(sk,c^*) = K']$. We upper-bound this probability via a reduction $\red_\text{CBIND}$ to the CBIND property of the KEM scheme:
 
 \medskip\noindent\textbf{\underline{Reduction $\red_\mathrm{CBIND}$}:}
 
 \medskip\noindent
-On input $(pk,c)$,
+On input $(pk,c,K')$,
 \begin{enumerate}
   \item Invoke $\env$. On $(\NewSession, sid, P, P', \pw, \text{``initiator''})$ from $\env$, run $P$'s algorithm to compute $(s,T)$, except that $\red_\mathrm{CBIND}$ uses its input $pk$ instead of $(pk,\star) \gets \Gen$. Send $(s,T)$ to $\adv$.
-  \item On $(\NewSession, sid, P', P, \pw', \text{``respondent''})$ from $\env$ and $(s^*,T^*)$ from $\adv$, if $\neg(\pw = \pw' \land (s^*,T^*) = (s,T))$, abort. Otherwise generate $(c,K') \gets \Encap(pk)$, and compute $SK := \Hkey(K')$ and $\tau' := \Htag(\pw,pk,s,T,c,K')$. Output $SK'$ to $\env$, and send $(c,\tau')$ to $\adv$.
+  \item On $(\NewSession, sid, P', P, \pw', \text{``respondent''})$ from $\env$ and $(s^*,T^*)$ from $\adv$, if $\neg(\pw = \pw' \land (s^*,T^*) = (s,T))$, abort. Otherwise compute $SK' := \Hkey(K')$ and $\tau' := \Htag(\pw,pk,s,T,c,K')$. Output $SK'$ to $\env$, and send $(c,\tau')$ to $\adv$.
   \item On $(c^*,\tau^*)$ from $\adv$, if $c^* = c$, abort. Otherwise output $c^*$.
 \end{enumerate}
 
-The definition of $\red_\text{CBIND}$ ensures that $\Decap(sk,c) = K'$. If $\adv$ sends $c^*$ such that $\Decap(sk,c^*) = K'$, then $\red_\text{CBIND}$ wins the CBIND game. Thus,
+If $\adv$ sends $c^*$ such that $\Decap(sk,c^*) = K'$, then $\red_\text{CBIND}$ wins the CBIND game. Thus,
 \[
 \Pr[\Decap(sk,c^*) = K'] \leq \Adv_{\red_\text{CBIND}}^\text{CBIND}.
 \]
-If $\Decap(sk,c) \neq K'$, i.e., $K \neq K'$, then of course $P'$'s query is not $\Htag(\pw,pk,s,\allowbreak T,K)$. This yields the claim.
+
+If $\Decap(sk,c) \neq K'$, i.e., $K \neq K'$, then of course $P'$'s query is not $\Htag(\pw,pk,\allowbreak s,T,K)$. This yields the claim.
 \end{proof}
+We conclude that the ``hash $pw$, $pk$ and $(s,T)$'' version is secure under the CBIND property of the KEM scheme (in addition to UNI-PK, OW-1PCA and ANO-1PCA that are already needed in the ``hash everything'' version).
 
 \subsection{The ``Hash $\pw$ and $(s,T)$'' Version}
 \label{sec:hash-pw-st}
@@ -1774,7 +1778,7 @@ We now turn to the variant where $pk$ is further removed from $\Htag$ inputs, i.
 
 \medskip\noindent\emph{Game 11:} In the case where $\neg(\pw = \pw' \land (s^*,T^*) = (s,T) \land c^* = c)$, if there is no $\langle\pw,pk,sk\rangle$ record, set $SK := \bot$ (i.e., replace the {\color{brown}brown} text in \Cref{fig:intermediate-game} with ``$SK := \bot$'').
 
-Game 10 and Game 11 differ only if $\adv$ does not make an $H_2(\pw,T)$ query, but makes an $\Htag(\pw,s,T,K^*)$ query resulting in $\tau^*$, where $K^* = \Decap(sk,c^*)$ for a freshly generated $sk$. We upper-bound this probability via a reduction $\red_\text{UNPRE}$ to the UNPRE property of the KEM scheme:
+Game 10 and Game 11 differ only if $\adv$ does not make an $H_2(\pw,T)$ query, but makes an $\Htag(\pw,s,T,K^*)$ query resulting in $\tau^*$, where $K^* = K = \Decap(sk,c^*)$ for a freshly generated $sk$. We upper-bound this probability via a reduction $\red_\text{UNPRE}$ to the UNPRE property of the KEM scheme:
 
 \medskip\noindent\textbf{\underline{Reduction $\red_\mathrm{UNPRE}$}:}
 
@@ -1813,7 +1817,7 @@ We show the new simulator in \Cref{fig:oeke-sim-hash-pk-st}. (Only the steps aft
 \medskip
 On $(c^*,\tau^*)$ from $\func$, simulate $P$'s output as follows:
 \begin{enumerate}
-  \item If $(s^*,T^*) = (s,T) \land (c^*,\tau^*) = (c,\tau')$, send $(\NewKey, sid, P', 0^n)$ to $\func$. \quad \textcolor[gray]{0.5}{// $\adv$ is passive}
+  \item If $(s^*,T^*) = (s,T) \land (c^*,\tau^*) = (c,\tau')$, send $(\NewKey, sid, P, 0^n)$ to $\func$. \quad \textcolor[gray]{0.5}{// $\adv$ is passive}
   \item Otherwise find $\adv$'s {\color{blue}$\Htag(pk^*,s,T,K^*)$} query resulting in $\tau^*$.
       \begin{enumerate}
         \item If there is no such query or more than one such query, send $(\TestPwd, sid, P, \bot)$ and then $(\NewKey, sid, P, 0^n)$ to $\func$.
@@ -1848,13 +1852,13 @@ $P'$ makes a single $\Htag$ query, on $(pk',s^*,T^*,K')$. If $(s^*,T^*) \neq (s,
       pk = \frac{T}{R} = \frac{T}{H_1(\pw,r)} = \frac{T}{H_1(\pw,s \oplus t)}, \\
       pk' = \frac{T}{R'} = \frac{T}{H_1(\pw',r')} = \frac{T}{H_1(\pw',s \oplus t')}.
       \end{gather*}
-      Since $\pw \neq \pw'$, $H_1(\pw,s \oplus t)$ and $H_1(\pw',s \oplus t')$ are independent of each other, so $\Pr[pk = pk'] = \Pr[H_1(\pw,s \oplus t) = H_1(\pw',s \oplus t')] \leq (q_1+1)/|\group|$.
+      Since $\pw \neq \pw'$, $H_1(\pw,s \oplus t)$ and $H_1(\pw',s \oplus t')$ are independent of each other, so $\Pr[pk = pk'] = \Pr[H_1(\pw,s \oplus t) = H_1(\pw',s \oplus t')] = 1/|\group|$.
   \item If $\pw = \pw' \land c^* \neq c$, then $\pw = \pw' \land (s^*,T^*) = (s,T)$, which implies that $pk = pk'$ by the definition of $pk$ and $pk'$. Then we can show that $\Pr[K = K']$ is negligible, via a reduction $\Adv_{\red_\text{CBIND}}^\text{CBIND}$ similar to that in the proof of \Cref{clm:htag2}. We have $\Pr[K = K'] \leq \Adv_{\red_\text{CBIND}}^\text{CBIND}$.
 \end{itemize}
 
 If $pk \neq pk'$ or $K \neq K'$ then of course $P'$'s query is not $\Htag(pk,s,T,K)$. Overall, we have
 \[
-\Pr[P'\text{ queries }\Htag(pk,s,T,K)] \leq \Adv_{\red_\text{CBIND}}^\text{CBIND} + \frac{q_1+1}{|\group|},
+\Pr[P'\text{ queries }\Htag(pk,s,T,K)] \leq \Adv_{\red_\text{CBIND}}^\text{CBIND} + \frac{1}{|\group|},
 \]
 which yields the claim.
 \end{proof}
@@ -1868,7 +1872,7 @@ We first state the new Game 13, and then make the argument.
   \item If there is more than one $\langle\pw^*,pk^*,sk^*\rangle$ record, abort.
   \item If there is no $\langle\pw^*,pk^*,sk^*\rangle$ record, set $SK := \bot$.
   \item If there is a unique $\langle\pw^*,pk^*,sk^*\rangle$ record, but $\pw^* \neq \pw$, also set $SK := \bot$.
-  \item If there is a unique $\langle\pw^*,pk^*,sk^*\rangle$ record, and $\pw^* = \pw$, compute $K := \Decap(sk^*,c^*)$. If $K^* = K$ then set $SK := \Hkey(K)$, otherwise set $SK := \bot$.
+  \item If there is a unique $\langle\pw^*,pk^*,sk^*\rangle$ record, and $\pw^* = \pw$, compute $K := \Decap(sk^*,c^*)$. If $K^* = K$, set $SK := \Hkey(K)$; otherwise set $SK := \bot$.
 \end{itemize}
 
 If $\adv$ makes no $\Htag(\star,s,T,\star)$ query resulting in $\tau^*$, then in particular $\adv$ makes no $\Htag(pk,s,T,\star)$ query resulting in $\tau^*$, so both Game 12 and Game 13 set $SK := \bot$. The probability that $\adv$ makes two different $\Htag(\star,s,T,\star)$ queries both resulting in $\tau^*$ is upper-bounded by $\qtag(\qtag-1)/2^{2n+1}$. (This part does not change from the argument under the old Game 13.) Below we assume that $\adv$ makes a unique $\Htag(pk^*,s,T,K^*)$ query resulting in $\tau^*$:
@@ -1905,7 +1909,7 @@ When $\pw$ is removed from $\Htag$ inputs in \Cref{sec:hash-pk-st}, the simulato
 \medskip
 On $(c^*,\tau^*)$ from $\func$, simulate $P$'s output as follows:
 \begin{enumerate}
-  \item If $(s^*,T^*) = (s,T) \land (c^*,\tau^*) = (c,\tau')$, send $(\NewKey, sid, P', 0^n)$ to $\func$. \quad \textcolor[gray]{0.5}{// $\adv$ is passive}
+  \item If $(s^*,T^*) = (s,T) \land (c^*,\tau^*) = (c,\tau')$, send $(\NewKey, sid, P, 0^n)$ to $\func$. \quad \textcolor[gray]{0.5}{// $\adv$ is passive}
   \item Otherwise find $\adv$'s {\color{blue}$\Htag(s,T,K^*)$} query resulting in $\tau^*$.
       \begin{enumerate}
         \item If there is no such query or more than one such query, send $(\TestPwd, sid, P, \bot)$ and then $(\NewKey, sid, P, 0^n)$ to $\func$.
@@ -1946,7 +1950,7 @@ $P'$ makes a single $\Htag$ query, on $(s^*,T^*,K')$. If $(s^*,T^*) \neq (s,T)$,
             \[
             r' := s \oplus t', \quad R' := T/pk'.
             \]
-            ($pk'$ is part of $\red_\mathrm{KBIND}$'s input.) If $H_1(\pw^*,r')$ has already been defined and it is not $R'$, abort. Otherwise program $H_1(\pw^*,r') := R'$. \quad \textcolor[gray]{0.5}{// Similar to how $H_1$ is programmed in the OW reduction in \Cref{sec:games}, Game 6}
+            ($pk'$ is part of $\red_\mathrm{KBIND}$'s input.) If $H_1(\pw^*,r')$ has already been defined and it is not $R'$, abort. Otherwise program $H_1(\pw^*,r') := R'$. \quad \textcolor[gray]{0.5}{// Similar to how $H_1$ is programmed in \Cref{sec:games}, Game 5}
         \item On $(\NewSession, sid, P', P, \pw', \text{``respondent''})$ from $\env$ and $(s^*,T^*)$ from $\adv$, if $\neg(\pw \neq \pw' \land (s^*,T^*) = (s,T))$, abort. Otherwise
             \begin{enumerate}
               \item If $\adv$ has not queried $H_2(\pw',T)$, make this query on behalf of $P'$.
@@ -1954,23 +1958,23 @@ $P'$ makes a single $\Htag$ query, on $(s^*,T^*,K')$. If $(s^*,T^*) \neq (s,T)$,
             \end{enumerate}
         \item On $(c^*,\tau^*)$ from $\adv$, output $c^*$.
       \end{enumerate}
-      Assuming $\Decap(sk,c^*) = K'$ and $\red_\text{KBIND}$'s guess of index $j$ is correct, the only difference between Game 1/2 and $\red_\text{KBIND}$'s simulation (until $\adv$ sends $c^*$) is that $\red_\text{KBIND}$ uses its input $pk'$ to program $H_1(\pw',r')$, and then uses its inputs $(c,K') \gets \Encap(pk')$ as the $P'$-to-$P$ message and compute $SK'$ and $\tau'$. Since $(c,K')$ are also computed as $\Encap(pk')$ in Game 1/2, $\red_\text{KBIND}$ simulates Game 1/2 perfectly. Furthermore, $\red_\text{KBIND}$ wins the KBIND game. We have
+      By an argument similar to that under Game 5 in \Cref{sec:games}, $\red_\text{KBIND}$'s aborting probability in step 2 is upper-bounded by $q_1(q_2+1)/2^{3n}$. Assuming $\red_\text{KBIND}$ does not abort in step 2, $\Decap(sk,c^*) = K'$, and $\red_\text{KBIND}$'s guess of index $j$ is correct, the only difference between Game 1/2 and $\red_\text{KBIND}$'s simulation (until $\adv$ sends $c^*$) is that $\red_\text{KBIND}$ uses its input $pk'$ to program $H_1(\pw',r')$, and then uses its inputs $(c,K') \gets \Encap(pk')$ as the $P'$-to-$P$ message and compute $SK'$ and $\tau'$. Since $(c,K')$ are also computed as $\Encap(pk')$ in Game 1/2, $\red_\text{KBIND}$ simulates Game 1/2 perfectly. Furthermore, $\red_\text{KBIND}$ wins the KBIND game. We have
       \[
-      \Pr[K = K' \mid \pw \neq \pw'] \leq (q_2+1)\Adv_{\red_\text{KBIND}}^\text{KBIND}.
+      \Pr[K = K' \mid \pw \neq \pw'] \leq (q_2+1)\left(\Adv_{\red_\text{KBIND}}^\text{KBIND} + \frac{q_1}{2^{3n}}\right).
       \]
   \item If $\pw = \pw' \land c^* \neq c$, then the argument in the proof of \Cref{clm:htag2} still holds, and $\Pr[K = K' \mid \pw = \pw' \land c^* \neq c] \leq (q_2+1)\Adv_{\red_\text{CBIND}}^\text{CBIND}$.
 \end{itemize}
 
 If $K \neq K'$ then of course $P'$'s query is not $\Htag(s,T,K)$. Overall, we have
 \[
-\Pr[P'\text{ queries }\Htag(s,T,K)] = \Pr[K = K'] \leq (q_2+1)(\Adv_{\red_\text{CBIND}}^\text{CBIND} + \Adv_{\red_\text{KBIND}}^\text{KBIND}),
+\Pr[P'\text{ queries }\Htag(s,T,K)] = \Pr[K = K'] \leq (q_2+1)\left(\Adv_{\red_\text{CBIND}}^\text{CBIND} + \Adv_{\red_\text{KBIND}}^\text{KBIND} + \frac{q_1}{2^{3n}}\right),
 \]
 which yields the claim.
 \end{proof}
 The remaining argument is essentially identical to that in the old Game 2.
 
 \paragraph{Change in Game 11.}
-Game 10 and Game 11 differ only if $\adv$ does not make an $H_2(\pw,T)$ query, but makes an $\Htag(s,T,K^*)$ query resulting in $\tau^*$, where $K^* = \Decap(sk,c^*)$ for a freshly generated $sk$. By a reduction $\red_\text{UNPRE}$ that is essentially identical to the one in \Cref{sec:hash-pw-st}, we have
+Game 10 and Game 11 differ only if $\adv$ does not make an $H_2(\pw,T)$ query, but makes an $\Htag(s,T,K^*)$ query resulting in $\tau^*$, where $K^* = \Decap(sk,c^*)$ for a freshly generated $sk$. By a reduction $\red_\text{UNPRE}$ to the UNPRE property of the KEM scheme that is essentially identical to the one in \Cref{sec:hash-pw-st}, we have
 \[
 \Dist_\env^{10,11} \leq \Adv_{\red_\text{UNPRE}}^\text{UNPRE}.
 \]
@@ -2011,19 +2015,19 @@ We claim that the KBIND property can also be removed. KBIND appears in the first
 While we aim to provide a comprehensive and thorough analysis of all OEKE-2F variants, there are, unfortunately (or perhaps fortunately?), still a number of open questions stemmed from this work. Below we mention four topics for future work.
 
 \paragraph{Minimal assumptions for OEKE-2F.}
-We did not prove any results on whether the KEM security properties used in this work are \emph{minimal}, i.e., whether some weaker properties suffice for OEKE-2F security. It appears that the properties in \Cref{sec:kem-standard} are minimal, as the reductions use them in a ``tight'' manner. It remains to be formally proven that the security of OEKE (even the ``hash everything'' version) implies the KEM properties in \Cref{sec:kem-standard}, i.e., any PPT adversary that breaks these properties can be used to build an adversary that breaks the UC-security of OEKE.
+We did not prove any results on whether the KEM security properties used in this work are \emph{minimal}, i.e., whether some weaker properties suffice for OEKE-2F security. It appears to us that the properties in \Cref{sec:kem-standard} are minimal, but it remains to be formally proven that the security of OEKE (even the ``hash everything'' version) implies the KEM properties in \Cref{sec:kem-standard}, i.e., any PPT adversary that breaks any of these properties can be used to build an adversary that breaks the UC-security of OEKE.
 
-On the other hand, with some thoughts one can realize that the KEM properties in \Cref{sec:kem-additional} are \emph{not} minimal, and some weaker properties suffice. Take CBIND as an example: even if an adversary can break CBIND of the underlying KEM scheme, as long as this behavior can be caught by the simulator, the simulation would still go through. Thus, roughly speaking CBIND can be weakened to the following property: for any PPT adversary $\adv$ in the game in \Cref{def:cbind}, there exists a PPT simulator $\sim$ that outputs a bit indicating whether $\adv$ wins with all but negligible accuracy. ($\sim$ does not know the secret key $sk$.) A similar weakening can be done for KBIND. The UNPRE and CR properties appear minimal.
+On the other hand, with some thoughts one can realize that the KEM properties in \Cref{sec:kem-additional} are \emph{not} minimal, and some weaker properties suffice. Take CBIND as an example: even if an adversary can break CBIND of the underlying KEM scheme, as long as this behavior could be ``caught'' by the simulator, the simulation would still go through. Thus, roughly speaking CBIND can be weakened to the following property: for any PPT adversary $\adv$ in the game in \Cref{def:cbind}, there exists a PPT simulator $\sim$ that outputs a bit indicating whether $\adv$ wins with all but negligible accuracy. ($\sim$ does not know the secret key $sk$.) A similar weakening can be done for KBIND. The UNPRE and CR properties appear minimal.
 
 \paragraph{OEKE-2F security in the game-based setting.}
-A natural question is whether we could rely on weaker KEM security properties if we only require game-based security for OEKE-2F. The standard game-based security notion for PAKE is the one in \cite{EC:BelPoiRog00} (henceforth BPR). One important difference between the BPR and UC security notions is that BPR does not require forward secrecy. From the discussion in \Cref{sec:kem-standard}, it seems that some mechanisms in the OW and ANO games (e.g., giving the public key $pk$ to the adversary) are designed solely for the purpose of achieving forward secrecy, so some weaker versions of OW-1PCA and ANO-1PCA should suffice for the BPR security of OEKE-2F.
+A natural question is whether we could rely on weaker KEM security properties if we only require game-based security for OEKE-2F. The standard game-based security notion for PAKE is the one in \cite{EC:BelPoiRog00} (henceforth BPR). One important difference between the BPR and UC security notions is that BPR does not require forward secrecy. From the discussion in \Cref{sec:kem-standard}, it seems that some mechanisms in the OW and ANO games (e.g., giving the public key $pk$ to the adversary) are designed for the sole purpose of achieving forward secrecy, so some weaker versions of OW-1PCA and ANO-1PCA should suffice for the BPR security of OEKE-2F.
 
 Furthermore, it seems that the CBIND and KBIND properties do not correspond to any ``real'' attack on OEKE-2F (see \Cref{fn:cbind}), and are needed only for the simulation to go through. Therefore, it is possible that they can be removed in game-based security of (any variant of) OEKE-2F.
 
 On the other hand, it is unclear how significant a game-based security analysis of OEKE-2F would be. Forward secrecy is considered a standard property for PAKE nowadays, and the UC notion has superseded the game-based one(s) in general. As such, this direction does not seem to be the most urgent in the analysis of OEKE-2F.
 
 \paragraph{Extension to EKE.}
-This entire work is on OEKE only, and one might wonder including/excluding certain items from the hash would make a difference in EKE. Note that EKE does not have the authenticator $\tau'$ to begin with, so the only question is what should be included in $\Hkey$ inputs (that derive the session key $SK$). \cite[Appendix~A.4]{EC:JanRoyXu25} shows that the second protocol message needs to be included and the first protocol message does not. It is not entirely clear whether hashing the password would weaken the security requirements on KEM: from the EKE security proof in \cite{EC:JanRoyXu25} it seems that hashing the password does not help, but a formal analysis of this is open.
+This entire work is on OEKE only, and one might wonder including/excluding certain items from the hash would make a difference in EKE. Note that EKE does not have the authenticator $\tau'$ to begin with, so the only question is what should be included in $\Hkey$ inputs (that derive the session key $SK$). \cite[Appendix~A.4]{EC:JanRoyXu25} shows that the second protocol message needs to be included and the first protocol message does not. It is not entirely clear whether hashing the password would weaken the security requirements on KEM: from the EKE security proof in \cite{EC:JanRoyXu25} it seems that hashing the password does not help, but a formal analysis is open.
 
 \paragraph{Extension to Tempo.}
 Finally, we mention the future direction of the most practical significance. The current description and security analysis of the Tempo protocol assume the ``hash everything'' version. Given how similar the security proof for Tempo is to the proof for OEKE-2F, we speculate that the same optimization --- removing certain items from the ROs while relying on mildly stronger security properties of the underlying KEM scheme --- can be made in Tempo, which would further protect the protocol against side-channel attacks.
@@ -2036,25 +2040,25 @@ Finally, we mention the future direction of the most practical significance. The
 \label{app:comparison}
 Our simulator in \Cref{sec:sim} is, by and large, the same as the one in \cite[Fig.5~and~6]{EPRINT:ArrBarJar25}, although we completely rewrite it to improve readability. We first summarize some of the notational differences in \Cref{tab:sim-notations}.
 \begin{table}[H]\centering
-\begin{tabular}{ |c|c|c|c| }
+\begin{tabular}{ |c|c|c| }
 \hline
- & \makecell{our \\ notation} & \makecell{notation in \\ \cite{EPRINT:ArrBarJar25}} & comment \\
+ & \makecell{our \\ notation} & \makecell{notation in \\ \cite{EPRINT:ArrBarJar25}} \\
 \hline
-protocol parties & $P$, $P'$ & $\mathsf{A}$, $\mathsf{B}$ & \makecell{easy to confuse \\ with adversary $\adv$} \\
+protocol parties & $P$, $P'$ & $\mathsf{A}$, $\mathsf{B}$ \\
 \hline
-simulated $P$-to-$P'$ message & $(s,T)$ & $(\overline{s},\overline{T})$ & \\
+simulated $P$-to-$P'$ message & $(s,T)$ & $(\overline{s},\overline{T})$ \\
 \hline
-adversarial $P$-to-$P'$ message & $(s^*,T^*)$ & $(s,T)$ & \\
+adversarial $P$-to-$P'$ message & $(s^*,T^*)$ & $(s,T)$ \\
 \hline
-$\adv$'s guess of $P'$'s password & $(\pw')^*$ & $\pw^*$ & \\
+$\adv$'s guess of $P'$'s password & $(\pw')^*$ & $\pw^*$ \\
 \hline
-\makecell{KEM public key corresponding to \\ correct password guess on $P'$} & $pk'$ & $\mathsf{pk}^*$ & \\
+\makecell{KEM public key corresponding to \\ correct password guess on $P'$} & $pk'$ & $\mathsf{pk}^*$ \\
 \hline
-simulated $P'$-to-$P$ message & $(c,\tau')$ & $(c,\mathsf{tag})$ & \\
+simulated $P'$-to-$P$ message & $(c,\tau')$ & $(c,\mathsf{tag})$ \\
 \hline
-adversarial $P'$-to-$P$ message & $(c^*,\tau^*)$ & $(c,\mathsf{tag})$ & \makecell{same $(c,\mathsf{tag})$ \\ for different things} \\
+adversarial $P'$-to-$P$ message & $(c^*,\tau^*)$ & $(c,\mathsf{tag})$ \\
 \hline
-$\adv$'s guess of $P$'s password & $\pw^*$ & $\pw^*$ & \makecell{same $\pw^*$ \\ for different things} \\
+$\adv$'s guess of $P$'s password & $\pw^*$ & $\pw^*$ \\
 \hline
 \end{tabular}
 \caption{Comparison of notations between our simulator and the one in \cite{EPRINT:ArrBarJar25}}
@@ -2063,17 +2067,17 @@ $\adv$'s guess of $P$'s password & $\pw^*$ & $\pw^*$ & \makecell{same $\pw^*$ \\
 
 The simulator in \cite{EPRINT:ArrBarJar25} has more bookkeeping and aborts more frequently. In particular, we completely remove their record $\mathsf{forwS}$, and when detecting whether an adversarial $P$-to-$P'$ message contains more than one password guess (causing the simulator to abort), we only check the relevant $H_2$ queries, whereas they check \emph{all} $H_2$ queries --- including those that are completely unrelated to the attack in the $P$-to-$P'$ direction. For a more detailed explanation, see the comment after Game 15 in \Cref{sec:games}.
 
-The only (more or less) essential difference lies in the {\color{red}red} text in \Cref{fig:oeke-sim1}: in the case where the adversary makes an incorrect password guess on $P'$, we compute $c$ from a uniformly random KEM public key $pk'$, whereas they compute $c$ from an honestly generated $pk'$. While both methods work, our method simplifies the reduction; this is further explained in the comment after Game 18 in \Cref{sec:games}, item (2).
+The only (more or less) essential difference lies in the {\color{red}red} text in \Cref{fig:oeke-sim1}: in the case where the adversary makes an incorrect password guess on $P'$, we compute $c$ from a uniformly random KEM public key $pk'$, whereas they compute $c$ from an honestly generated $pk'$. While both methods work, our method simplifies the reduction; this is further explained in the comment after Game 17 in \Cref{sec:games}, item (2).
 
 \section{Security Analyses of Other Versions (II): Removing $(s,T)$ from the Hash}
 \label{app:other-variants-2}
 \subsection{The ``Hash $\pw$ and $pk$'' Version}
 \label{app:hash-pw-pk}
-We start from the version where $\tau$ is defined as $\Htag(\pw,pk,K)$, i.e., $(s,T)$ and $c$ are removed from the hash compared with the ``hash everything'' version. This would best be compared with the protocol (and its security proof) in \Cref{sec:hash-pw-st}, where $\tau$ is defined as $\Htag(\pw,pk,s,T,K)$. Removing $(s,T)$ from the hash introduces a new case that the simulator must take into consideration, which we start from.
+We start from the version where $\tau$ is defined as $\Htag(\pw,pk,K)$, i.e., $(s,T)$ and $c$ are removed from the hash compared to the ``hash everything'' version. This would best be compared with the protocol (and its security proof) in \Cref{sec:hash-pw-st}, where $\tau$ is defined as $\Htag(\pw,pk,s,T,K)$. Removing $(s,T)$ from the hash introduces a new case that the simulator must take into consideration, which we start from.
 
 \subsubsection{Changes to the Simulator}
 \label{app:hash-pw-pk-sim}
-The new situation emerges when the adversary $\adv$ decrypts the $P$-to-$P'$ message $(s,T)$ to recover $pk := \mathsf{2F}^{\text{-}1}(\pw,(s,T))$, and then re-encrypts the same $pk$ under the same $\pw'$ to get $(s^*,T^*) \gets \mathsf{2F}(\pw,pk)$. Note that unlike IC, \emph{the $\mathsf{2F}$ encryption is randomized}, so $\adv$'s re-encryption likely results in a different $(s^*,T^*) \neq (s,T)$. Then $\adv$ sends $(s^*,T^*)$ to $P'$, and forwards the $P'$-to-$P$ message $(c,\tau')$ without modification. We show this whole process in \Cref{fig:attack-no-st}.
+The new situation emerges when the adversary $\adv$ decrypts the $P$-to-$P'$ message $(s,T)$ to recover $pk := \mathsf{2F}^{\text{-}1}(\pw,(s,T))$, and re-encrypts the same $pk$ under the same $\pw$ to get $(s^*,T^*) \gets \mathsf{2F}(\pw,pk)$. Note that unlike IC, \emph{the $\mathsf{2F}$ encryption is randomized}, so $\adv$'s re-encryption likely results in a different $(s^*,T^*) \neq (s,T)$. Then $\adv$ sends $(s^*,T^*)$ to $P'$, and forwards the $P'$-to-$P$ message $(c,\tau')$ without modification. We show this whole process in \Cref{fig:attack-no-st}.
 
 \begin{figure}[H]
 \pseudocodeblock{
@@ -2103,7 +2107,11 @@ If we include $(s,T)$ in $\Htag$ inputs, this will immediately result in $P$ rej
 \end{remark}
 
 We show the new simulator in \Cref{fig:oeke-sim-hash-pw-pk}. (Only the steps after receiving $(c^*,\tau^*)$ are included.)
+\begin{remark}
+We briefly mention another possible simulation strategy. Referring to \Cref{fig:attack-no-st}, computing $pk := \mathsf{2F}^{\text{-}1}(\pw,(s,T))$ requires $\adv$ to query $H_2(\pw,T)$, at which time the simulator $\sim$ stores $\langle\pw,pk,sk\rangle$. Later when $\sim$ simulates the $P'$-to-$P$ message, it needs to compute $(c,K) \gets \Encap(pk)$ and $\tau' := \Htag(\pw,pk,K)$ (see step 2(b)(ii) of \Cref{fig:oeke-sim1}). Therefore, in \Cref{fig:oeke-sim-hash-pw-pk} we could remove step 2, and instead in step 3 find $\adv$ \emph{{\color{blue}or $\sim$ itself}}'s $\Htag(\pw^*,pk^*,K^*)$ query resulting in $\tau^*$, which will still result in $\sim$ finding $\pw$ and sending $(\TestPwd, sid, P, \allowbreak\pw)$ to $\func$. This is essentially what the simulator in \cite{EC:JanRoyXu25} does, and yields a simpler simulator. We choose to present our simulator in the more complicated way because it explicitly highlights the ``attack'' in \Cref{fig:attack-no-st} and thus provides a clearer comparison with the ``hash everything'' version of the protocol.
 
+The same remark goes for subsequent simulators in this section.
+\end{remark}
 \begin{figure}[H]
 \begin{framed}
 \begin{small}
@@ -2112,7 +2120,7 @@ We show the new simulator in \Cref{fig:oeke-sim-hash-pw-pk}. (Only the steps aft
 \medskip
 On $(c^*,\tau^*)$ from $\func$, simulate $P$'s output as follows:
 \begin{enumerate}
-  \item If $(s^*,T^*) = (s,T) \land (c^*,\tau^*) = (c,\tau')$, send $(\NewKey, sid, P', 0^n)$ to $\func$. \quad \textcolor[gray]{0.5}{// $\adv$ is passive}
+  \item If $(s^*,T^*) = (s,T) \land (c^*,\tau^*) = (c,\tau')$, send $(\NewKey, sid, P, 0^n)$ to $\func$. \quad \textcolor[gray]{0.5}{// $\adv$ is passive}
   {\color{blue}\item If $(s^*,T^*) \neq (s,T) \land (c^*,\tau^*) = (c,\tau')$, and there has been a $(\TestPwd, sid, P', \pw')$ command to $\func$ resulting in ``correct guess'' (i.e., $\sim$ previously entered step 2(b)(ii) in \Cref{fig:oeke-sim2}), there must be a $pk'$ and an $SK'$ defined at that time. 
       \begin{enumerate}
         \item Retrieve record $\langle\pw',pk,\star\rangle$. If there is no such record, go to step 3. \quad \textcolor[gray]{0.5}{// $\adv$ does not decrypt $pk := \mathsf{2F}^{\text{-}1}(\pw,(s,T))$}
@@ -2141,12 +2149,6 @@ On $(c^*,\tau^*)$ from $\func$, simulate $P$'s output as follows:
 \caption{UC simulator $\sim$ for the ``hash $\pw$ and $pk$'' variant of OEKE. Only the paragraph that needs essential change (shown in {\color{blue}blue}) is included}
 \label{fig:oeke-sim-hash-pw-pk}
 \end{figure}
-
-\begin{remark}
-We briefly mention another possible simulation strategy. Referring to \Cref{fig:attack-no-st}, computing $pk := \mathsf{2F}^{\text{-}1}(\pw,(s,T))$ requires $\adv$ to query $H_2(\pw,T)$, at which time the simulator $\sim$ stores $\langle\pw,pk,sk\rangle$. Later when $\sim$ simulates the $P'$-to-$P$ message, it needs to compute $(c,K) \gets \Encap(pk)$ and $\tau' := \Htag(\pw,pk,K)$ (see step 2(b)(ii) of \Cref{fig:oeke-sim1}). Therefore, in \Cref{fig:oeke-sim-hash-pw-pk} we could remove step 2, and instead in step 3 find $\adv$ \emph{{\color{blue}or $\sim$ itself}}'s $\Htag(\pw^*,pk^*,K^*)$ query resulting in $\tau^*$, which will still result in $\sim$ finding $\pw$ and sending $(\TestPwd, sid, P, \allowbreak\pw)$ to $\func$. This is essentially what the simulator in \cite{EC:JanRoyXu25} does, and yields a simpler simulator. We choose to present our simulator in the more complicated way because it explicitly highlights the ``attack'' in \Cref{fig:attack-no-st} and thus provides a clearer comparison with the ``hash everything'' version of the protocol.
-
-The same remark goes for subsequent simulators in this section.
-\end{remark}
 
 \subsubsection{Changes in Game Hops}
 \label{app:game-hops-hash-pw-pk}
@@ -2340,7 +2342,7 @@ P(\pw) \< \< \adv \< \< P'(\pw) \\
 
 In this ``attack'', the two honest parties' passwords $\pw$ are the same. Assuming $\adv$ knows it, it can decrypt $P$'s message to recover $X = g^x$, and then re-encrypt $X^2$ under the same $\pw$; this causes $P'$ to output $SK' = \Hkey(g^{2xy})$ and send $(Y = g^y, \tau' = \Htag(\pw,g^{2xy}))$. Then $\adv$ sends $(Y^2,\tau')$ to $P$, causing $P$'s check to pass and $P$ will also output $\Hkey(g^{2xy})$. (This is not an issue if $pk$ is included in $\Htag$, since $P$ would compute $\tau = \Htag(\dots,Y^2,\dots) \neq \Htag(\dots,Y,\dots) = \tau'$ unless there is a collision in $\Htag$, and its check $\tau^* \stackrel{?}{=} \tau$ would fail.). Of course, $X^2$ can be replaced by any function of $X$ that $\adv$ can compute.
 
-In general, $\adv$ can decrypt $(s,T)$ to recover $pk := \mathsf{2F}^{\text{-}1}(\pw,(s,T))$, then re-encrypt some $pk'$ of $\adv$'s choise under the same $\pw'$ to get $(s^*,T^*) \gets \mathsf{2F}(\pw,pk')$, and finally forward $\tau'$ but manipulate $c^*$ so that $P$'s check will pass. The ``attack'' in \Cref{app:hash-pw-pk} is the special case where $pk' = pk$; there, including $pk$ in $\Htag$ inputs forces $\adv$ not to change $pk$.
+In general, $\adv$ can decrypt $(s,T)$ to recover $pk := \mathsf{2F}^{\text{-}1}(\pw,(s,T))$, then re-encrypt some $pk'$ of $\adv$'s choice under the same $\pw'$ to get $(s^*,T^*) \gets \mathsf{2F}(\pw,pk')$, and finally forward $\tau'$ but manipulate $c^*$ so that $P$'s check will pass. The ``attack'' in \Cref{app:hash-pw-pk} is the special case where $pk' = pk$; there, including $pk$ in $\Htag$ inputs forces $\adv$ not to change $pk$.
 
 This scenario should be simulated as follows: When $\adv$ decrypts $(s,T)$ under $\pw$, $\sim$ records $\langle\pw,pk,sk\rangle$ (although there might be a large number of such decryption attempts, and $\sim$ does not know which is the ``right'' one at this point). Then when $\adv$ sends $(s^*,T^*)$ to $P'$, $\sim$ extracts $\pw$, which allows $\sim$ to retrieve the ``right'' record $\langle\pw,pk,sk\rangle$; $\sim$ also computes $K'$ while simulating the $P'$ side. Later, when $\adv$ sends $(c^*,\tau')$, $\sim$ can tell if $\adv$ is performing the aforementioned attack by checking if $\Decap(sk,c^*) = K'$.
 
@@ -2543,7 +2545,7 @@ We show the new simulator in \Cref{fig:oeke-sim-hash-pk}. (Only the steps after 
 \medskip
 On $(c^*,\tau^*)$ from $\func$, simulate $P$'s output as follows:
 \begin{enumerate}
-  \item If $(s^*,T^*) = (s,T) \land (c^*,\tau^*) = (c,\tau')$, send $(\NewKey, sid, P', 0^n)$ to $\func$. \textcolor[gray]{0.5}{// $\adv$ is passive}
+  \item If $(s^*,T^*) = (s,T) \land (c^*,\tau^*) = (c,\tau')$, send $(\NewKey, sid, P, 0^n)$ to $\func$. \textcolor[gray]{0.5}{// $\adv$ is passive}
   {\color{blue}\item If $(s^*,T^*) \neq (s,T) \land (c^*,\tau^*) = (c,\tau')$, and there has been a $(\TestPwd, sid, P', \pw')$ command to $\func$ resulting in ``correct guess'' (i.e., $\sim$ previously entered step 2(b)(ii) in \Cref{fig:oeke-sim2}), there must be a $pk'$ and an $SK'$ defined at that time. 
       \begin{enumerate}
         \item Retrieve record $\langle\pw^*,pk',\star\rangle$. If there is more than one such record, abort. If there is no such record, go to step 3.
