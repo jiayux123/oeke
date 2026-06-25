@@ -95,7 +95,7 @@
 \title{The Most Efficient Protocol for PAKE: \\
 \medskip
 \large{What Exact Stuff Do You Need to Hash at the End?}
-\thanks{The \texttt{.tex} code of this paper is available at \url{https://github.com/jiayux123/oeke}. \\ Some minor \LaTeX\;hacks, such as lines 21--25 and 29--31, might be useful to beginners.}
+\thanks{The \texttt{.tex} code of this paper is available at \url{https://github.com/jiayux123/oeke}. \\ Some minor \LaTeX\;hacks, such as lines 21--25, 29--31, 1045, 1088--1089 and 1942--1944, \\ might be useful to beginners.}
 }
 
 \author{Jiayu Xu\footnote{Oregon State University, \texttt{xujiay@oregonstate.edu}}}
@@ -112,7 +112,7 @@ Unfortunately, the community cannot agree upon what the OEKE-2F protocol exactly
   \item The first protocol message, and
   \item The KEM ciphertext.
 \end{itemize}
-This yields 16 potential variants of OEKE-2F; only two of them have been studied in the literature, and the pros and cons of each version are poorly understood.
+This yields 16 potential variants of OEKE-2F; only two of them have been studied in the literature, and their pros and cons are poorly understood.
 
 In this work, we present a comprehensive analysis of \emph{all 16 variants} of OEKE-2F, proving the UC-security of each of them. The general takeaway is that the ``hash everything'' version requires the fewest security properties of the underlying KEM scheme, and the more items we remove from the hash, the more security requirements the KEM scheme has to satisfy --- although all of the additional KEM properties are still mild. We pinpoint the exact KEM properties each version of OEKE-2F needs, and thoroughly explain the rationales.
 
@@ -432,7 +432,7 @@ The information above could be overwhelming, but the general takeaway is:
 Overall, we hope that this work will help the community converge upon a ``right'' version of OEKE. Since the password $\pw$ can be removed from the hash ``for free'', we advocate removing it for better defense against side-channel attacks. Whether other items can/should be removed depends on the underlying KEM scheme; in \Cref{sec:dh-kem} we show that the Diffie--Hellman KEM scheme --- with 1 excluded from valid ciphertexts --- satisfies all properties we consider, but leave the analyses of post-quantum KEM schemes for future work.
 
 \subsection{How to Read This Paper}
-I certainly don't expect anyone to read through all 107 pages of this paper. (Well, perhaps the 2-page table of contents and the 3.5-page references shouldn't count, but even then it's still over 100 pages.) As I said right before \Cref{sec:oeke-dh}, I have organized the paper in such a way that you should gain an intermediate level of understanding of the technical details after reading \Cref{sec:intro,sec:prelim}. In particular, \Cref{sec:kem-standard,sec:kem-additional} explain why certain KEM properties are needed in certain OEKE variants.
+I certainly don't expect anyone to read through all 105 pages of this paper. (Well, perhaps the 2-page table of contents and the 3-page references shouldn't count, but even then it's still 100 pages.) As I said right before \Cref{sec:oeke-dh}, I have organized the paper in such a way that you should gain an intermediate level of understanding of the technical details after reading \Cref{sec:intro,sec:prelim}. In particular, \Cref{sec:kem-standard,sec:kem-additional} explain why certain KEM properties are needed in certain OEKE variants.
 
 Below I discuss who should read further:
 \begin{itemize}
@@ -686,7 +686,7 @@ Suppose the UNI-PK and OW properties hold for a KEM scheme. Then
       \end{array}
       :
       \begin{array}{c}
-      (pk,sk) \gets \Gen \\
+      (\star,sk) \gets \Gen \\
       pk' \gets \pkspace \\
       (c,K') \gets \Encap(pk') \\
       K := \Decap(sk,c)
@@ -2030,7 +2030,7 @@ On the other hand, it is unclear how significant a game-based security analysis 
 This entire work is on OEKE only, and one might wonder including/excluding certain items from the hash would make a difference in EKE. Note that EKE does not have the authenticator $\tau'$ to begin with, so the only question is what should be included in $\Hkey$ inputs (that derive the session key $SK$). \cite[Appendix~A.4]{EC:JanRoyXu25} shows that the second protocol message needs to be included and the first protocol message does not. It is not entirely clear whether hashing the password would weaken the security requirements on KEM: from the EKE security proof in \cite{EC:JanRoyXu25} it seems that hashing the password does not help, but a formal analysis is open.
 
 \paragraph{Extension to Tempo.}
-Finally, we mention the future direction of the most practical significance. The current description and security analysis of the Tempo protocol assume the ``hash everything'' version. Given how similar the security proof for Tempo is to the proof for OEKE-2F, we speculate that the same optimization --- removing certain items from the ROs while relying on mildly stronger security properties of the underlying KEM scheme --- can be made in Tempo, which would further protect the protocol against side-channel attacks.
+Finally, we mention the future direction of the most practical significance. The current description and security analysis of the Tempo protocol \cite[Figure~2]{TCHES:ArrBarJar26} assume the ``hash everything'' version. Given how similar the security proof for Tempo is to the proof for OEKE-2F, we speculate that the same optimization --- removing certain items from the ROs while relying on mildly stronger security properties of the underlying KEM scheme --- can be made in Tempo, which would further protect the protocol against side-channel attacks.
 
 \bibliographystyle{alpha}
 \bibliography{bib.bib}
@@ -2095,7 +2095,7 @@ P(\pw) \< \< \adv \< \< P'(\pw) \\
 
 One can intuitively tell that this does not constitute an actual attack, since the only thing $\adv$ achieves is to modify some protocol messages and cause $P$ and $P'$ to output the same session key --- which $\adv$ \emph{cannot} compute.\footnote{If anything, such an $\adv$ is ``dumber'' than an adversary who performs a regular online attack, since $\adv$ who knows the correct password could have learned the two parties' session keys but wastes such an opportunity.} What $\adv$ essentially does is to run the $\mathsf{2F}$ encryption process using a fresh randomness, yielding another $(s^*,T^*)$ which has the same effect on the $P'$ side as the honest $(s,T)$; in this way, $\adv$ is ``effectively'' passive while actually modifying the $P$-to-$P'$ message. (We stress again that this ``attack'' critically relies on $\mathsf{2F}$ being randomized, and does not work anymore if we replace it with an IC. However, all subsequent ``attacks'' --- in the setting where we further remove $\pw$ and/or $pk$ from $\Htag$ inputs --- work even with IC.)
 
-This example vividly demonstrates why removing $(s,T)$ from the hash does not require more properties of the underlying KEM scheme, but complicates the security proof. Since this ``attack'' requires $\adv$ to decrypt and re-encrypt via some RO queries, the simulator can catch $\adv$ doing so (and can extract the password along the way), and no additional properties on the KEM level are needed. Still, this scenario is not covered by the previous simulator, and the simulator has to create a new case dedicated to this specific scenario. In more detail, the scenario in \Cref{fig:attack-no-st} should be simulated as follows: When $\adv$ decrypts $(s,T)$ under $\pw$, the simulator $\sim$ records $\langle\pw,pk,sk\rangle$ (although there might be a large number of such decryption attempts, and $\sim$ does not know which is the ``right'' one at this point). Then when $\adv$ sends $(s^*,T^*)$ to $P'$, $\sim$ extracts the ``right'' $\pw$, which allows $\sim$ to compromise $P'$'s session. Later, when $\adv$ sends $(c^*,\tau')$, $\sim$ can tell that $\adv$ is performing the aforementioned ``attack'', and can use the same $\pw$ to compromise $P$'s session.
+This example vividly demonstrates why removing $(s,T)$ from the hash sometimes does not require more properties of the underlying KEM scheme, but complicates the security proof. Since this ``attack'' requires $\adv$ to decrypt and re-encrypt via some RO queries, the simulator can catch $\adv$ doing so (and can extract the password along the way), and no additional properties on the KEM level are needed. Still, this scenario is not covered by the previous simulator, and the simulator has to create a new case dedicated to this specific scenario. In more detail, the scenario in \Cref{fig:attack-no-st} should be simulated as follows: When $\adv$ decrypts $(s,T)$ under $\pw$, the simulator $\sim$ records $\langle\pw,pk,sk\rangle$ (although there might be a large number of such decryption attempts, and $\sim$ does not know which is the ``right'' one at this point). Then when $\adv$ sends $(s^*,T^*)$ to $P'$, $\sim$ extracts the ``right'' $\pw$, which allows $\sim$ to compromise $P'$'s session. Later, when $\adv$ forwards $(c^*,\tau')$, $\sim$ can tell that $\adv$ is performing the aforementioned ``attack'', and can use the same $\pw$ to compromise $P$'s session.
 
 \begin{remark}
 Looking ahead, all subsequent ``attacks'' follow a similar pattern:
@@ -2103,7 +2103,7 @@ Looking ahead, all subsequent ``attacks'' follow a similar pattern:
   \item In the first protocol message, $\adv$ decrypts $(s,T)$ and re-encrypts to some other $(s^*,T^*)$, and
   \item In the second protocol message, $\adv$ forwards $\tau'$ (but may or may not modify $c$).
 \end{itemize}
-If we include $(s,T)$ in $\Htag$ inputs, this will immediately result in $P$ rejecting, since $P$'s check will fail. However, without $(s,T)$ in the hash, we have to take this scenario into account. The difference from what's in this section is that if we additionally remove $\pw$ and/or $pk$ from the hash, then $\adv$ can re-encrypt the same $pk$ under another $\pw'$, and/or re-encrypt another $pk^*$ under the same $\pw$. Hence, \Cref{fig:attack-no-st} is a special case of all subsequent ``attacks''.
+If we include $(s,T)$ in $\Htag$ inputs, this will immediately result in $P$ rejecting, since $P$'s check will fail. However, without $(s,T)$ in the hash, we have to take this scenario into account. The difference from what's in this section is that if we additionally remove $\pw$ and/or $pk$ from the hash, then $\adv$ can re-encrypt $pk^*$ under $\pw'$, where $\pw'$ is equal or not equal to $pw$, and $pk^*$ is equal or not equal to $pk$. Hence, \Cref{fig:attack-no-st} is a special case of all subsequent ``attacks''.
 \end{remark}
 
 We show the new simulator in \Cref{fig:oeke-sim-hash-pw-pk}. (Only the steps after receiving $(c^*,\tau^*)$ are included.)
@@ -2137,7 +2137,7 @@ On $(c^*,\tau^*)$ from $\func$, simulate $P$'s output as follows:
         \item If there is no such query or more than one such query, send $(\TestPwd, sid, P, \bot)$ and then $(\NewKey, sid, P, 0^n)$ to $\func$.
         \item If there is exactly one such query, retrieve record $\langle\pw^*,\star,sk^*\rangle$. If there is no such record, send $(\TestPwd, sid, P, \bot)$ and then $(\NewKey, sid, P, 0^n)$ to $\func$.
         \item Compute $K := \Decap(sk^*,c^*)$. If $K^* \neq K$, send $(\TestPwd, sid, P', \bot)$ and then $(\NewKey, sid, P, 0^n)$ to $\func$.
-        \item Send $(\TestPwd, sid, P, \pw')$ to $\func$.
+        \item Send $(\TestPwd, sid, P, \pw^*)$ to $\func$.
             \begin{enumerate}
               \item If $\func$ replies with ``wrong guess'', send $(\NewKey, sid, P, 0^n)$ to $\func$.
               \item If $\func$ replies with ``correct guess'', compute $SK := \Hkey(K)$ and send $(\NewKey, sid, P, SK)$ to $\func$.
@@ -2152,7 +2152,7 @@ On $(c^*,\tau^*)$ from $\func$, simulate $P$'s output as follows:
 
 \subsubsection{Changes in Game Hops}
 \label{app:game-hops-hash-pw-pk}
-Note that \Cref{clm:htag} in Game 2 does not hold anymore, exactly due to what the adversary can do in \Cref{fig:attack-no-pk} ($P$ does not reject even though $\adv$ is not passive and $\adv$ makes no $\Htag$ query whatsoever). As such, Game 2 needs to change essentially. Since Game 2 is almost at the beginning of the sequence of games, this affects some subsequent games and we need to proceed carefully. The trick is to isolate the specific case of the new ``attack'', i.e., the case that makes \Cref{clm:htag} fail; in this case we need to additionally check $P'$'s $\Htag$ query, whereas in all other cases we can proceed as before. In this way we minimize the affect of the change in Game 2.
+Note that \Cref{clm:htag} in Game 2 does not hold anymore, exactly due to what the adversary can do in \Cref{fig:attack-no-st} ($P$ does not reject even though $\adv$ is not passive and $\adv$ makes no $\Htag$ query whatsoever). As such, Game 2 needs to change essentially. Since Game 2 is almost at the beginning of the sequence of games, this affects some subsequent games and we need to proceed carefully. The trick is to isolate the specific case in \Cref{fig:attack-no-st}, i.e., the case that makes \Cref{clm:htag} fail; in this case we need to additionally check $P'$'s $\Htag$ query, whereas in all other cases we can proceed as before. In this way we minimize the effect of the change in Game 2.
 
 We start from describing the new Game 2. Most of the subsequent argument is clerical work verifying that the previous argument still goes through; the parts that need to essentially change are shown in {\color{blue}blue}.
 
@@ -2170,7 +2170,7 @@ Furthermore, in the case where $\pw = \pw' \land (s^*,T^*) \neq (s,T) \land c^* 
   \item $\pw = \pw' \land (s^*,T^*) \neq (s,T) \land c^* = c$.
 \end{enumerate}
 }
-These two cases combined yield $\neg(\pw = \pw' \land (s^*,T^*) = (s,T) \land c^* = c)$, which is identical to the case in the old Game 2 (i.e., they cover all situations other than the one addressed in Game 1). In case (1) we proceed as in the old Game 2, whereas {\color{blue}in case (2) we cannot due to the ``attack'' in \Cref{fig:attack-no-st}; instead, in case (2) we need to include $P'$'s $\Htag$ query as if it were $\adv$'s}.
+These two cases combined yield $\neg(\pw = \pw' \land (s^*,T^*) = (s,T) \land c^* = c)$, which is identical to the condition in the old Game 2 (i.e., they cover all situations other than the one addressed in Game 1). In case (1) we proceed as in the old Game 2, whereas {\color{blue}in case (2) we cannot due to the ``attack'' in \Cref{fig:attack-no-st}; instead, in case (2) we need to include $P'$'s $\Htag$ query as if it were $\adv$'s}.
 \begin{claim}
 \label{clm:htag5}
 Suppose the CBIND property holds for the KEM scheme. In case (1) above, the probability that $P'$ queries $\Htag(\pw,pk,K)$ is negligible.
@@ -2199,11 +2199,11 @@ For subsequent games, if they only involve case (1) in Game 2 then they do not n
 
 \medskip\noindent\emph{Games 9--10:} These two games involve statistical arguments only, and they have nothing to do with whether the games need to check $P'$'s $\Htag$ queries.
 
-\medskip\noindent\emph{Game 11:} This game hop goes through for essentially the same reason as in \Cref{sec:games}. The difference is that now Game 10 and Game 11 differ if $\adv$ does not make an $H_2(\pw,T)$ query, but $\adv$ \emph{{\color{blue}or $P'$}} makes an $\Htag(\pw,pk,K^*)$ query resulting in $\tau^*$. However, $pk$ is freshly generated by $P$, independent of \emph{both} $\adv$ and $P'$'s views. Thus, the distinguishing advantage between Game 10 and Game 11 is still upper-bounded by $p_\text{guess}$.
+\medskip\noindent\emph{Game 11:} This game hop goes through for essentially the same reason as in \Cref{sec:games}. The difference is that now in case (2), Game 10 and Game 11 differ if $\adv$ does not make an $H_2(\pw,T)$ query, but $\adv$ \emph{{\color{blue}or $P'$}} makes an $\Htag(\pw,pk,K^*)$ query resulting in $\tau^*$. However, in vase (2) $pk$ is freshly generated by $P$, independent of \emph{both} $\adv$ and $P'$'s views. Thus, the distinguishing advantage between Game 10 and Game 11 is still upper-bounded by $p_\text{guess}$.
 
 \medskip\noindent\emph{Game 12:} This game should read as follows now: In the case where $\pw = \pw' \land (s^*,T^*) = (s,T) \land c^* = c \land \tau^* \neq \tau'$, do what's in the {\color{blue}$\pw \neq \pw' \lor c^* \neq c$ case (i.e., case (1) in Game 2)}.
 
-This game only involves case (1) in Game 2, i.e., it checks $\adv$'s $\Htag$ queries \emph{but does not check $P'$'s $\Htag$ query}. Therefore, this game hop has nothing to do with what's different in the new Game 2, and the previous argument still goes through.
+This game only involves case (1) in Game 2, i.e., it checks $\adv$'s $\Htag$ queries \emph{but does not check $P'$'s $\Htag$ query}. Therefore, this game hop has nothing to do with the change in the new Game 2, and the previous argument still goes through.
 
 \medskip\noindent\emph{Game 13:} This game should now extract $\pw^*$ from $\adv$ {\color{blue}\emph{or $P'$}}'s $\Htag$ query, if case (2) in Game 2 happens. For completeness, we include a full description of the game.
 
@@ -2906,7 +2906,7 @@ Suppose the UNI-PK and OW properties hold for a KEM scheme. Then for any PPT adv
 (Below we call this property UNI-OW.)
 \end{lemma}
 \begin{proof}
-This is straightforward so we only provide a sketch. We claim that the following two games are indistinguishable:
+This is straightforward so we only provide a sketch. We claim that $\adv$'s winning probabilities in the following two games are negligibly close:
 \[
     \fcodebox{
     \underline{UNI-OW game}: \\
@@ -2963,7 +2963,7 @@ The proof goes by a sequence of games, and we again only provide a sketch. The f
     $b^* \gets \adv(pk,c)$
     }
 \]
-are indistinguishable due to the UNI-PK property of the KEM scheme (the reduction is very similar to that in the proof of \Cref{lem:uni-ow}, except that here the reduction copies $\adv$'s output bit instead of making a guess and outputting one of $\adv$'s RO queries); the following two games
+are indistinguishable due to the UNI-PK property of the KEM scheme (the reduction is very similar to that in the proof of \Cref{lem:uni-ow}, except that here the reduction copies $\adv$'s output bit instead of outputting whether $\adv$ wins or not); the following two games
 \[
     \fcodebox{
     \underline{challenge bit $b = 0$ in the ANO game}: \\
@@ -3055,7 +3055,7 @@ Next, we sample $h_1,h_2$ at random rather than set them to the real RO outputs:
     }
 \]
 
-The two games are identical unless $\adv$ queries either $H_1(K)$ or $H_2(K)$, which happens with negligible probability due to a reduction $\red_\text{UNI-OW}$ to the UNI-OW property of the KEM scheme (\Cref{lem:uni-ow}). $\red_\text{UNI-OW}$, on input $(pk,c)$, samples $i \gets [q_1+q_2]$ as a guess that $\adv$'s $i$-th $H_1$ or $H_2$ query is on $K$. Then $\red_\text{UNI-OW}$ samples $pk \gets \pkspace, h_1 \gets \{0,1\}^n, h_2 \gets \{0,1\}^{2n}$ and invokes $\adv$ on input $(pk,c,h_1,h_2)$ to $\adv$. On $\adv$'s $i$-th $H_1$ or $H_2$ query (say the query input is $K^*$), $\red_\text{UNI-OW}$ outputs $K^*$. Assuming $\adv$ queries either $H_1(K)$ or $H_2(K)$, and $\red_\text{UNI-OW}$'s guess of index $i$ is correct, $\red_\text{UNI-OW}$ simulates the two games perfectly until the ``bad event'' happens and wins the UNI-OW game. So the above two games are indistinguishable (with a $q_1+q_2$ reduction loss).
+The two games are identical unless $\adv$ queries either $H_1(K)$ or $H_2(K)$, which happens with negligible probability due to a reduction $\red_\text{UNI-OW}$ to the UNI-OW property of the KEM scheme (\Cref{lem:uni-ow}). $\red_\text{UNI-OW}$, on input $(pk,c)$, samples $i \gets [q_1+q_2]$ as a guess that $\adv$'s $i$-th $H_1$ or $H_2$ query is on $K$. Then $\red_\text{UNI-OW}$ samples $pk \gets \pkspace, h_1 \gets \{0,1\}^n, h_2 \gets \{0,1\}^{2n}$ and invokes $\adv$ on input $(pk,c,h_1,h_2)$. On $\adv$'s $i$-th $H_1$ or $H_2$ query (say the query input is $K^*$), $\red_\text{UNI-OW}$ outputs $K^*$. Assuming $\adv$ queries either $H_1(K)$ or $H_2(K)$, and $\red_\text{UNI-OW}$'s guess of index $i$ is correct, $\red_\text{UNI-OW}$ simulates the two games perfectly until the ``bad event'' happens and wins the UNI-OW game. So the above two games are indistinguishable (with a $q_1+q_2$ reduction loss).
 
 After that, we change the generation of $c$ from using $pk_i$ to using a fresh $pk'$:
 \[
@@ -3075,7 +3075,7 @@ After that, we change the generation of $c$ from using $pk_i$ to using a fresh $
     $b^* \gets \adv(pk,c,h_1,h_2)$
     }
 \]
-The two games are indistinguishable, due to the UNI-ANO property of the KEM scheme (\Cref{lem:uni-ano}). (The only difference is that here $\adv$ additionally sees $h_1,h_2$, which are not used anywhere in the game.)
+The two games are indistinguishable, due to the UNI-ANO property of the KEM scheme (\Cref{lem:uni-ano}). (The only difference is that here $\adv$ additionally sees $h_1,h_2$, which are not used anywhere else in the game.)
 
 Finally, we bring back $\adv$'s ability to choose an index $i$ and arrive at the game where the challenge bit $b = 1$:
 \[
@@ -3111,7 +3111,7 @@ We only provide a sketch. First,
       \end{array}
       :
       \begin{array}{c}
-      (pk,sk) \gets \Gen \\
+      (\star,sk) \gets \Gen \\
       pk' \gets \pkspace \\
       (c,K') \gets \Encap(pk') \\
       K := \Decap(sk,c)
@@ -3128,7 +3128,7 @@ and
       \end{array}
       :
       \begin{array}{c}
-      (pk,sk) \gets \Gen \\
+      (\star,sk) \gets \Gen \\
       (pk',\star) \gets \Gen \\
       (c,K') \gets \Encap(pk') \\
       K := \Decap(sk,c)
@@ -3136,12 +3136,12 @@ and
       \right]
 \tag{\textdagger}
 \end{equation}
-are negligibly close due to a reduction $\red$ to the UNI-PK property of the KEM scheme: $\red$, on input $pk'$, computes $(pk,sk) \gets \Gen$, $(c,K') \gets \Encap(pk')$, and $K := \Decap(sk,c)$, and outputs 1 if $K = K'$ and 0 otherwise.
+are negligibly close due to a reduction $\red_\text{UNI-PK}$ to the UNI-PK property of the KEM scheme: $\red_\text{UNI-PK}$, on input $pk'$, computes $(pk,sk) \gets \Gen$, $(c,K') \gets \Encap(pk')$, and $K := \Decap(sk,c)$, and outputs 1 if $K = K'$ and 0 otherwise.
 
 Next, we show \eqref{eq:kbind-eq-real} is negligible. Consider the following adversary $\adv$ in the OW game for the KEM scheme: $\adv$, on input $(pk',c)$, computes $(pk,sk) \gets \Gen$ and $K := \Decap(sk,c)$, and outputs $K$. $\adv$ wins the game if and only if the equation in \eqref{eq:kbind-eq-real} holds, so
 \[
 \eqref{eq:kbind-eq-real} = \Adv_{\adv}^\text{OW},
 \]
-which is negligible.
+which is negligible. (Note that $\adv$ does not use its input $pk'$, so a weaker OW property, where the adversary is only given $c$, suffices.)
 \end{proof}
 \end{document} 
