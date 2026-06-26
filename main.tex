@@ -249,7 +249,7 @@ An immediate question is whether this topic matters at all --- why not simply ha
 \end{itemize}
 These reasons aside, perhaps the primary motivation of this work is that
 \begin{displayquote}
-  \emph{The current state-of-the-art, where the community cannot converge upon a ``right'' version of OEKE and everyone does an ad hoc analysis, is just sad, especially given that (1) OEKE has been around for over 20 years, and (2) it is one of the most significant PAKE protocols as explained earlier.}
+  \emph{The current state of the art, where the community cannot converge upon a ``right'' version of OEKE and everyone does an ad hoc analysis, is just sad, especially given that (1) OEKE has been around for over 20 years, and (2) it is one of the most significant PAKE protocols as explained earlier.}
 \end{displayquote}
 Furthermore, we believe the topic we study is of theoretical interest: The requirements on the underlying KEM scheme depend on the items included in the hash, and it is very interesting to see what exact additional KEM properties are needed when we remove certain items from the hash. Also, the security proofs require careful considerations of the order of games and how the reductions can go through.
 
@@ -2222,7 +2222,7 @@ The previous statistical argument is based on ruling out collisions in $\Htag$. 
 {\color{blue}
 \medskip\noindent\emph{New Game I:} Now that $(\pw')^*$ --- the password guess extracted from $(s^*,T^*)$ --- is defined (in Game 15), we can finally add (part of) what's in step 2 of \Cref{fig:oeke-sim-hash-pw-pk}. Concretely, we change the game as follows:
 
-In the case where $(s^*,T^*) \neq (s,T) \land (\pw')^* = \pw = \pw' \land (c^*,\tau^*) = (c,\tau')$, there is a record $\langle\pw,pk,\star\rangle$, and $pk = pk'$, set $SK := SK'$. If $(\pw')^*$ is undefined, treat it as if $(\pw')^* \neq \pw'$. (In some sense this is the most crucial new game, as it covers the scenario in \Cref{fig:attack-no-st} --- which is why we need to make all these changes to begin with. It also corresponds to step 2(c)(ii) in the simulator in \Cref{fig:oeke-sim-hash-pw-pk}. We will deal with step 2(c)(i) in new Game III later.)
+In the case where $(s^*,T^*) \neq (s,T) \land (\pw')^* = \pw = \pw' \land c^* = c$, there is a record $\langle\pw,pk,\star\rangle$, and $pk = pk'$, set $SK := SK'$. If $(\pw')^*$ is undefined, treat it as if $(\pw')^* \neq \pw'$. (In some sense this is the most crucial new game, as it covers the scenario in \Cref{fig:attack-no-st} --- which is why we need to make all these changes to begin with. It also corresponds to step 2(c)(ii) in the simulator in \Cref{fig:oeke-sim-hash-pw-pk}. We will deal with step 2(c)(i) in new Game III later.)
 
 Since $\pw = \pw' \land (s^*,T^*) \neq (s,T) \land (c^*,\tau^*) = (c,\tau')$, Game 16 finds $\adv$ or $P'$'s $\Htag$ query resulting in $\tau^*$ (see the description of Game 13). $P'$ makes a single query to $\Htag$, on input $(\pw',pk',K')$; and the query result is $\tau' = \tau^*$. Therefore, Game 16 finds this query, and does the following (again see the description of Game 13):
 \begin{enumerate}
@@ -2251,7 +2251,7 @@ In case (2) in Game 2, we have to check both $\adv$ and $P'$'s $\Htag$ queries, 
 
 \begin{claim}
 \label{clm:pk-ind}
-If $(\pw')^* \neq \pw'$ then $pk$ and $pk'$ are independent of each other. ($pk$ is the item in record $\langle\pw,pk,sk\rangle$.)
+If $(\pw')^* \neq \pw'$ then $\Pr[pk = pk'] = 1/|\group|$. ($pk$ is the item in record $\langle\pw,pk,sk\rangle$.)
 \end{claim}
 \begin{proof}
 We have (in the creation of the record $\langle\pw,pk,sk\rangle$)
@@ -2267,24 +2267,23 @@ pk' = \frac{T^*}{R'} = \frac{T^*}{H_1(\pw,r')} = \frac{T^*}{H_1(\pw,s^* \oplus t
   \item If $s^*\oplus H_2(\pw,T^*) = s \oplus H_2(\pw,T)$, then $(\pw')^*$ is set to $\pw$ in type (2);
   \item If the $H_1(\pw,s^*\allowbreak\oplus H_2(\pw,T^*))$ query is made before $\adv$'s $H_2(\pw,T^*)$ query, then $(\pw')^*$ is set to $\pw$ in type (1).
 \end{itemize}
-Since $(\pw')^* \neq \pw'$, the only possibility is that $\adv$ makes a \emph{fresh} $H_1(\pw,s^*\allowbreak\oplus H_2(\pw,T^*))$ query \emph{after} its $H_2(\pw,T^*)$ query (in particular, after $T^*$ is fixed), which causes $pk'$ to be independent of $pk$.
+Since $(\pw')^* \neq \pw'$, the only possibility is that $\adv$ makes a \emph{fresh} $H_1(\pw,s^*\allowbreak\oplus H_2(\pw,T^*))$ query \emph{after} its $H_2(\pw,T^*)$ query (in particular, after $T^*$ is fixed). This means that $H_1(\pw,s^*\allowbreak\oplus H_2(\pw,T^*))$ is independent of everything else (in particular, independent of $pk$), which implies that $pk'$ is uniformly random in $\group$ and independent of $pk$. So $\Pr[pk = pk'] = 1/|\group|$.
 \end{proof}
 
 Going back to the game, there are the following cases:
 \begin{itemize}
   \item If $\tau^* \neq \tau'$, then of course $P'$'s $\Htag$ query does not result in $\tau^*$ (it results in $\tau'$), so we can safely drop $P'$'s $\Htag$ query from the check.
   \item If $\tau^* = \tau'$, but there is no $\langle\pw,pk,\star\rangle$ record, then both new Game I and new Game II outright set $SK := \bot$, regardless of $\Htag$ queries by $\adv$ or $P'$. Thus, the two games are identical.
-  \item If $(\pw')^* \neq \pw' \land \tau^* = \tau'$, and there is a record $\langle\pw,pk,\star\rangle$, then $P'$'s $\Htag(\pw',pk',K')$ query results in $\tau^*$, and we need to argue that this query can be dropped from the check.
+  \item If $\tau^* = \tau'$, there is a record $\langle\pw,pk,\star\rangle$, but $(\pw')^* \neq \pw' \lor pk \neq pk'$, then $P'$'s $\Htag(\pw',pk',K')$ query results in $\tau^*$, and we need to argue that this query can be dropped from the check. 
       \begin{itemize}
         \item If $\adv$ queries $\Htag(\pw',pk',K')$, then new Game II still finds this query, so new Game I and new Game II are identical.
-        \item If $\adv$ does not query $\Htag(\pw',pk',K')$, then new Game II sets $SK := \bot$. We argue that new Game I also sets $SK := \bot$ except with negligible probability. New Game I finds $P'$'s $\Htag(\pw',pk',K')$ query, and sets $SK := \bot$ if $pk \neq pk'$. But $pk$ and $pk'$ are independent of each other by \Cref{clm:pk-ind}, so $\Pr[pk = pk'] \leq p_\text{guess}$.
+        \item If $\adv$ does not query $\Htag(\pw',pk',K')$, then new Game II sets $SK := \bot$. We argue that new Game I also sets $SK := \bot$ except with negligible probability. New Game I finds $P'$'s $\Htag(\pw',pk',K')$ query, and sets $SK := \bot$ if $pk \neq pk'$. But by \Cref{clm:pk-ind} we have $\Pr[pk = pk'] \leq 1/|\group|$.
       \end{itemize}
-  \item If $(\pw')^* = \pw' \land \tau^* = \tau'$, there is a record $\langle\pw,pk,\star\rangle$, but $pk \neq pk'$, then new Game I finds $P'$'s $\Htag(\pw',pk',K')$ query and then sets $SK := \bot$ because $pk \neq pk'$, and new Game II also sets $SK := \bot$ because it either fails to find $\adv$'s $\Htag(\pw',pk',K')$ query, or it finds such a query but then sets $SK := \bot$ because $pk \neq pk'$. Thus, the two games are identical.
 \end{itemize}
 
 The remaining case is that $(\pw')^* = \pw' \land \tau^* = \tau'$, there is a record $\langle\pw,pk,\star\rangle$, and $pk = pk'$. The condition of the game additionally requires $\pw = \pw' \land (s^*,T^*) \neq (s,T) \land c^* = c$. Combined, we get ``$(s^*,T^*) \neq (s,T) \land (\pw')^* = \pw = \pw' \land (c^*,\tau^*) = (c,\tau')$, there is a record $\langle\pw,pk,\star\rangle$, and $pk = pk'$''. This is exactly the condition in new Game I, in which case we do not make any change in new Game II. Overall, we conclude that
 \[
-\Dist_\env^{\text{newI},\text{newII}} \leq p_\text{guess}.
+\Dist_\env^{\text{newI},\text{newII}} \leq \frac{1}{|\group|}.
 \]}
 
 \noindent\emph{Game 17:} Note that after new Game II, we never try to find $P'$'s $\Htag$ query anymore: in some cases we try to find $\adv$'s $\Htag$ query, and in other cases we outright set $SK$ to be a certain value or $\bot$. Therefore, the reduction still goes through (it can simulate the $P$ side honestly).\footnote{New Games I and II --- which drop $P'$'s $\Htag$ query from the check --- have to be inserted before Game 17, since the reduction in Game 17 cannot check $P'$'s $\Htag$ query (the query is $\Htag(\pw',pk',K')$, and the reduction does not know $K'$).}
@@ -2302,9 +2301,9 @@ In this case Game 17 tries to find $\adv$'s (unique) $\Htag(\pw^*,pk^*,K^*)$ que
 We have made the following essential changes to the games:
 \begin{enumerate}
   \item In the case where $\pw = \pw' \land (s^*,T^*) \neq (s,T) \land c^* = c$ (case (2) in Game 2), Game 2 tries to find $P'$'s $\Htag$ query resulting in $\tau^*$ (in addition to $\adv$'s query).
-  \item In the case where $(s^*,T^*) \neq (s,T) \land (\pw')^* = \pw = \pw' \land \tau^* = \tau'$, there is a record $\langle\pw,pk,\star\rangle$, and $pk = pk'$, new Game I outright sets $SK := SK'$ (without trying to find any $\Htag$ query by $\adv$ or $P'$).
+  \item In the case where $(s^*,T^*) \neq (s,T) \land (\pw')^* = \pw = \pw' \land (c^*,\tau^*) = (c,\tau')$, there is a record $\langle\pw,pk,\star\rangle$, and $pk = pk'$, new Game I outright sets $SK := SK'$ (without trying to find any $\Htag$ query by $\adv$ or $P'$).
   \item In the case where $\pw = \pw' \land (s^*,T^*) \neq (s,T) \land c^* = c$, new Game II drops the check on $P'$'s $\Htag$ query introduced in Game 2 (except in new Game I's condition, where all checks on $\Htag$ queries have already been dropped).
-  \item In the case where $(s^*,T^*) \neq (s,T) \land (\pw')^* = \pw' \neq \pw \land \tau^* = \tau'$, there is a record $\langle\pw,pk,\star\rangle$, and $pk = pk'$, new Game III outright sets $SK := \bot$.
+  \item In the case where $(s^*,T^*) \neq (s,T) \land (\pw')^* = \pw' \neq \pw \land (c^*,\tau^*) = (c,\tau')$, there is a record $\langle\pw,pk,\star\rangle$, and $pk = pk'$, new Game III outright sets $SK := \bot$.
 \end{enumerate}
 
 Items (1) and (3) introduce the check on $P'$'s $\Htag$ query and then drop it, so there is no net change there. To see the net change, we only need to combine items (2) and (4), which say that in the case where $(s^*,T^*) \neq (s,T) \land (\pw')^* = \pw' \land \tau^* = \tau'$, there is a record $\langle\pw,pk,\star\rangle$, and $pk = pk'$,
@@ -2323,7 +2322,7 @@ We now consider the variant where $pk$ is further removed from $\Htag$ inputs, i
 
 \subsubsection{Changes to the Simulator}
 \label{app:hash-pw-sim}
-The easiest way to see the new, more general ``attack'' is to work out a concrete version for OEKE based on the Diffie--Hellman KEM, which we show in \Cref{fig:attack-no-pk}.
+The easiest way to see the new, more general ``attack'' is to work out a concrete version for OEKE based on the Diffie--Hellman KEM scheme, which we show in \Cref{fig:attack-no-pk}.
 
 \begin{figure}[H]
 \pseudocodeblock[codesize=\scriptsize]{
@@ -2340,7 +2339,7 @@ P(\pw) \< \< \adv \< \< P'(\pw) \\
 \label{fig:attack-no-pk}
 \end{figure}
 
-In this ``attack'', the two honest parties' passwords $\pw$ are the same. Assuming $\adv$ knows it, it can decrypt $P$'s message to recover $X = g^x$, and then re-encrypt $X^2$ under the same $\pw$; this causes $P'$ to output $SK' = \Hkey(g^{2xy})$ and send $(Y = g^y, \tau' = \Htag(\pw,g^{2xy}))$. Then $\adv$ sends $(Y^2,\tau')$ to $P$, causing $P$'s check to pass and $P$ will also output $\Hkey(g^{2xy})$. (This is not an issue if $pk$ is included in $\Htag$, since $P$ would compute $\tau = \Htag(\dots,Y^2,\dots) \neq \Htag(\dots,Y,\dots) = \tau'$ unless there is a collision in $\Htag$, and its check $\tau^* \stackrel{?}{=} \tau$ would fail.). Of course, $X^2$ can be replaced by any function of $X$ that $\adv$ can compute.
+In this ``attack'', the two honest parties' passwords $\pw$ are the same. Assuming $\adv$ knows it, it can decrypt $P$'s message to recover $X = g^x$, and then re-encrypt $X^2$ under the same $\pw$; this causes $P'$ to output $SK' = \Hkey(g^{2xy})$ and send $(Y = g^y, \tau' = \Htag(\pw,g^{2xy}))$. Then $\adv$ sends $(Y^2,\tau')$ to $P$, causing $P$'s check to pass and $P$ will also output $\Hkey(g^{2xy})$. (This is not an issue if $pk$ is included in $\Htag$, since $P$ would compute $\tau = \Htag(\dots,Y^2,\dots) \neq \Htag(\dots,Y,\dots) = \tau'$ unless there is a collision in $\Htag$, and its check $\tau^* \stackrel{?}{=} \tau$ would fail.)
 
 In general, $\adv$ can decrypt $(s,T)$ to recover $pk := \mathsf{2F}^{\text{-}1}(\pw,(s,T))$, then re-encrypt some $pk'$ of $\adv$'s choice under the same $\pw'$ to get $(s^*,T^*) \gets \mathsf{2F}(\pw,pk')$, and finally forward $\tau'$ but manipulate $c^*$ so that $P$'s check will pass. The ``attack'' in \Cref{app:hash-pw-pk} is the special case where $pk' = pk$; there, including $pk$ in $\Htag$ inputs forces $\adv$ not to change $pk$.
 
