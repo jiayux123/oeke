@@ -352,7 +352,7 @@ We list some other improvements on the presentation below:
   \item Our Game 9 in \Cref{sec:games}, which is equivalent to game $\mathsf{G}_{13}$ in \cite[Section~5]{EPRINT:ArrBarJar25}, essentially says that the simulator can simulate the $P$-to-$P'$ message $(s,T)$ at random and then program the ROs later if necessary. Our statistical argument why this game hop goes through is much cleaner than theirs.
 \end{itemize}
 
-\subsubsection{Analysis of the Other 15 Variants}
+\subsubsection{Analyses of the Other 15 Variants}
 Once we fully work out the ``basic'' security proof for the ``hash everything'' version of OEKE, in \Cref{sec:other-variants-1,app:other-variants-2} we turn to other variants of the protocol. Since the only difference lies in how the $P'$-to-$P$ authenticator $\tau'$ is defined, a large portion of the argument --- e.g., password extraction from the adversarial $P$-to-$P'$ message, and $P'$'s reaction upon receiving this message --- is irrelevant to the OEKE variant we are analyzing and can be reused. However, as seen in \Cref{sec:oeke-dh}, removing certain items from the hash puts more requirements on the KEM scheme, and figuring out these additional properties is highly non-trivial. Below we list the KEM properties needed for all 16 OEKE variants.
 \begin{table}[H]\centering
 \begin{tabular}{ |c|c|c|c|c|c| }
@@ -373,9 +373,9 @@ $\pw$ & $pk$ & $(s,T)$ & $c$ & & \\
 \hline
  & \CIRCLE & \CIRCLE & \CIRCLE & & \Cref{sec:hash-pk-st} \\
 \hline
- & & \CIRCLE & & CBIND, UNPRE, KBIND, CR & \Cref{sec:hash-st} \\
+ & & \CIRCLE & & CBIND, KBIND, CR & \Cref{sec:hash-st} \\
 \hline
- & & \CIRCLE & \CIRCLE & UNPRE, CR & \Cref{sec:hash-st} \\
+ & & \CIRCLE & \CIRCLE & CR & \Cref{sec:hash-st} \\
 \hline
 \CIRCLE & \CIRCLE & & & CBIND & \Cref{app:hash-pw-pk} \\
 \hline
@@ -389,11 +389,11 @@ $\pw$ & $pk$ & $(s,T)$ & $c$ & & \\
 \hline
 & \CIRCLE & & \CIRCLE & & \Cref{app:hash-pk} \\
 \hline
-& & & & CBIND, UNPRE, KBIND, CR & \Cref{app:hash-nothing} \\
+& & & & CBIND, KBIND, CR & \Cref{app:hash-nothing} \\
 \hline
-& & & \CIRCLE & UNPRE, KBIND, CR & \Cref{app:hash-nothing} \\
+& & & \CIRCLE & KBIND, CR & \Cref{app:hash-nothing} \\
 \hline
-\multicolumn{6}{|l|}{\makecell{$K$ is always hashed, which is omitted above \\ UNI-PK, OW-1PCA and ANO-1PCA properties are always required}} \\
+\multicolumn{6}{|l|}{\makecell{$K$ is always hashed, which is omitted above \\ UNI-PK, OW-1PCA and ANO-1PCA properties are always required \\ UNPRE is implied by CR}} \\
 \hline
 \end{tabular}
 \caption{List of OEKE variants}
@@ -557,7 +557,7 @@ A KEM scheme is \emph{anonymous (ANO)} if for any PPT adversary $\adv$, $\Pr[b^*
 Similar to OW-1PCA, we also need the 1PCA variant of ANO.
 \begin{definition}
 \label{def:ano-1pca}
-The definition of \emph{anonymity under one plaintext-checking attack (ANO-1PCA)} is the same as that of ANO, except that the adversary $\adv$ is additionally given access to an oracle $\PC_{sk}(\star,\star)$, which on input $(c' \neq c, K')$ outputs 1 if $K' = \Decap(sk,c')$ and 0 otherwise. $\adv$ is allowed to query this oracle only once.
+The definition of \emph{anonymity under one plaintext-checking attack (ANO-1PCA)} is the same as that of ANO, except that the adversary $\adv$ is additionally given access to the oracle $\PC_{sk}(\star,\star)$, which on input $(c' \neq c, K')$ outputs 1 if $K' = \Decap(sk,c')$ and 0 otherwise. $\adv$ is allowed to query this oracle only once.
 \end{definition}
 This property is the same as what's called ANO-PCA in \cite[Definition~4]{EPRINT:ArrBarJar25}, except that in our notion (1) the adversary can query its plaintext-checking oracle only once, and (2) the adversary is not given $pk'$ (whereas in their notion $pk'$ is generated and given to the adversary in both games).
 
@@ -610,7 +610,7 @@ A KEM scheme is \emph{ciphertext binding (CBIND)} if for any PPT adversary $\adv
     \fcodebox{
     $(pk,sk) \gets \Gen$ \\
     $(c,K) \gets \Encap(pk)$ \\
-    $c^* \gets \adv(pk,c)$ \\
+    $c^* \gets \adv(pk,c,K)$ \\
     abort if $c^* = c$ \\
     $\adv$ wins if $\Decap(sk,c^*) = K$
     }
@@ -717,8 +717,12 @@ A very similar notion, called strong collision freeness (SCFR-CPA), has been stu
 
 CR is needed in OEKE variants where $\pw$ and $pk$ are \emph{both} removed from $\Htag$ inputs. This is to prevent the following attack: The OEKE adversary $\adv$ completely disregards $P'$, and on $(s,T)$ from $P$, $\adv$ chooses two password guesses $\pw_1^*,\pw_2^*$ and computes $pk_1^* := \mathsf{2F}^{\text{-}1}(\pw_1^*,(s,T)), pk_2^* := \mathsf{2F}^{\text{-}1}(\pw_2^*,(s,T))$. If $\adv$ can find $(c^*,K^*)$ that break the CR property for $pk_1^*,pk_2^*$, it then sends $(c^*,\tau^* = \Htag(s,T,c^*,K^*))$ to $P$. As long as one of $\pw_1^*,\pw_2^*$ is equal to $P$'s password $\pw$, $P$'s check will pass and $\adv$ can compute $P$'s session key $SK = \Hkey(K^*)$. In this way $\adv$ can make two password guesses per session, which is not allowed by PAKE security. (If either $\pw$ or $pk$ is included in $\Htag$ then the attack above does not work, since $\adv$ needs to commit to a single $(\pw^*,pk^*)$ pair while sending $\tau^*$, unless $\adv$ finds a collision in $\Htag$.)
 
-\medskip
-It is unclear whether our new KEM properties are of independent interest. Some of them, such as CR, appear natural enough; while properties such as KBIND look highly tailored (especially since in KBIND one of the public keys is generated honestly, and the other is sampled uniformly at random). Either way, we are not aware of any other applications of these properties yet.
+It is not hard to see that CR implies UNPRE:
+\begin{lemma}
+\label{lem:unpre}
+Suppose the CR property holds for a KEM scheme. Then the UNPRE property also holds for the KEM scheme.
+\end{lemma}
+The proof is deferred to \Cref{app:unpre}.
 
 \subsection{Example: Diffie--Hellman KEM}
 \label{sec:dh-kem}
@@ -733,7 +737,7 @@ It is instructive to see what cryptographic assumptions the various KEM properti
   \item UNI-PK says that $X = g^x$ is indistinguishable from a uniformly random element of $\group$, which holds perfectly.
   \item OW says that given $(X = g^x, Y = g^y)$ it is infeasible to compute $K = g^{xy}$, which is the Computational Diffie--Hellman (CDH) assumption.
   \item OW-1PCA says that given $(X = g^x, Y = g^y)$ and one-time access to an oracle that on input $(Y' \neq Y, K')$ checks if $(Y')^x = K'$, it is infeasible to compute $K = g^{xy}$. This is the Gap Diffie--Hellman (GDH) assumption, except that (1) when the adversary makes a DH oracle query, its first input is fixed to be $X$, (2) when the adversary makes a DH oracle query, its second input must not be equal to $Y$, and (3) the adversary can query the (restricted) DH oracle only once.\footnote{GDH with restriction (1) in place, namely the oracle only takes two inputs $(Y',Z)$ and checks if $Z = (Y')^x$, is sometimes called ``Strong Diffie--Hellman (SDH)'' \cite[Definition~9]{RSA:AbdBelRog01}. Some people (e.g., \cite[Section~2]{CiC:LLMT25}) use the term ``GDH'' to refer to SDH.} This limited version of GDH can be reduced to CDH (on the single oracle query, the reduction to CDH returns 1 with probability 1/2 and 0 with probability 1/2; in this way the reduction has a 1/2 chance of simulating the game correctly).
-  \item ANO says that $(X = g^x, Y = g^y)$ and $(X = g^x, Y' = g^{y'})$ for another $y' \gets \mathbb{Z}_q$ are indistinguishable, which holds perfectly. (This property holds perfectly for any KEM scheme where the ciphertext does not rely on the public key.) It of course holds perfectly even if the adversary is additionally given the plaintext-checking oracle.
+  \item ANO says that $(X = g^x, Y = g^y)$ and $(X = g^x, Y' = g^{y'})$ for another $y' \gets \mathbb{Z}_q$ are indistinguishable, which holds perfectly. It of course holds perfectly even if the adversary is additionally given the plaintext-checking oracle.
   \item CBIND says that given $(X = g^x, Y = g^y)$ it is infeasible to come up with $Y^* \neq Y$ such that $(Y^*)^x = X^y$, which holds statistically (such $Y^*$ does not exist unless $x = 0$, which happens with negligible probability $1/q$).
   \item UNPRE says that it is infeasible to come up with $(Y^*,K^*)$ such that $K^* = (Y^*)^x$. \textbf{This property does NOT hold for the Diffie--Hellman KEM scheme as described above}, since the adversary can simply output $(Y^* = 1, K^* = 1)$. (This is what caused us trouble in \Cref{sec:oeke-dh}.) To fix this, we have to dictate that the identity group element \emph{not} be a valid ciphertext, i.e., $\Decap(\star,1)$ must output $\bot$. Then UNPRE is a statistical property.
   \item KBIND says that given $(X = g^x, X', Y = g^y, (X')^y)$ where $X'$ is a freshly sampled random group element, it is infeasible to come up with $Y^*$ such that $(Y^*)^x = (X')^y$. We claim that this is implied by the CDH assumption. Since $x = 0$ with negligible probability $1/q$, below we assume this does not happen, and the adversary's task is to compute $((X')^y)^\frac{1}{x}$. Let $Z = (X')^y$, and consider a stronger adversary that is additionally given $\log_g Z$. Then computing $Z^\frac{1}{x} = (g^\frac{1}{x})^{\log_g Z}$ is equivalent to computing $g^\frac{1}{x}$. But computing $g^\frac{1}{x}$ given $X = g^x$ ($\adv$'s other inputs are independent of $X$ and are thus useless) is the inverse Diffie--Hellman problem, which is well-known to be equivalent to CDH.\footnote{Inverse Diffie--Hellman is equivalent to square Diffie--Hellman \cite[Section~2.2]{ICICS:BaoDenZhu03}, which in turn is equivalent to CDH \cite[Section~2.1]{ICICS:BaoDenZhu03}.}
@@ -742,7 +746,7 @@ It is instructive to see what cryptographic assumptions the various KEM properti
 
 Overall, we conclude that the Diffie--Hellman KEM scheme has all desired properties under the CDH assumption, \emph{except for UNPRE and CR where we need to exclude $1$ from valid ciphertexts}.
 \begin{remark}
-The arguments in the CBIND and KBIND paragraphs clearly require the group order to be prime. The arguments in the UNPRE and CR paragraphs also make this requirement, although it can be straightforwardly extended to the general case where the group order has at least one large prime factor (a requirement we have to make anyway, since otherwise discrete logarithm is easy in the group due to the Pohlig--Hellman algorithm).
+The arguments in the CBIND, UNPRE, KBIND and CR paragraphs require the group order to be prime. However, they can be straightforwardly extended to the general case where the group order has at least one large prime factor (a requirement we have to make anyway, since otherwise discrete logarithm is easy in the group due to the Pohlig--Hellman algorithm) --- \emph{except} that for UNPRE and CR, we need to additionally exclude all elements of the small subgroup(s) from valid ciphertexts (e.g., if $|\group| = 2p$ for prime $p$, then $g^p$ cannot be a valid ciphertext, since otherwise the adversary can output $(Y^* = g^p, K^* = 1)$ and win the UNPRE game with probability 1/2).
 \end{remark}
 
 \subsection{The UC PAKE Functionality}
@@ -2017,7 +2021,7 @@ While we aim to provide a comprehensive and thorough analysis of all OEKE-2F var
 \paragraph{Minimal assumptions for OEKE-2F.}
 We did not prove any results on whether the KEM security properties used in this work are \emph{minimal}, i.e., whether some weaker properties suffice for OEKE-2F security. It appears to us that the properties in \Cref{sec:kem-standard} are minimal, but it remains to be formally proven that the security of OEKE (even the ``hash everything'' version) implies the KEM properties in \Cref{sec:kem-standard}, i.e., any PPT adversary that breaks any of these properties can be used to build an adversary that breaks the UC-security of OEKE.
 
-On the other hand, with some thoughts one can realize that the KEM properties in \Cref{sec:kem-additional} are \emph{not} minimal, and some weaker properties suffice. Take CBIND as an example: even if an adversary can break CBIND of the underlying KEM scheme, as long as this behavior could be ``caught'' by the simulator, the simulation would still go through. Thus, roughly speaking CBIND can be weakened to the following property: for any PPT adversary $\adv$ in the game in \Cref{def:cbind}, there exists a PPT simulator $\sim$ that outputs a bit indicating whether $\adv$ wins with all but negligible accuracy. ($\sim$ does not know the secret key $sk$.) A similar weakening can be done for KBIND. The UNPRE and CR properties appear minimal.
+On the other hand, with some thoughts one can realize that the KEM properties in \Cref{sec:kem-additional} are \emph{not} minimal, and some weaker properties suffice. Take CBIND as an example: even if an adversary can break CBIND of the underlying KEM scheme, as long as this behavior could be ``caught'' by the simulator, the simulation would still go through. Thus, roughly speaking CBIND can be weakened to the following property: there exists a PPT simulator $\sim$ such that for any PPT adversary $\adv$ in the CBIND game (\Cref{def:cbind}), $\sim$ outputs a bit indicating whether $\adv$ wins with all but negligible accuracy. ($\sim$ does not know the secret key $sk$.) A similar weakening can be done for KBIND. The UNPRE and CR properties appear minimal.
 
 \paragraph{OEKE-2F security in the game-based setting.}
 A natural question is whether we could rely on weaker KEM security properties if we only require game-based security for OEKE-2F. The standard game-based security notion for PAKE is the one in \cite{EC:BelPoiRog00} (henceforth BPR). One important difference between the BPR and UC security notions is that BPR does not require forward secrecy. From the discussion in \Cref{sec:kem-standard}, it seems that some mechanisms in the OW and ANO games (e.g., giving the public key $pk$ to the adversary) are designed for the sole purpose of achieving forward secrecy, so some weaker versions of OW-1PCA and ANO-1PCA should suffice for the BPR security of OEKE-2F.
@@ -3142,5 +3146,22 @@ Next, we show \eqref{eq:kbind-eq-real} is negligible. Consider the following adv
 \eqref{eq:kbind-eq-real} = \Adv_{\adv}^\text{OW},
 \]
 which is negligible. (Note that $\adv$ does not use its input $pk'$, so a weaker OW property, where the adversary is only given $c$, suffices.)
+\end{proof}
+
+\subsection{Proof of \Cref{lem:unpre}}
+\label{app:unpre}
+\begin{proof}
+For any PPT adversary $\adv$ in the UNPRE game, we construct a reduction $\red_\text{CR}$ to the CR property of the KEM scheme. $\red_\text{CR}$ ignores its input $(pk,pk')$ and invokes $\adv$. When $\adv$ outputs $(c^*,K^*)$, $\red_\text{CR}$ also outputs $(c^*,K^*)$.
+
+We have
+\begin{align*}
+\Pr[\Decap(sk,c^*) = K^*] &= \Adv_\adv^\text{UNPRE}, \\
+\Pr[\Decap(sk',c^*) = K^*] &= \Adv_\adv^\text{UNPRE},
+\end{align*}
+and the two events are independent of each other. (They are independent because for any \emph{fixed} pair of $c^*$ and $K^*$, they completely determine a set $S$ of secret keys $sk^*$ such that $\Decap(sk^*,c^*) = K^*$. Therefore, $\Decap(sk,c^*) = K^*$ is equivalent to $sk \in S$, and $\Decap(sk',c^*) = K^*$ is equivalent to $sk' \in S$, and since $sk$ and $sk'$ are generated independently, ``$sk \in S$'' and ``$sk' \in S$'' are independent of each other. Since the two events are independent for \emph{any} fixed pair of $c^*$ and $K^*$, they must also be independent for any random variables $c^*$ and $K^*$.) If both events happen then $\red_\text{CR}$ wins the CR game. Thus,
+\[
+\Adv_\adv^\text{UNPRE} = \sqrt{\Adv_{\red_\text{CR}}^\text{CR}},
+\]
+which is negligible.
 \end{proof}
 \end{document} 
