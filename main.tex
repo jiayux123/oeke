@@ -437,7 +437,7 @@ The information above could be overwhelming, but the general takeaway is:
   \item Removing or not removing $(s,T)$ does not make a difference, \emph{except} that if $pk$ is also removed, then we additionally need KBIND. (This is why we put all variants where $(s,T)$ are removed in the appendices.) 
 \end{itemize}
 
-Overall, we hope that this work will help the community converge upon a ``right'' version of OEKE. Since the password $\pw$ can be removed from the hash ``for free'', we advocate removing it for better defense against side-channel attacks. Whether other items can/should be removed depends on the underlying KEM scheme; in \Cref{sec:dh-kem} we show that the Diffie--Hellman KEM scheme --- with 1 excluded from valid ciphertexts --- satisfies all properties we consider, but leave the analysis of post-quantum KEM schemes for future work.
+Overall, we hope that this work will help the community converge upon a ``right'' version of OEKE. Since the password $\pw$ can be removed from the hash ``for free'', we advocate removing it for better defense against side-channel attacks. Whether other items can/should be removed depends on the underlying KEM scheme; in \Cref{sec:dh-kem} we show that the Diffie--Hellman KEM scheme --- with 1 excluded from valid ciphertexts --- satisfies all properties we consider, but leave the analysis of post-quantum KEM schemes (or KEM schemes based on RSA) for future work.
 
 \subsection{How to Read This Paper}
 I certainly don't expect anyone to read through all 105 pages of this paper. (Well, perhaps the 2-page table of contents and the 3-page references shouldn't count, but even then it's still 100 pages.) As I said right before \Cref{sec:oeke-dh}, I have organized the paper in such a way that you should gain an intermediate level of understanding of the technical details after reading \Cref{sec:intro,sec:prelim}. In particular, \Cref{sec:kem-standard,sec:kem-additional} explain why certain KEM properties are needed in certain OEKE variants.
@@ -486,7 +486,7 @@ We require two syntactic properties for a KEM scheme:
       \[
       \Pr[pk = pk' : (pk,\star) \gets \Gen] \leq p_\text{guess},
       \]
-      where $p_\text{guess}$ is negligible. In other words, a (computationally unbounded) adversary has negligible probability of guessing an honestly generated public key correctly. \\
+      where $p_\text{guess}$ is negligible. In other words, a (computationally unbounded) adversary has negligible probability of guessing an honestly generated public key correctly.
 \end{itemize}
 Whenever we refer to a KEM scheme below, we always assume these two properties and do not explicitly mention them.
 
@@ -627,6 +627,9 @@ A KEM scheme is \emph{ciphertext binding (CBIND)} if for any PPT adversary $\adv
 CBIND is needed in OEKE variants where $c$ is removed from $\Htag$ inputs. Then we must prevent the OEKE adversary $\adv$ from forwarding the $P$-to-$P'$ message $(s,T)$ without modification, but then modifying the $P'$-to-$P$ message $(c,\tau')$ to some $(c^*,\tau')$ which makes $P$'s check pass.\footnote{\label{fn:cbind}It is, in fact, unclear whether this is an ``actual'' attack: $\adv$ causes the two parties to output the same session key by modifying $c$ and forwarding all other protocol messages, but $\adv$ does not learn the session key or the password. However, at least such an $\adv$ makes the UC simulation fail, since the simulator is not able to tell that $\adv$ is sending a valid $c^*$ (it does not know $sk$). The same comment is true for the attacks in the ``key binding'' paragraph below.} (If $c$ is included in $\Htag$ then $P$'s check will not pass unless $(\dots, c, \dots)$ and $(\dots, c^*, \dots)$ form a collision for $\Htag$.) This should not happen even after $\adv$ later learns $\pw$ and uses it to compute $pk := \mathsf{2F}^{\text{-}1}(\pw,(s,T))$.
 
 In the actual definition of CBIND we additionally give $K$ to the adversary. This is because the \emph{reduction} in our OEKE security proof (see \Cref{clm:htag2}) needs the KEM key to simulate $P'$'s output $SK'$ and the authenticator $\tau'$. It is possible that a reduction to a weaker CBIND property (where $K$ is not given the adversary) can go through by sampling $SK',\tau'$ at random, but that would require changing the order of the games in the security proof, and we do not explore this possibility.
+\begin{remark}
+The weaker variant of CBIND, where $K$ is not given to the adversary, is implied by OW-1CCA (which is arguably a more standard property): the reduction $\red_\text{OW-1CCA}$, on input $(pk,c)$, invokes the CBIND adversary $\adv$ on the same input; when $\adv$ outputs $c^* \neq c$, $\red_\text{OW-1CCA}$ queries its decapsulation oracle on $c^*$ and outputs the result. Hence, it is meaningful to study whether the security proof goes through under this weak CBIND property.
+\end{remark}
 
 \paragraph{Unpredictability.}
 This property roughly says that an adversary $\adv$ cannot feasibly output a ciphertext/KEM key pair $(c^*,K^*)$ ``out of thin air'', such that $(pk,c^*,K^*)$ is a valid tuple for an honestly generated public key $pk$ that $\adv$ does not know.
@@ -706,7 +709,16 @@ is negligible.
 The proof is straightforward and is deferred to \Cref{app:kbind-eq-proof}.
 
 \Cref{lem:kbind-eq} suggests that assuming UNI-PK and OW, we can strengthen KBIND so that $\adv$ is required to output $c^* \neq c$.
-
+\begin{remark}
+Consider a weaker variant of KBIND, where $K'$ is not given to the adversary; and a stronger variant of ANO-1PCA, where $pk'$ is additionally given to the adversary. Then this weak KBIND is implied by UNI-PK + strong ANO-1PCA + CBIND via the following sequence of games:
+\begin{enumerate}\setcounter{enumi}{-1} 
+  \item The CBIND game.
+  \item Independently generate $pk'$ and additionally give $pk'$ to $\adv$ ($pk'$ is not used anywhere else).
+  \item Instead of computing $(c,K) \gets \Encap(pk)$, compute $(c,K') \gets \Encap(pk')$ and give $(pk,pk',c)$ to $\adv$. $\adv$'s winning probability is negligibly close due to the ANO-1PCA property.
+  \item Instead of generating $pk'$ honestly, sample $pk' \gets \group$. $\adv$'s winning probability is negligibly close due to the UNI-PK property. At this point we arrive at the KBIND game.
+\end{enumerate}
+A formal proof of this is left to the reader as an exercise (think about why 1PCA is needed in step 2).
+\end{remark}
 \paragraph{Collision resistance.}
 This property roughly says that given two honestly generated public keys $pk,pk'$, an adversary cannot feasibly come up with a ciphertext/KEM key pair $c^*,K^*$ such that both $(pk,c^*,K^*)$ and $(pk',c^*,K^*)$ are valid tuples. In other words, an (adversarially generated) ciphertext/KEM key pair $(c^*,K^*)$ binds an (honestly generated) public/secret key pair.
 \begin{definition}
@@ -747,8 +759,8 @@ It is instructive to see what cryptographic assumptions the various KEM properti
 \begin{itemize}
   \item UNI-PK says that $X = g^x$ is indistinguishable from a uniformly random element of $\group$, which holds perfectly.
   \item OW says that given $(X = g^x, Y = g^y)$ it is infeasible to compute $K = g^{xy}$, which is the Computational Diffie--Hellman (CDH) assumption.
-  \item OW-1PCA says that given $(X = g^x, Y = g^y)$ and one-time access to an oracle that on input $(Y' \neq Y, K')$ checks if $(Y')^x = K'$, it is infeasible to compute $K = g^{xy}$. This is the Gap Diffie--Hellman (GDH) assumption, except that (1) when the adversary makes a DH oracle query, its first input is fixed to be $X$, (2) when the adversary makes a DH oracle query, its second input must not be equal to $Y$, and (3) the adversary can query the (restricted) DH oracle only once.\footnote{GDH with restriction (1) in place, namely the oracle only takes two inputs $(Y',Z)$ and checks if $Z = (Y')^x$, is sometimes called ``Strong Diffie--Hellman (SDH)'' \cite[Definition~9]{RSA:AbdBelRog01}. (Some people, e.g., \cite[Section~2]{CiC:LLMT25}) use the term ``GDH'' to refer to SDH.) Restriction (2) is redundant since a query on $(Y,K')$ is equivalent to a query on $(Y \cdot g, K' \cdot X)$. As such, this assumption could be properly named ``1SDH''.} This limited version of GDH can be reduced to CDH (on the single oracle query, the reduction to CDH returns 1 with probability 1/2 and 0 with probability 1/2; in this way the reduction has a 1/2 chance of simulating the game correctly).
-  \item ANO says that $(X = g^x, Y = g^y)$ and $(X = g^x, Y' = g^{y'})$ for another $y' \gets \mathbb{Z}_q$ are indistinguishable, which holds perfectly. (This property holds perfectly for any KEM scheme where the ciphertext does not rely on the public key.) It of course holds perfectly even if the adversary is additionally given the plaintext-checking oracle.
+  \item OW-1PCA says that given $(X = g^x, Y = g^y)$ and one-time access to an oracle that on input $(Y' \neq Y, K')$ checks if $(Y')^x = K'$, it is infeasible to compute $K = g^{xy}$. This is the Gap Diffie--Hellman (GDH) assumption, except that (1) when the adversary makes a DH oracle query, its first input is fixed to be $X$, (2) when the adversary makes a DH oracle query, its second input must not be equal to $Y$, and (3) the adversary can query the (restricted) DH oracle only once.\footnote{GDH with restriction (1) in place, namely the oracle only takes two inputs $(Y',Z)$ and checks if $Z = (Y')^x$, is sometimes called ``Strong Diffie--Hellman (SDH)'' \cite[Definition~9]{RSA:AbdBelRog01}. (Some people, e.g., \cite[Section~2]{CiC:LLMT25}, use the term ``GDH'' to refer to SDH.) Restriction (2) is redundant since a query on $(Y,K')$ is equivalent to a query on $(Y \cdot g, K' \cdot X)$. As such, this assumption could be properly named ``1SDH''.} This limited version of GDH can be reduced to CDH (on the single oracle query, the reduction to CDH returns 1 with probability 1/2 and 0 with probability 1/2; in this way the reduction has a 1/2 chance of simulating the game correctly).
+  \item ANO says that $(X = g^x, Y = g^y)$ and $(X' = g^{x'}, Y = g^y)$ for another $x' \gets \mathbb{Z}_q$ are indistinguishable, which holds perfectly. (This property holds perfectly for any KEM scheme where the ciphertext does not rely on the public key.) It of course holds perfectly even if the adversary is additionally given the plaintext-checking oracle.
   \item CBIND says that given $(X = g^x, Y = g^y)$ it is infeasible to come up with $Y^* \neq Y$ such that $(Y^*)^x = X^y$, which holds statistically (such $Y^*$ does not exist unless $x = 0$, which happens with negligible probability $1/q$).
   \item UNPRE says that it is infeasible to come up with $(Y^*,K^*)$ such that $K^* = (Y^*)^x$. \textbf{This property does NOT hold for the Diffie--Hellman KEM scheme as described above}, since the adversary can simply output $(Y^* = 1, K^* = 1)$. (This is what caused us trouble in \Cref{sec:oeke-dh}.) To fix this, we have to dictate that the identity group element \emph{not} be a valid ciphertext, i.e., $\Decap(\star,1)$ must output $\bot$. Then UNPRE is a statistical property.
   \item KBIND says that given $(X = g^x, X', Y = g^y, (X')^y)$ where $X'$ is a freshly sampled random group element, it is infeasible to come up with $Y^*$ such that $(Y^*)^x = (X')^y$. We claim that this is implied by the CDH assumption. Since $x = 0$ with negligible probability $1/q$, below we assume this does not happen, and the adversary's task is to compute $((X')^y)^\frac{1}{x}$. Let $Z = (X')^y$, and consider a stronger adversary that is additionally given $\log_g Z$. Then computing $Z^\frac{1}{x} = (g^\frac{1}{x})^{\log_g Z}$ is equivalent to computing $g^\frac{1}{x}$. But computing $g^\frac{1}{x}$ given $X = g^x$ ($\adv$'s other inputs are independent of $X$ and are thus useless) is the inverse Diffie--Hellman problem, which is well-known to be equivalent to CDH.\footnote{Inverse Diffie--Hellman is equivalent to square Diffie--Hellman \cite[Section~2.2]{ICICS:BaoDenZhu03}, which in turn is equivalent to CDH \cite[Section~2.1]{ICICS:BaoDenZhu03}.}
@@ -2891,7 +2903,7 @@ Another difficulty when comparing our security proof with the one in \cite{EC:Ja
 In more detail, let $(\Gen,\Encap,\Decap)$ be a KEM scheme as used in our description of OEKE. We can construct another KEM scheme $(\Gen,\Encap',\Decap')$ as follows:
 \begin{itemize}
   \item $\Encap'(pk)$: Run $(c,K) \gets \Encap(pk)$, compute $SK := \Hkey(K)$ and $\tau' := \Htag(K)$, and output $(c,SK||\tau')$.
-  \item $\Decap'(sk,c)$: Run $K \gets \Decap(sk,c)$, compute $SK := \Hkey(K)$ and $\tau' := \Htag(K)$, and output $SK||\tau'$.
+  \item $\Decap'(sk,c)$: Run $K := \Decap(sk,c)$, compute $SK := \Hkey(K)$ and $\tau' := \Htag(K)$, and output $SK||\tau'$.
 \end{itemize}
 Then on the PAKE level, the OEKE scheme can use the ``raw'' KEM key as $SK$ and $\tau'$, without mentioning $\Hkey$ or $\Htag$.
 
