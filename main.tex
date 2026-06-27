@@ -2264,7 +2264,11 @@ In case (2) in Game 2, we have to check both $\adv$ and $P'$'s $\Htag$ queries, 
 
 \begin{claim}
 \label{clm:pk-ind}
-If $(\pw')^* \neq \pw'$ then $\Pr[pk = pk'] = 1/|\group|$. ($pk$ is the item in record $\langle\pw,pk,sk\rangle$.)
+If $(\pw')^* \neq \pw'$ then
+\begin{enumerate}
+  \item $pk$ and $pk'$ are independent of each other. ($pk$ is the item in record $\langle\pw,pk,sk\rangle$.)
+  \item $\Pr[pk = pk'] = 1/|\group|$.
+\end{enumerate}
 \end{claim}
 \begin{proof}
 We have (in the creation of the record $\langle\pw,pk,sk\rangle$)
@@ -2440,7 +2444,7 @@ Since $\pw = \pw' \land (s^*,T^*) \neq (s,T)$, Game 16 finds $\adv$ or $P'$'s $\
   \item Compute $K := \Decap(sk,c^*)$ and check if $K = K'$, which is again the case per the condition of the game.
   \item Set $SK := \Hkey(K) (= \Hkey(K') = SK')$.
 \end{enumerate}
-This entire process in Game 16 eventually results in setting $SK := SK'$, which exactly matches the new game. Thus, there is no difference. We have
+This entire process in Game 16 eventually results in setting $SK := SK'$, which exactly matches the new game. We have
 \[
 \Dist_\env^{16,\text{newI}} = 0.
 \]
@@ -2451,10 +2455,10 @@ There are the following cases:
 \begin{itemize}
   \item If $\tau^* \neq \tau'$, then of course $P'$'s $\Htag$ query does not result in $\tau^*$ (it results in $\tau'$), so we can safely drop $P'$'s $\Htag$ query from the check.
   \item If $\tau^* = \tau'$, but there is no $\langle\pw,\star,sk\rangle$ record, then both new Game I and new Game II outright set $SK := \bot$, regardless of $\Htag$ queries by $\adv$ or $P'$. Thus, the two games are identical.
-  \item If $(\pw')^* \neq \pw' \land \tau^* = \tau'$, and there is a $\langle\pw,pk,sk\rangle$ record, then $P'$'s $\Htag(\pw',K')$ query results in $\tau^*$, and we need to argue that this query can be dropped from the check.
+  \item If $\tau^* = \tau'$, there is a record $\langle\pw,pk,sk\rangle$, but $(\pw')^* \neq \pw' \lor \Decap(sk,c^*) \neq K'$, then $P'$'s $\Htag(\pw',K')$ query results in $\tau^*$, and we need to argue that this query can be dropped from the check. 
       \begin{itemize}
         \item If $\adv$ queries $\Htag(\pw',K')$, then new Game II still finds this query, so new Game I and new Game II are identical.
-        \item If $\adv$ does not query $\Htag(\pw',K')$, then new Game II sets $SK := \bot$. We argue that new Game I also sets $SK := \bot$ except with negligible probability. New Game I finds $P'$'s $\Htag(\pw',K')$ query, and sets $SK := \bot$ unless $\Decap(sk,c^*) = K'$. But $(pk,sk)$ are independent of $pk'$ by \Cref{clm:pk-ind},\footnote{\Cref{clm:pk-ind} additionally requires $c^* = c$, but its proof does not use this condition.} which suggests a reduction $\red_\text{KBIND}$ to the KBIND property of the KEM scheme: \\
+        \item If $\adv$ does not query $\Htag(\pw',K')$, then new Game II sets $SK := \bot$. We argue that new Game I also sets $SK := \bot$ except with negligible probability. New Game I finds $P'$'s $\Htag(\pw',K')$ query, and sets $SK := \bot$ if $\Decap(sk,c^*) \neq K'$. The condition of this case says $(\pw')^* \neq \pw' \lor \Decap(sk,c^*) \neq K'$, so we only need to upper-bound $\Pr[\Decap(sk,c^*) = K']$ given $(\pw')^* \neq \pw'$. By \Cref{clm:pk-ind}, $(pk,sk)$ are independent of $pk'$, \footnote{\Cref{clm:pk-ind} additionally requires $c^* = c$, but its proof does not use this condition.} which suggests a reduction $\red_\text{KBIND}$ to the KBIND property of the KEM scheme: \\
             \vspace{-6pt} \\ % force \medskip in itemize environment
             \textbf{\underline{Reduction $\red_\mathrm{KBIND}$}:}
             \vspace{6pt} \\
@@ -2480,16 +2484,15 @@ There are the following cases:
               \item On $(c^*,\tau^*)$ from $\adv$, if $\tau^* \neq \tau'$, abort. Otherwise output $c^*$.
             \end{enumerate}
       \end{itemize}
-      Assuming $\Decap(sk,c^*) = K'$ and $\red_\text{KBIND}$'s guess of index $j$ is correct, the only difference between new Game I/II and $\red_\text{KBIND}$'s simulation (until $\adv$ sends $c^*$) is that $\red_\text{KBIND}$ uses its input $pk$ to program $H_1(\pw,r)$, uses its input $pk'$ to program $H_1(\pw',r')$, and then uses its inputs $(c,K') \gets \Encap(pk')$ as the $P'$-to-$P$ message and compute $SK'$ and $\tau'$. Since $(c,K')$ are also computed as $\Encap(pk')$ in new Game I/II, $\red_\text{KBIND}$ simulates new Game I/II perfectly. Furthermore, $\red_\text{KBIND}$ wins the KBIND game. We have
+      By an argument similar to that under Game 5 in \Cref{sec:games}, $\red_\text{KBIND}$'s aborting probability in steps 1 or 2 is upper-bounded by $q_1(q_2+1)/2^{3n}$. Assuming $\red_\text{KBIND}$ does not abort in steps 1 or 2, $\Decap(sk,c^*) = K'$, and $\red_\text{KBIND}$'s guess of index $j$ is correct, the only difference between new Game I/II and $\red_\text{KBIND}$'s simulation (until $\adv$ sends $c^*$) is that $\red_\text{KBIND}$ uses its input $pk$ to program $H_1(\pw,r)$, uses its input $pk'$ to program $H_1(\pw',r')$, and then uses its inputs $(c,K') \gets \Encap(pk')$ as the $P'$-to-$P$ message and while computing $SK'$ and $\tau'$. Since $(c,K')$ are also computed as $\Encap(pk')$ in new Game I/II, $\red_\text{KBIND}$ simulates new Game I/II perfectly. Furthermore, $\red_\text{KBIND}$ wins the KBIND game. We have
       \[
-      \Pr[\Decap(sk,c^*) = K'] \leq (q_2+1)\Adv_{\red_\text{KBIND}}^\text{KBIND}.
+      \Pr[\Decap(sk,c^*) = K'] \leq (q_2+1)\Adv_{\red_\text{KBIND}}^\text{KBIND} + \frac{q_1(q_2+1)}{2^{3n}}.
       \]
-  \item If $(\pw')^* = \pw' \land \tau^* = \tau'$, but $\Decap(sk,c^*) \neq K'$, then new Game I finds $P'$'s $\Htag(\pw',K')$ query and then sets $SK := \bot$ because the check $\Decap(sk,c^*) \stackrel{?}{=} K'$ does not pass, and new Game II also sets $SK := \bot$ because it either fails to find $\adv$'s $\Htag(\pw',K')$ query, or it finds such a query but then sets $SK := \bot$ because the check $\Decap(sk,c^*) \stackrel{?}{=} K'$ does not pass. Thus, the two games are identical.
 \end{itemize}
 
 The remaining case is that $(\pw')^* = \pw' \land \tau^* = \tau'$, there is a $\langle\pw,\star,sk\rangle$ record, and $\Decap(sk,c^*) = K'$. The condition of the game additionally requires $\pw = \pw' \land (s^*,T^*) \neq (s,T)$. Combined, we get ``$(s^*,T^*) \neq (s,T) \land (\pw')^* = \pw = \pw' \land \tau^* = \tau'$, there is a record $\langle\pw,\star,sk\rangle$, and $\Decap(sk,c^*) = K'$''. This is exactly the condition in new Game I, in which case we do not make any change in new Game II. Overall, we conclude that
 \[
-\Dist_\env^{\text{newI},\text{newII}} \leq (q_2+1)\Adv_{\red_\text{KBIND}}^\text{KBIND}.
+\Dist_\env^{\text{newI},\text{newII}} \leq (q_2+1)\Adv_{\red_\text{KBIND}}^\text{KBIND} + \frac{q_1(q_2+1)}{2^{3n}}.
 \]
 
 Game 17 is essentially unchanged from the corresponding game in \Cref{sec:hash-pw-st}.
