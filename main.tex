@@ -440,7 +440,7 @@ The information above could be overwhelming, but the general takeaway is:
 Overall, we hope that this work will help the community converge upon a ``right'' version of OEKE. Since the password $\pw$ can be removed from the hash ``for free'', we advocate removing it for better defense against side-channel attacks. Whether other items can/should be removed depends on the underlying KEM scheme; in \Cref{sec:dh-kem} we show that the Diffie--Hellman KEM scheme --- with 1 excluded from valid ciphertexts --- satisfies all properties we consider, but leave the analysis of post-quantum KEM schemes (or KEM schemes based on RSA) for future work.
 
 \subsection{How to Read This Paper}
-I certainly don't expect anyone to read through all 105 pages of this paper. (Well, perhaps the 2-page table of contents and the 3-page references shouldn't count, but even then it's still 100 pages.) As I said right before \Cref{sec:oeke-dh}, I have organized the paper in such a way that you should gain an intermediate level of understanding of the technical details after reading \Cref{sec:intro,sec:prelim}. In particular, \Cref{sec:kem-standard,sec:kem-additional} explain why certain KEM properties are needed in certain OEKE variants.
+I certainly don't expect anyone to read through all 106 pages of this paper. (Well, perhaps the 2-page table of contents and the 3-page references shouldn't count, but even then it's still over 100 pages.) As I said right before \Cref{sec:oeke-dh}, I have organized the paper in such a way that you should gain an intermediate level of understanding of the technical details after reading \Cref{sec:intro,sec:prelim}. In particular, \Cref{sec:kem-standard,sec:kem-additional} explain why certain KEM properties are needed in certain OEKE variants.
 
 Below I discuss who should read further:
 \begin{itemize}
@@ -610,7 +610,7 @@ The proof is deferred to \Cref{app:uni-ano-ro-proof}.
 \subsection{Additional KEM Properties Used in Other Versions}
 \label{sec:kem-additional}
 \paragraph{Ciphertext binding.}
-This property roughly says that given an honest tuple of $(pk,c,K)$, the adversary cannot feasibly find another valid $(pk,c^*,K)$ tuple (i.e., a new ciphertext that works for the same public key and the same KEM key). In other words, the public key/KEM key pair $(pk,K)$ binds a ciphertext. This essentially requires that the adversary cannot merely change the \emph{format} of the ciphertext without changing its actual content.
+This property roughly says that given an honest tuple of $(pk,c,K)$, an adversary cannot feasibly find another valid $(pk,c^*,K)$ tuple (i.e., a new ciphertext that works for the same public key and the same KEM key). In other words, the public key/KEM key pair $(pk,K)$ binds a ciphertext. This essentially requires that the adversary cannot merely change the \emph{format} of the ciphertext without changing its actual content.
 \begin{definition}
 \label{def:cbind}
 A KEM scheme is \emph{ciphertext binding (CBIND)} if for any PPT adversary $\adv$, the probability that $\adv$ wins the following game is negligible:
@@ -626,7 +626,7 @@ A KEM scheme is \emph{ciphertext binding (CBIND)} if for any PPT adversary $\adv
 \end{definition}
 CBIND is needed in OEKE variants where $c$ is removed from $\Htag$ inputs. Then we must prevent the OEKE adversary $\adv$ from forwarding the $P$-to-$P'$ message $(s,T)$ without modification, but then modifying the $P'$-to-$P$ message $(c,\tau')$ to some $(c^*,\tau')$ which makes $P$'s check pass.\footnote{\label{fn:cbind}It is, in fact, unclear whether this is an ``actual'' attack: $\adv$ causes the two parties to output the same session key by modifying $c$ and forwarding all other protocol messages, but $\adv$ does not learn the session key or the password. However, at least such an $\adv$ makes the UC simulation fail, since the simulator is not able to tell that $\adv$ is sending a valid $c^*$ (it does not know $sk$). The same comment is true for the attacks in the ``key binding'' paragraph below.} (If $c$ is included in $\Htag$ then $P$'s check will not pass unless $(\dots, c, \dots)$ and $(\dots, c^*, \dots)$ form a collision for $\Htag$.) This should not happen even after $\adv$ later learns $\pw$ and uses it to compute $pk := \mathsf{2F}^{\text{-}1}(\pw,(s,T))$.
 
-In the actual definition of CBIND we additionally give $K$ to the adversary. This is because the \emph{reduction} in our OEKE security proof (see \Cref{clm:htag2}) needs the KEM key to simulate $P'$'s output $SK'$ and the authenticator $\tau'$. It is possible that a reduction to a weaker CBIND property (where $K$ is not given the adversary) can go through by sampling $SK',\tau'$ at random, but that would require changing the order of the games in the security proof, and we do not explore this possibility.
+In the actual definition of CBIND we additionally give $K$ to the adversary. This is because the \emph{reduction} in our OEKE security proof (see \Cref{clm:htag2}) needs the KEM key to simulate $P'$'s session key $SK'$ and the authenticator $\tau'$. It is possible that a reduction to a weaker CBIND property (where $K$ is not given the adversary) can go through by sampling $SK',\tau'$ at random, but that would require changing the order of the games in the security proof, and we do not explore this possibility.
 \begin{remark}
 The weaker variant of CBIND, where $K$ is not given to the adversary, is implied by OW-1CCA (which is arguably a more standard property): the reduction $\red_\text{OW-1CCA}$, on input $(pk,c)$, invokes the CBIND adversary $\adv$ on the same input; when $\adv$ outputs $c^* \neq c$, $\red_\text{OW-1CCA}$ queries its decapsulation oracle on $c^*$ and outputs the result. Hence, it is meaningful to study whether the security proof goes through under this weak CBIND property.
 \end{remark}
@@ -682,7 +682,7 @@ Furthermore, KBIND is also needed if $pk$ and $(s,T)$ are \emph{both} removed fr
 \end{enumerate}
 In this attack, $\adv$ modifies the $P$-to-$P'$ message $(s,T)$, but still forwards $\tau'$. Again, this poses a problem to the UC simulator since the simulator cannot tell if $\adv$ is sending a valid $c^*$ or not (it does not know $sk$). (If $pk$ is included in $\Htag$ then $P$'s check will not pass unless either (1) the uniformly random and independent $pk'$ happens to be equal to $pk$, or (2) $(\dots, pk, \dots)$ and $(\dots, pk', \dots)$ form a collision for $\Htag$. If $(s,T)$ are included in $\Htag$ then $P$'s check will not pass unless $(\dots, s,T, \dots)$ and $(\dots, s^*,T^*, \dots)$ form a collision for $\Htag$.)
 
-Note that the OEKE adversaries above only know $pk'$ and $c$, whereas in the definition of KBIND we additionally give $pk$ and $K'$ to the adversary. This is because the \emph{reduction} in our OEKE security proof (see \Cref{clm:htag4}) needs $pk$ to simulate the $P$-to-$P'$ message $(s,T)$, and needs $K'$ to simulate $P'$'s output $SK'$ and the authenticator $\tau'$ (cf. the ``ciphertext binding'' paragraph).
+Note that the OEKE adversaries above only know $pk'$ and $c$, whereas in the definition of KBIND we additionally give $pk$ and $K'$ to the adversary. This is because the \emph{reduction} in our OEKE security proof (see \Cref{clm:htag4}) needs $pk$ to simulate the $P$-to-$P'$ message $(s,T)$, and needs $K'$ to simulate $P'$'s session key $SK'$ and the authenticator $\tau'$ (cf. the ``ciphertext binding'' paragraph).
 
 \medskip
 We also consider a much weaker variant of KBIND, where the adversary $\adv$ is forced to output $c^* = c$. Since $\adv$ is passive now, this is in fact a statistical property, and we show that it is implied by UNI-PK and OW:
@@ -715,7 +715,7 @@ Consider a weaker variant of KBIND, where $K'$ is not given to the adversary; an
   \item The CBIND game.
   \item Independently generate $pk'$ and additionally give $pk'$ to $\adv$ ($pk'$ is not used anywhere else).
   \item Instead of computing $(c,K) \gets \Encap(pk)$, compute $(c,K') \gets \Encap(pk')$ and give $(pk,pk',c)$ to $\adv$. $\adv$'s winning probability is negligibly close due to the ANO-1PCA property.
-  \item Instead of generating $pk'$ honestly, sample $pk' \gets \group$. $\adv$'s winning probability is negligibly close due to the UNI-PK property. At this point we arrive at the KBIND game.
+  \item Instead of generating $pk'$ honestly, sample $pk' \gets \pkspace$. $\adv$'s winning probability is negligibly close due to the UNI-PK property. At this point we arrive at the KBIND game.
 \end{enumerate}
 A formal proof of this is left to the reader as an exercise (think about why 1PCA is needed in step 2).
 \end{remark}
@@ -813,7 +813,7 @@ All these three possibilities are covered by the third bullet under $\NewKey$,\f
 
 \section{UC Description of the OEKE-2F Protocol}
 \label{sec:protocol-uc}
-We give a formal, UC-compatible description of the OEKE-2F protocol in \Cref{fig:protocol-uc}. Note that UC PAKE considers the case that the two parties' passwords are different; therefore, we need to use different notations $\pw$ and $\pw'$ for the password of $P$ and $P'$, respectively.\footnote{\cite[Fig.4]{EPRINT:ArrBarJar25} uses $\pw$ for both parties' passwords, which is not the ``right'' protocol description in the UC setting.} We only describe the ``hash everything'' version of the protocol; in other variants one or more of $\pw$, $pk$, $(s,T)$ and $c$ can be removed from the inputs to $\Htag$. We omit $sid$ from RO inputs (e.g., we write ``$H_1(\pw,r)$'' rather than ``$H_1(sid,\pw,r)$''), although we stress that $sid$ must be included in order to achieve domain separation.
+We give a formal, UC-compatible description of the OEKE-2F protocol in \Cref{fig:protocol-uc}. Note that UC PAKE considers the case that the two parties' passwords are different; therefore, we need to use different notations $\pw$ and $\pw'$ for the password of $P$ and $P'$, respectively.\footnote{\cite[Fig.4]{EPRINT:ArrBarJar25} uses $\pw$ for both parties' passwords, which is not the ``right'' protocol description in the UC setting.} We only describe the ``hash everything'' version of the protocol; in other variants one or more of $\pw$, $pk$, $(s,T)$ and $c$ can be removed from the inputs to $\Htag$. We omit $sid$ from RO inputs (e.g., we write ``$H_1(\pw,r)$'' rather than ``$H_1(sid,\pw,r)$''), although we stress that $sid$ must be included in order to achieve domain separation. We assume that $sid$ contains the names of the two protocol parties.
 
 \begin{figure}[H]
 \begin{framed}
@@ -2545,7 +2545,7 @@ We now move on to the variant where $\pw$, but not $pk$, is further removed from
 
 \subsubsection{Changes to the Simulator}
 \label{app:hash-pk-sim}
-Similar to \Cref{app:hash-pw}, once we remove $pk$ from $\Htag$, the adversary $\adv$ can force the two parties' session keys to be the same without performing a ``real'' attack. However, this time the two parties' passwords may or may not be the same (and $\adv$ needs to know both of them), and $\adv$ should forward both $c$ and $\tau'$ from $P'$ without modification. We show this scenario in \Cref{fig:attack-no-pw}.
+Similar to \Cref{app:hash-pw}, once we remove $pk$ from $\Htag$, the adversary $\adv$ can force the two parties' session keys to be the same without performing an ``actual'' attack. However, this time the two parties' passwords may or may not be the same (and $\adv$ needs to know both of them), and $\adv$ should forward both $c$ and $\tau'$ from $P'$ without modification. We show this scenario in \Cref{fig:attack-no-pw}.
 
 \begin{figure}[H]
 \pseudocodeblock{
