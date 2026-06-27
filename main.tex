@@ -202,7 +202,7 @@ Apart from its computational efficiency, OEKE-2F has received much attention for
   \item A recent variant of OEKE-2F called Tempo \cite{TCHES:ArrBarJar26} is resilient to timing attacks, while mostly retaining the efficiency of OEKE-2F.
 \end{itemize}
 \begin{remark}
-We caution that ``PAKE secure under post-quantum assumptions'' and ``post-quantum PAKE'' are two different concepts: the latter additionally requires a security proof in the Quantum-accessible ROM (QROM), and such a proof for (O)EKE --- even in the game-based setting --- appears difficult \cite{EPRINT:HHKR25}.
+We caution that ``PAKE secure under post-quantum assumptions'' and ``post-quantum PAKE'' are two different concepts: the latter additionally requires a security proof in the Quantum-accessible ROM (QROM), and such a proof for (O)EKE --- even in the game-based setting --- appears difficult \cite{EPRINT:HHKR25}. (\cite{draft:hybrid-pake} calls their protocol ``post-quantum'' without performing an analysis in the QROM, which is, in our opinion, misleading.)
 \end{remark}
 \begin{table}[H]\centering
 \begin{tabular}{ |c|c|c| }
@@ -437,7 +437,7 @@ The information above could be overwhelming, but the general takeaway is:
   \item Removing or not removing $(s,T)$ does not make a difference, \emph{except} that if $pk$ is also removed, then we additionally need KBIND. (This is why we put all variants where $(s,T)$ are removed in the appendices.) 
 \end{itemize}
 
-Overall, we hope that this work will help the community converge upon a ``right'' version of OEKE. Since the password $\pw$ can be removed from the hash ``for free'', we advocate removing it for better defense against side-channel attacks. Whether other items can/should be removed depends on the underlying KEM scheme; in \Cref{sec:dh-kem} we show that the Diffie--Hellman KEM scheme --- with 1 excluded from valid ciphertexts --- satisfies all properties we consider, but leave the analyses of post-quantum KEM schemes for future work.
+Overall, we hope that this work will help the community converge upon a ``right'' version of OEKE. Since the password $\pw$ can be removed from the hash ``for free'', we advocate removing it for better defense against side-channel attacks. Whether other items can/should be removed depends on the underlying KEM scheme; in \Cref{sec:dh-kem} we show that the Diffie--Hellman KEM scheme --- with 1 excluded from valid ciphertexts --- satisfies all properties we consider, but leave the analysis of post-quantum KEM schemes for future work.
 
 \subsection{How to Read This Paper}
 I certainly don't expect anyone to read through all 105 pages of this paper. (Well, perhaps the 2-page table of contents and the 3-page references shouldn't count, but even then it's still 100 pages.) As I said right before \Cref{sec:oeke-dh}, I have organized the paper in such a way that you should gain an intermediate level of understanding of the technical details after reading \Cref{sec:intro,sec:prelim}. In particular, \Cref{sec:kem-standard,sec:kem-additional} explain why certain KEM properties are needed in certain OEKE variants.
@@ -732,6 +732,9 @@ Suppose the CR property holds for a KEM scheme. Then the UNPRE property also hol
 \end{lemma}
 The proof is deferred to \Cref{app:unpre}.
 
+\medskip
+It is unclear whether our new KEM properties are of independent interest. Some of them, such as CR, appear natural enough; while properties such as KBIND look highly tailored (especially since in KBIND one of the public keys is generated honestly, and the other is sampled uniformly at random). Either way, we are not aware of any other applications of these properties yet.
+
 \subsection{Example: Diffie--Hellman KEM}
 \label{sec:dh-kem}
 It is instructive to see what cryptographic assumptions the various KEM properties are, in the well-known Diffie--Hellman KEM. This KEM scheme works in a finite cyclic group with (public) generator $g$ and prime order $q$ superpolynomial in $n$, and
@@ -744,8 +747,8 @@ It is instructive to see what cryptographic assumptions the various KEM properti
 \begin{itemize}
   \item UNI-PK says that $X = g^x$ is indistinguishable from a uniformly random element of $\group$, which holds perfectly.
   \item OW says that given $(X = g^x, Y = g^y)$ it is infeasible to compute $K = g^{xy}$, which is the Computational Diffie--Hellman (CDH) assumption.
-  \item OW-1PCA says that given $(X = g^x, Y = g^y)$ and one-time access to an oracle that on input $(Y' \neq Y, K')$ checks if $(Y')^x = K'$, it is infeasible to compute $K = g^{xy}$. This is the Gap Diffie--Hellman (GDH) assumption, except that (1) when the adversary makes a DH oracle query, its first input is fixed to be $X$, (2) when the adversary makes a DH oracle query, its second input must not be equal to $Y$, and (3) the adversary can query the (restricted) DH oracle only once.\footnote{GDH with restriction (1) in place, namely the oracle only takes two inputs $(Y',Z)$ and checks if $Z = (Y')^x$, is sometimes called ``Strong Diffie--Hellman (SDH)'' \cite[Definition~9]{RSA:AbdBelRog01}. Some people (e.g., \cite[Section~2]{CiC:LLMT25}) use the term ``GDH'' to refer to SDH.} This limited version of GDH can be reduced to CDH (on the single oracle query, the reduction to CDH returns 1 with probability 1/2 and 0 with probability 1/2; in this way the reduction has a 1/2 chance of simulating the game correctly).
-  \item ANO says that $(X = g^x, Y = g^y)$ and $(X = g^x, Y' = g^{y'})$ for another $y' \gets \mathbb{Z}_q$ are indistinguishable, which holds perfectly. It of course holds perfectly even if the adversary is additionally given the plaintext-checking oracle.
+  \item OW-1PCA says that given $(X = g^x, Y = g^y)$ and one-time access to an oracle that on input $(Y' \neq Y, K')$ checks if $(Y')^x = K'$, it is infeasible to compute $K = g^{xy}$. This is the Gap Diffie--Hellman (GDH) assumption, except that (1) when the adversary makes a DH oracle query, its first input is fixed to be $X$, (2) when the adversary makes a DH oracle query, its second input must not be equal to $Y$, and (3) the adversary can query the (restricted) DH oracle only once.\footnote{GDH with restriction (1) in place, namely the oracle only takes two inputs $(Y',Z)$ and checks if $Z = (Y')^x$, is sometimes called ``Strong Diffie--Hellman (SDH)'' \cite[Definition~9]{RSA:AbdBelRog01}. (Some people, e.g., \cite[Section~2]{CiC:LLMT25}) use the term ``GDH'' to refer to SDH.) Restriction (2) is redundant since a query on $(Y,K')$ is equivalent to a query on $(Y \cdot g, K' \cdot X)$. As such, this assumption could be properly named ``1SDH''.} This limited version of GDH can be reduced to CDH (on the single oracle query, the reduction to CDH returns 1 with probability 1/2 and 0 with probability 1/2; in this way the reduction has a 1/2 chance of simulating the game correctly).
+  \item ANO says that $(X = g^x, Y = g^y)$ and $(X = g^x, Y' = g^{y'})$ for another $y' \gets \mathbb{Z}_q$ are indistinguishable, which holds perfectly. (This property holds perfectly for any KEM scheme where the ciphertext does not rely on the public key.) It of course holds perfectly even if the adversary is additionally given the plaintext-checking oracle.
   \item CBIND says that given $(X = g^x, Y = g^y)$ it is infeasible to come up with $Y^* \neq Y$ such that $(Y^*)^x = X^y$, which holds statistically (such $Y^*$ does not exist unless $x = 0$, which happens with negligible probability $1/q$).
   \item UNPRE says that it is infeasible to come up with $(Y^*,K^*)$ such that $K^* = (Y^*)^x$. \textbf{This property does NOT hold for the Diffie--Hellman KEM scheme as described above}, since the adversary can simply output $(Y^* = 1, K^* = 1)$. (This is what caused us trouble in \Cref{sec:oeke-dh}.) To fix this, we have to dictate that the identity group element \emph{not} be a valid ciphertext, i.e., $\Decap(\star,1)$ must output $\bot$. Then UNPRE is a statistical property.
   \item KBIND says that given $(X = g^x, X', Y = g^y, (X')^y)$ where $X'$ is a freshly sampled random group element, it is infeasible to come up with $Y^*$ such that $(Y^*)^x = (X')^y$. We claim that this is implied by the CDH assumption. Since $x = 0$ with negligible probability $1/q$, below we assume this does not happen, and the adversary's task is to compute $((X')^y)^\frac{1}{x}$. Let $Z = (X')^y$, and consider a stronger adversary that is additionally given $\log_g Z$. Then computing $Z^\frac{1}{x} = (g^\frac{1}{x})^{\log_g Z}$ is equivalent to computing $g^\frac{1}{x}$. But computing $g^\frac{1}{x}$ given $X = g^x$ ($\adv$'s other inputs are independent of $X$ and are thus useless) is the inverse Diffie--Hellman problem, which is well-known to be equivalent to CDH.\footnote{Inverse Diffie--Hellman is equivalent to square Diffie--Hellman \cite[Section~2.2]{ICICS:BaoDenZhu03}, which in turn is equivalent to CDH \cite[Section~2.1]{ICICS:BaoDenZhu03}.}
@@ -2045,7 +2048,7 @@ This entire work is on OEKE only, and one might wonder including/excluding certa
 Finally, we mention the future direction of the greatest practical significance. The current description and security analysis of the Tempo protocol \cite[Figure~2]{TCHES:ArrBarJar26} assume the ``hash everything'' version. Given how similar the security proof for Tempo is to the proof for OEKE-2F, we speculate that the same optimization --- removing certain items from the ROs while relying on mildly stronger security properties of the underlying KEM scheme --- can be made in Tempo, which would further protect the protocol against side-channel attacks.
 
 \bibliographystyle{alpha}
-\bibprolog{Whenever we cite (say) [1, Figure 4], we always refer to the full version (if available) rather than the proceedings version.}
+\bibprolog{When we cite (say) \cite[Definition~9]{RSA:AbdBelRog01}, we always refer to the full version (if available) rather than the proceedings version.}
 \bibliography{bib.bib}
 \newpage
 \appendix
@@ -2883,12 +2886,12 @@ While our proof is a monolith, the proof in \cite{EC:JanRoyXu25} is split into t
 If we collect and combine all proofs in the three sections of \cite{EC:JanRoyXu25} using the composition theorem, that should yield a monolith security proof for OEKE. However, there would be so much work that we might as well perform a monolith proof from scratch --- as what we did in this work.
 
 \paragraph{KEM scheme: hashed v. unhashed.}
-Another difficulty when comparing our security proof with the one in \cite{EC:JanRoyXu25} is that they put the ROs $\Hkey$ and $\Htag$ inside the KEM scheme.\footnote{In fact, \cite{EC:JanRoyXu25} uses the syntax of (unauthenticated) key exchange protocols, rather than KEM.} In our description of OEKE, we use the KEM scheme to derive the KEM key $K$, and then use $\Hkey$ and $\Htag$ to derive the PAKE session key $SK$ and the authenticator $\tau'$. In contrast, \cite{EC:JanRoyXu25} splits the KEM key as $SK||\tau'$, without applying an RO --- which means that the ROs are implicitly ``baked into'' the KEM scheme.
+Another difficulty when comparing our security proof with the one in \cite{EC:JanRoyXu25} is that they put the ROs $\Hkey$ and $\Htag$ inside the KEM scheme.\footnote{In fact, \cite{EC:JanRoyXu25} uses the syntax of (unauthenticated) key exchange protocols, rather than KEM.} In our description of OEKE, we use the KEM scheme to derive the KEM key $K$, and then use $\Hkey$ and $\Htag$ to derive the PAKE session key $SK$ and the authenticator $\tau'$, respectively. In contrast, \cite{EC:JanRoyXu25} splits the KEM key into $SK||\tau'$, without applying an RO --- which means that the ROs are implicitly ``baked into'' the KEM scheme.
 
 In more detail, let $(\Gen,\Encap,\Decap)$ be a KEM scheme as used in our description of OEKE. We can construct another KEM scheme $(\Gen,\Encap',\Decap')$ as follows:
 \begin{itemize}
   \item $\Encap'(pk)$: Run $(c,K) \gets \Encap(pk)$, compute $SK := \Hkey(K)$ and $\tau' := \Htag(K)$, and output $(c,SK||\tau')$.
-  \item $\Decap'(sk,c)$: Run $K \gets \Decap(pk)$, compute $SK := \Hkey(K)$ and $\tau' := \Htag(K)$, and output $SK||\tau'$.
+  \item $\Decap'(sk,c)$: Run $K \gets \Decap(sk,c)$, compute $SK := \Hkey(K)$ and $\tau' := \Htag(K)$, and output $SK||\tau'$.
 \end{itemize}
 Then on the PAKE level, the OEKE scheme can use the ``raw'' KEM key as $SK$ and $\tau'$, without mentioning $\Hkey$ or $\Htag$.
 
@@ -3170,7 +3173,7 @@ We have
 \Pr[\Decap(sk,c^*) = K^*] &= \Adv_\adv^\text{UNPRE}, \\
 \Pr[\Decap(sk',c^*) = K^*] &= \Adv_\adv^\text{UNPRE},
 \end{align*}
-and the two events are independent of each other. (They are independent because any \emph{fixed} pair of $c^*$ and $K^*$ completely determine a set $S$ of secret keys $sk^*$ such that $\Decap(sk^*,c^*) = K^*$. Therefore, $\Decap(sk,c^*) = K^*$ is equivalent to $sk \in S$, and $\Decap(sk',c^*) = K^*$ is equivalent to $sk' \in S$, and since $sk$ and $sk'$ are generated independently, ``$sk \in S$'' and ``$sk' \in S$'' are independent of each other. Since the two events are independent for \emph{any} fixed pair of $c^*$ and $K^*$, they must also be independent for any random variables $c^*$ and $K^*$.) If both events happen then $\red_\text{CR}$ wins the CR game. Thus,
+and the two events are independent of each other. (They are independent because any \emph{fixed} pair of $c^*$ and $K^*$ completely determines a set $S$ of secret keys $sk^*$ such that $\Decap(sk^*,c^*) = K^*$. Therefore, $\Decap(sk,c^*) = K^*$ is equivalent to $sk \in S$, and $\Decap(sk',c^*) = K^*$ is equivalent to $sk' \in S$; since $sk$ and $sk'$ are generated independently, ``$sk \in S$'' and ``$sk' \in S$'' are independent of each other. Since the two events are independent for \emph{any} fixed pair of $c^*$ and $K^*$, they must also be independent for any random variables $c^*$ and $K^*$.) If both events happen then $\red_\text{CR}$ wins the CR game. Thus,
 \[
 \Adv_\adv^\text{UNPRE} = \sqrt{\Adv_{\red_\text{CR}}^\text{CR}},
 \]
