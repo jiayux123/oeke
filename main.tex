@@ -15,6 +15,14 @@
 \usepackage{cryptocode}
 \usepackage{csquotes}
 \usepackage{enumerate}
+\usepackage{etoolbox}
+\patchcmd{\thebibliography}{\list}{\printbibprolog\list}{}{}
+\newcommand{\bibprolog}[1]{
+  \def\printbibprolog{
+#1
+}
+}
+\def\printbibprolog{} % preamble of the References section; see https://tex.stackexchange.com/a/513635
 \usepackage{float}
 \usepackage{framed}
 \usepackage[colorlinks]{hyperref}
@@ -2007,12 +2015,12 @@ In sum, we have
 \Dist_\env^{12,13} \leq \frac{q_2(q_2-1)}{2} \cdot \Adv_{\red_\text{CR1}}^\text{CR} + q_2 \cdot \Adv_{\red_\text{CR2}}^\text{CR} + \frac{\qtag(\qtag-1)}{2^{2n+1}}.
 \]
 
-Overall, we conclude that the ``only hash $(s,T)$'' version is secure under the CBIND, UNPRE, KBIND and CR properties of the KEM scheme.
+Overall, we conclude that the ``only hash $(s,T)$'' version is secure under the CBIND, UNPRE, KBIND and CR properties of the KEM scheme. Since UNPRE is implied by CR per \Cref{lem:unpre}, we can drop UNPRE and the protocol is secure under CBIND, KBIND and CR.
 
 \paragraph{The ``hash $(s,T)$ and $c$'' version.}
 If we define $\tau$ as $\Htag(s,T,c,K)$, then the second bullet of \Cref{clm:htag4} is not needed, and the protocol can be proven secure without the CBIND property of the KEM scheme.
 
-We claim that the KBIND property can also be removed. KBIND appears in the first bullet of \Cref{clm:htag4}. We now have $\pw \neq \pw' \land c^* = c$, so in the corresponding reduction $\adv$ is forced to send $(c^*,\tau^*)$ for $c^* = c$. That is, instead of reducing to KBIND, we only need to reduce to the property in \Cref{lem:kbind-eq}, which is implied by UNI-PK and OW. Overall we only need UNPRE and CR in this version.
+We claim that the KBIND property can also be removed. KBIND appears in the first bullet of \Cref{clm:htag4}. We now have $\pw \neq \pw' \land c^* = c$, so in the corresponding reduction $\adv$ is forced to send $(c^*,\tau^*)$ for $c^* = c$. That is, instead of reducing to KBIND, we only need to reduce to the property in \Cref{lem:kbind-eq}, which is implied by UNI-PK and OW. Overall we only need CR in this version.
 
 \section{Future Directions}
 \label{sec:future-work}
@@ -2037,6 +2045,7 @@ This entire work is on OEKE only, and one might wonder including/excluding certa
 Finally, we mention the future direction of the greatest practical significance. The current description and security analysis of the Tempo protocol \cite[Figure~2]{TCHES:ArrBarJar26} assume the ``hash everything'' version. Given how similar the security proof for Tempo is to the proof for OEKE-2F, we speculate that the same optimization --- removing certain items from the ROs while relying on mildly stronger security properties of the underlying KEM scheme --- can be made in Tempo, which would further protect the protocol against side-channel attacks.
 
 \bibliographystyle{alpha}
+\bibprolog{Whenever we cite (say) [1, Figure 4], we always refer to the full version (if available) rather than the proceedings version.}
 \bibliography{bib.bib}
 \newpage
 \appendix
@@ -2424,7 +2433,7 @@ Games 3--16 are essentially unchanged from the corresponding games in \Cref{sec:
 
 In the case where $(s^*,T^*) \neq (s,T) \land (\pw')^* = \pw = \pw' \land \tau^* = \tau'$, there is a record $\langle\pw,\star,sk\rangle$, and $\Decap(sk,c^*) = K'$, set $SK := SK'$. If $(\pw')^*$ is undefined, treat it as if $(\pw')^* \neq \pw'$. (In some sense this is the most crucial new game, as it covers the scenario in \Cref{fig:attack-no-pk} --- which is why we need to make all these changes to begin with. It also corresponds to step 2(c)(ii) in the simulator in \Cref{fig:oeke-sim-hash-pw}. We will deal with step 2(c)(i) in new Game III later.)
 
-Since $\pw = \pw' \land (s^*,T^*) \neq (s,T)$, Game 16 finds $\adv$ or $P'$'s $\Htag$ query resulting in $\tau^*$. $P'$ makes a singe query to $\Htag$, on input $(\pw',K')$; and the query result is $\tau' = \tau^*$. Therefore, Game 16 finds this query, and does the following:
+Since $\pw = \pw' \land (s^*,T^*) \neq (s,T)$, Game 16 finds $\adv$ or $P'$'s $\Htag$ query resulting in $\tau^*$. $P'$ makes a single query to $\Htag$, on input $(\pw',K')$; and the query result is $\tau' = \tau^*$. Therefore, Game 16 finds this query, and does the following:
 \begin{enumerate}
   \item Check if $\pw' = \pw$, which is indeed the case.
   \item Find the $\langle\pw,\star,sk\rangle$ record.
@@ -3158,7 +3167,7 @@ We have
 \Pr[\Decap(sk,c^*) = K^*] &= \Adv_\adv^\text{UNPRE}, \\
 \Pr[\Decap(sk',c^*) = K^*] &= \Adv_\adv^\text{UNPRE},
 \end{align*}
-and the two events are independent of each other. (They are independent because for any \emph{fixed} pair of $c^*$ and $K^*$, they completely determine a set $S$ of secret keys $sk^*$ such that $\Decap(sk^*,c^*) = K^*$. Therefore, $\Decap(sk,c^*) = K^*$ is equivalent to $sk \in S$, and $\Decap(sk',c^*) = K^*$ is equivalent to $sk' \in S$, and since $sk$ and $sk'$ are generated independently, ``$sk \in S$'' and ``$sk' \in S$'' are independent of each other. Since the two events are independent for \emph{any} fixed pair of $c^*$ and $K^*$, they must also be independent for any random variables $c^*$ and $K^*$.) If both events happen then $\red_\text{CR}$ wins the CR game. Thus,
+and the two events are independent of each other. (They are independent because any \emph{fixed} pair of $c^*$ and $K^*$ completely determine a set $S$ of secret keys $sk^*$ such that $\Decap(sk^*,c^*) = K^*$. Therefore, $\Decap(sk,c^*) = K^*$ is equivalent to $sk \in S$, and $\Decap(sk',c^*) = K^*$ is equivalent to $sk' \in S$, and since $sk$ and $sk'$ are generated independently, ``$sk \in S$'' and ``$sk' \in S$'' are independent of each other. Since the two events are independent for \emph{any} fixed pair of $c^*$ and $K^*$, they must also be independent for any random variables $c^*$ and $K^*$.) If both events happen then $\red_\text{CR}$ wins the CR game. Thus,
 \[
 \Adv_\adv^\text{UNPRE} = \sqrt{\Adv_{\red_\text{CR}}^\text{CR}},
 \]
