@@ -177,7 +177,7 @@ K := \Decap(sk,c) \< \< \\
 Apart from being computationally more efficient than EKE, OEKE also achieves one-side \emph{explicit authentication}: the initiator ($P$ in \Cref{fig:oeke}) can check if its counterparty holds the correct password by computing its own authenticator and comparing it with the incoming message; if the check fails, it can explicitly reject.\footnote{It is unclear whether this should be called ``initiator-side explicit authentication'' or ``respondent-side explicit authentication'': It is the initiator who may explicitly reject, but what's checked is whether the respondent holds the correct password. Below we use the term ``initiator-side explicit authentication''.}
 
 \paragraph{Using 2-round Feistel cipher (2F) in place of IC.}
-In 2020, an orthogonal optimization of EKE was proposed by McQuoid, Rosulek and Roy \cite{CCS:McQRosRoy20}. Their trick is simple: While a 2-round Feistel cipher (2F) is distinguishable from an IC, it nevertheless can be used in place of IC in EKE. In more detail, they use the following procedure
+In 2020, an orthogonal optimization of EKE was proposed by McQuoid, Rosulek and Roy \cite{CCS:McQRosRoy20}. Their trick is simple: While a 2-round Feistel cipher (2F) is differentiable from an IC, it nevertheless can be used in place of IC in EKE. In more detail, they use the following procedure
 \begin{align*}
 & \underline{\mathsf{2F}(\pw,pk)}: \\
 & r \gets \{0,1\}^{3n}, \\
