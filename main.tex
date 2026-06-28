@@ -31,16 +31,17 @@
   \hypersetup{#1color=Hy#1color}}
 \tmp{link}{HTML}{800006}
 \tmp{cite}{HTML}{2E7E2A} % better default colors for hyperref links; see https://tex.stackexchange.com/a/525297
-\usepackage{soul} % allow line break in underline
-\usepackage[capitalise]{cleveref}
+\usepackage[capitalise]{cleveref} % cleveref must be loaded after hyperref
 \Crefname{claim}{Claim}{Claims}
 \makeatletter
 \AddToHook{cmd/appendix/before}{\def\cref@section@alias{appendix}\def\cref@subsection@alias{appendix}\def\cref@subsubsection@alias{appendix}} % change ``Section B.1'' to ``Appendix B.1'' while using \Cref command; see https://tex.stackexchange.com/a/734147
 \makeatother
 \usepackage{makecell} % force line break within a table cell
 \usepackage{multirow} % merge cells in a table
-\usepackage{wasysym} % black circle in Table 2
 \usepackage{ocgx} % spoiler hack
+\usepackage{soul} % allow line break in underline
+\usepackage[nottoc]{tocbibind} % force the References section to appear in the table of contents; see https://tex.stackexchange.com/a/8459 and comments therein
+\usepackage{wasysym} % black circle in Table 2
 
 \newcommand{\codebox}[1]{
     \begin{varwidth}{\linewidth}
