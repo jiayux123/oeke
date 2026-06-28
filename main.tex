@@ -173,7 +173,7 @@ K := \Decap(sk,c) \< \< \\
 \caption{The OEKE protocol with KEM scheme $(\Gen,\Encap,\Decap)$ and symmetric encryption $(\mathcal{E},\mathcal{D})$}
 \label{fig:oeke}
 \end{figure}
-Apart from being more computationally efficient than EKE, OEKE also achieves one-side \emph{explicit authentication}: the initiator ($P$ in \Cref{fig:oeke}) can check if its counterparty holds the correct password by computing its own authenticator and comparing it with the incoming message; if the check fails, it can explicitly reject.\footnote{It is unclear whether this should be called ``initiator-side explicit authentication'' or ``respondent-side explicit authentication'': It is the initiator who may explicitly reject, but what's checked is whether the respondent holds the correct password. Below we use the term ``initiator-side explicit authentication''.}
+Apart from being computationally more efficient than EKE, OEKE also achieves one-side \emph{explicit authentication}: the initiator ($P$ in \Cref{fig:oeke}) can check if its counterparty holds the correct password by computing its own authenticator and comparing it with the incoming message; if the check fails, it can explicitly reject.\footnote{It is unclear whether this should be called ``initiator-side explicit authentication'' or ``respondent-side explicit authentication'': It is the initiator who may explicitly reject, but what's checked is whether the respondent holds the correct password. Below we use the term ``initiator-side explicit authentication''.}
 
 \paragraph{Using 2-round Feistel cipher (2F) in place of IC.}
 In 2020, an orthogonal optimization of EKE was proposed by McQuoid, Rosulek and Roy \cite{CCS:McQRosRoy20}. Their trick is simple: While a 2-round Feistel cipher (2F) is distinguishable from an IC, it nevertheless can be used in place of IC in EKE. In more detail, they use the following procedure
@@ -202,7 +202,7 @@ Apart from its computational efficiency, OEKE-2F has received much attention for
   \item A recent variant of OEKE-2F called Tempo \cite{TCHES:ArrBarJar26} is resilient to timing attacks, while mostly retaining the efficiency of OEKE-2F.
 \end{itemize}
 \begin{remark}
-We caution that ``PAKE secure under post-quantum assumptions'' and ``post-quantum PAKE'' are two different concepts: the latter additionally requires a security proof in the Quantum-accessible ROM (QROM), and such a proof for (O)EKE --- even in the game-based setting --- appears difficult \cite{EPRINT:HHKR25}. (\cite{draft:hybrid-pake} calls their protocol ``post-quantum'' without performing an analysis in the QROM, which is, in our opinion, misleading.)
+We caution that ``PAKE secure under post-quantum assumptions'' and ``post-quantum PAKE'' are two different concepts: the latter additionally requires a security proof in the Quantum-accessible ROM (QROM), and such a proof for (O)EKE appears difficult \cite{EPRINT:HHKR25}. (\cite{draft:hybrid-pake} calls their protocol ``post-quantum'' without an analysis in the QROM, which is, in our opinion, misleading.) Nevertheless, it is fair to say that a security analysis under post-quantum assumptions could serve as the first step of a post-quantum analysis.
 \end{remark}
 \begin{table}[H]\centering
 \begin{tabular}{ |c|c|c| }
@@ -401,10 +401,10 @@ $\pw$ & $pk$ & $(s,T)$ & $c$ & & \\
 \hline
 & & & \CIRCLE & KBIND, CR & \Cref{app:hash-nothing} \\
 \hline
-\multicolumn{6}{|l|}{\makecell{$K$ is always hashed, which is omitted above \\ UNI-PK, OW-1PCA and ANO-1PCA properties are always required \\ UNPRE is implied by CR}} \\
+\multicolumn{6}{|l|}{\makecell{$K$ is always hashed, which is omitted above \\ UNI-PK, OW-1PCA and ANO-1PCA properties are always required \\ UNPRE is implied by CR (\Cref{lem:unpre})}} \\
 \hline
 \end{tabular}
-\caption{List of OEKE variants}
+\caption{List of OEKE variants. The KEM properties are not necessarily minimal (see \Cref{sec:future-work})}
 \label{table:oeke-variants}
 \end{table}
 We will define the various additional KEM properties in \Cref{sec:kem-additional}, but at a high level, they are different types of binding properties. For example, if the KEM ciphertext $c$ is included in the hash, then modifying $c$ but forwarding $\tau'$ will immediately cause $P$ to reject; however, if $c$ is removed from the hash, then we need some additional ``ciphertext binding'' property to prevent the adversary from doing this. We show the full names of the KEM properties below.
@@ -685,7 +685,7 @@ In this attack, $\adv$ modifies the $P$-to-$P'$ message $(s,T)$, but still forwa
 Note that the OEKE adversaries above only know $pk'$ and $c$, whereas in the definition of KBIND we additionally give $pk$ and $K'$ to the adversary. This is because the \emph{reduction} in our OEKE security proof (see \Cref{clm:htag4}) needs $pk$ to simulate the $P$-to-$P'$ message $(s,T)$, and needs $K'$ to simulate $P'$'s session key $SK'$ and the authenticator $\tau'$ (cf. the ``ciphertext binding'' paragraph).
 
 \medskip
-We also consider a much weaker variant of KBIND, where the adversary $\adv$ is forced to output $c^* = c$. Since $\adv$ is passive now, this is in fact a statistical property, and we show that it is implied by UNI-PK and OW:
+We also consider a much weaker variant of KBIND, where the adversary $\adv$ is forced to output $c^* = c$. Since $\adv$ is passive now, this property can be described without mentioning an adversary, and we show that it is implied by UNI-PK and OW:
 \begin{lemma}
 \label{lem:kbind-eq}
 Suppose the UNI-PK and OW properties hold for a KEM scheme. Then
@@ -759,7 +759,7 @@ It is instructive to see what cryptographic assumptions the various KEM properti
 \begin{itemize}
   \item UNI-PK says that $X = g^x$ is indistinguishable from a uniformly random element of $\group$, which holds perfectly.
   \item OW says that given $(X = g^x, Y = g^y)$ it is infeasible to compute $K = g^{xy}$, which is the Computational Diffie--Hellman (CDH) assumption.
-  \item OW-1PCA says that given $(X = g^x, Y = g^y)$ and one-time access to an oracle that on input $(Y' \neq Y, K')$ checks if $(Y')^x = K'$, it is infeasible to compute $K = g^{xy}$. This is the Gap Diffie--Hellman (GDH) assumption, except that (1) when the adversary makes a DH oracle query, its first input is fixed to be $X$, (2) when the adversary makes a DH oracle query, its second input must not be equal to $Y$, and (3) the adversary can query the (restricted) DH oracle only once.\footnote{GDH with restriction (1) in place, namely the oracle only takes two inputs $(Y',Z)$ and checks if $Z = (Y')^x$, is sometimes called ``Strong Diffie--Hellman (SDH)'' \cite[Definition~9]{RSA:AbdBelRog01}. (Some people, e.g., \cite[Section~2]{CiC:LLMT25}, use the term ``GDH'' to refer to SDH.) Restriction (2) is redundant since a query on $(Y,K')$ is equivalent to a query on $(Y \cdot g, K' \cdot X)$. As such, this assumption could be properly named ``1SDH''.} This limited version of GDH can be reduced to CDH (on the single oracle query, the reduction to CDH returns 1 with probability 1/2 and 0 with probability 1/2; in this way the reduction has a 1/2 chance of simulating the game correctly).
+  \item OW-1PCA says that given $(X = g^x, Y = g^y)$ and one-time access to an oracle that on input $(Y' \neq Y, K')$ checks if $(Y')^x = K'$, it is infeasible to compute $K = g^{xy}$. This is the Gap Diffie--Hellman (GDH) assumption, except that (1) when the adversary makes a DH oracle query, its first input is fixed to be $X$, (2) when the adversary makes a DH oracle query, its second input must not be equal to $Y$, and (3) the adversary can query the (restricted) DH oracle only once.\footnote{GDH with restriction (1) in place, namely the oracle only takes two inputs $(Y',Z)$ and checks if $Z = (Y')^x$, is sometimes called ``Strong Diffie--Hellman (SDH)'' \cite[Definition~9]{RSA:AbdBelRog01}. (Some works, e.g., \cite[Section~2]{CiC:LLMT25}, use the term ``GDH'' to refer to SDH.) Restriction (2) is redundant since a query on $(Y,K')$ is equivalent to a query on $(Y \cdot g, K' \cdot X)$. As such, this assumption could be properly named ``1SDH''.} This limited version of GDH can be reduced to CDH (on the single oracle query, the reduction to CDH returns 1 with probability 1/2 and 0 with probability 1/2; in this way the reduction has a 1/2 chance of simulating the game correctly).
   \item ANO says that $(X = g^x, Y = g^y)$ and $(X' = g^{x'}, Y = g^y)$ for another $x' \gets \mathbb{Z}_q$ are indistinguishable, which holds perfectly. (This property holds perfectly for any KEM scheme where the ciphertext does not rely on the public key.) It of course holds perfectly even if the adversary is additionally given the plaintext-checking oracle.
   \item CBIND says that given $(X = g^x, Y = g^y)$ it is infeasible to come up with $Y^* \neq Y$ such that $(Y^*)^x = X^y$, which holds statistically (such $Y^*$ does not exist unless $x = 0$, which happens with negligible probability $1/q$).
   \item UNPRE says that it is infeasible to come up with $(Y^*,K^*)$ such that $K^* = (Y^*)^x$. \textbf{This property does NOT hold for the Diffie--Hellman KEM scheme as described above}, since the adversary can simply output $(Y^* = 1, K^* = 1)$. (This is what caused us trouble in \Cref{sec:oeke-dh}.) To fix this, we have to dictate that the identity group element \emph{not} be a valid ciphertext, i.e., $\Decap(\star,1)$ must output $\bot$. Then UNPRE is a statistical property.
@@ -2629,15 +2629,15 @@ Suppose the CBIND property holds for the KEM scheme. In case (1) above, the prob
 \begin{proof}
 $P'$ makes a single $\Htag$ query, on $(pk',K')$. There are the following cases:
 \begin{itemize}
-  \item If $(\pw \neq \pw' \land (s^*,T^*) = (s,T))$, then the argument in the proof of \Cref{clm:htag3} still goes through, so $\Pr[pk = pk'] \leq (q_1+1)/|\group|$.
+  \item If $\pw \neq \pw' \land (s^*,T^*) = (s,T)$, then the argument in the proof of \Cref{clm:htag3} still goes through, so $\Pr[pk = pk'] \leq 1/|\group|$.
   \item If $c^* \neq c$, we claim that $pk = pk' \land K = K'$ happens with negligible probability. Suppose $pk = pk'$. Then we can reduce the event $K = K'$ to the CBIND property of the KEM scheme, via a reduction $\Adv_{\red_\text{CBIND}}^\text{CBIND}$ similar to that in the proof of \Cref{clm:htag2}. We have $\Pr[pk = pk' \land K = K'] \leq \Adv_{\red_\text{CBIND}}^\text{CBIND}$.
 \end{itemize}
 
 If $pk \neq pk'$ or $K \neq K'$ then of course $P'$'s query is not $\Htag(pk,K)$. Overall, we have
 \[
-\Pr[P'\text{ queries }\Htag(pk,K)] \leq \Adv_{\red_\text{CBIND}}^\text{CBIND} + \frac{q_1+1}{|\group|},
+\Pr[P'\text{ queries }\Htag(pk,K)] \leq \Adv_{\red_\text{CBIND}}^\text{CBIND} + \frac{1}{|\group|},
 \]
-which  yields the claim.
+which yields the claim.
 \end{proof}
 The remaining argument is essentially identical to that in the old Game 2.
 
@@ -2663,7 +2663,7 @@ Since $(s^*,T^*) \neq (s,T) \land c^* = c$, Game 16 finds $\adv$ or $P'$'s $\Hta
       c^* = c, \\
       K = \Decap(sk',c^*)\text{ on the }P\text{ side},
       \end{gather*}
-      and $(pk,sk)$ are an honestly generated KEM public/secret key pair (again, because there is a $\langle\pw,pk',sk'\rangle$ record), so by the correctness of the KEM scheme, the $K' \stackrel{?}{=} K$ check passes except with probability $\varepsilon_\text{correctness}$.
+      and $(pk',sk')$ are an honestly generated KEM public/secret key pair (again, because there is a $\langle\pw,pk',sk'\rangle$ record), so by the correctness of the KEM scheme, the $K' \stackrel{?}{=} K$ check passes except with probability $\varepsilon_\text{correctness}$.
   \item Set $SK := \Hkey(K) (= \Hkey(K') = SK')$.
 \end{enumerate}
 This entire process in Game 16 eventually results in setting $SK := SK'$ except with probability $\varepsilon_\text{correctness}$, which exactly matches the new game. We have
@@ -2677,17 +2677,16 @@ There are the following cases:
 \begin{itemize}
   \item If $\tau^* \neq \tau'$, then of course $P'$'s $\Htag$ query does not result in $\tau^*$ (it results in $\tau'$), so we can safely drop $P'$'s $\Htag$ query.
   \item If $\tau^* = \tau'$, but there is more than one $\langle\pw^*,pk',\star\rangle$ record, then both new Game II and new Game III abort, regardless of $\Htag$ queries by $\adv$ or $P'$. Similarly, if $\tau^* = \tau'$, but there is no $\langle\pw^*,pk',\star\rangle$ record, then both new Game II and new Game III outright set $SK := \bot$. Thus, the two games are identical.
-  \item If $(\pw')^* \neq \pw' \land \tau^* = \tau'$, then $P'$'s $\Htag(pk',K')$ query results in $\tau^*$, and we need to argue that this query can be dropped from the check.
+  \item If $\tau^* = \tau'$ and there is a unique $\langle\pw^*,pk',\star\rangle$ record, but $(\pw')^* \neq \pw' \lor \pw^* \neq \pw$, then $P'$'s $\Htag(pk',K')$ query results in $\tau^*$, and we need to argue that this query can be dropped from the check.
       \begin{itemize}
         \item If $\adv$ queries $\Htag(pk',K')$, then new Game II still finds this query, so new Game II and new Game III are identical.
-        \item If $\adv$ does not query $\Htag(pk',K')$, then new Game III sets $SK := \bot$. We argue that new Game II also sets $SK := \bot$ except with negligible probability. New Game II finds $P'$'s $\Htag(pk',K')$ query, then finds the $\langle\pw^*,pk',sk'\rangle$ record, and sets $SK := \bot$ unless $\pw^* = \pw \land \Decap(sk',c^*) = K'$. We claim that $\pw^* = \pw$ with negligible probability; in other words, suppose there is a record $\langle\pw,pk,\star\rangle$, then $pk = pk'$ with negligible probability. This is because $pk$ and $pk'$ are independent of each other by \Cref{clm:pk-ind}, so $\Pr[pk = pk'] \leq p_\text{guess}$.
+        \item If $\adv$ does not query $\Htag(pk',K')$, then new Game III sets $SK := \bot$. We argue that new Game II also sets $SK := \bot$ except with negligible probability. New Game II finds $P'$'s $\Htag(pk',K')$ query, then finds the $\langle\pw^*,pk',sk'\rangle$ record, and sets $SK := \bot$ unless $\pw^* = \pw \land \Decap(sk',c^*) = K'$. The condition of this case says $(\pw')^* \neq \pw' \lor \pw^* \neq \pw$, so we only need to upper-bound $\Pr[\pw^* = \pw]$ given $(\pw')^* \neq \pw'$. Recall that $\pw^*$ is the candidate password whose record $\langle\pw^*,pk',\star\rangle$ matches $pk'$. The record for $\pw$ is $\langle\pw,pk,\star\rangle$, so $\pw^* = \pw$ is equivalent to $pk = pk'$, whose probability is $1/|\group|$ by \Cref{clm:pk-ind}.
       \end{itemize}
-  \item If $(\pw')^* = \pw' \land \tau^* = \tau'$, there is a unique $\langle\pw^*,pk',\star\rangle$ record, but $\pw^* \neq \pw$, then again both new Game II and new Game III outright set $SK := \bot$, regardless of $\Htag$ queries by $\adv$ or $P'$. Thus, the two games are identical.
 \end{itemize}
 
 The remaining case is that $(\pw')^* = \pw' \land \tau^* = \tau'$, there is a unique $\langle\pw^*,pk',\star\rangle$ record, and $\pw^* = \pw$. The condition of the game additionally requires $(s^*,T^*) \neq (s,T) \land c^* = c$. Combined, we get ``$(s^*,T^*) \neq (s,T) \land (\pw')^* = \pw' \land (c^*,\tau^*) = (c,\tau')$, there is a unique record $\langle\pw^*,pk',\star\rangle$, and $\pw^* = \pw$''. This is exactly the condition in new Game II, in which case we do not make any change in new Game III. Overall, we conclude that
 \[
-\Dist_\env^{\text{newII},\text{newIII}} \leq p_\text{guess}.
+\Dist_\env^{\text{newII},\text{newIII}} \leq \frac{1}{|\group|}.
 \]
 
 Game 17 is essentially unchanged from the corresponding game in \Cref{sec:hash-pw-st}.
@@ -2907,7 +2906,7 @@ In more detail, let $(\Gen,\Encap,\Decap)$ be a KEM scheme as used in our descri
 \end{itemize}
 Then on the PAKE level, the OEKE scheme can use the ``raw'' KEM key as $SK$ and $\tau'$, without mentioning $\Hkey$ or $\Htag$.
 
-Outputting the ``raw'' KEM key also means that \cite{EC:JanRoyXu25} needs stronger KEM security properties than ours. The OEKE security result in \cite{EC:JanRoyXu25} requires three KEM security properties: first pseudorandomness, pseudorandom non-malleability, and collision resistance. First pseudorandomness is the same as what we call UNI-PK. Pseudorandom non-malleability roughly corresponds to IND-1CCA\$, whereas we only need OW-1PCA and ANO-1PCA. (It shouldn't be surprising that they need IND and we only need OW: they use the ``raw'' KEM key as the PAKE session key, whereas we use an RO of the KEM key --- so we only need the KEM key to be unpredictable given the KEM ciphertext.) Collision resistance is stronger than our CR, and roughly corresponds to the combination of the additional properties in \Cref{sec:kem-additional}.
+Outputting the ``raw'' KEM key also means that \cite{EC:JanRoyXu25} needs stronger KEM security properties than ours. The OEKE security result in \cite{EC:JanRoyXu25} requires three KEM security properties: first pseudorandomness, pseudorandom non-malleability, and collision resistance. First pseudorandomness is the same as what we call UNI-PK. Pseudorandom non-malleability roughly corresponds to IND-1CCA\$, whereas we only need OW-1PCA and ANO-1PCA. (It shouldn't be surprising that they need IND and we only need OW: they use the ``raw'' KEM key as the PAKE session key, whereas we use an RO of the KEM key --- so we only need the KEM key to be unpredictable given the KEM ciphertext.) Collision resistance is stronger than our CR, in that it does not require the adversary to output the KEM key (among other things).
 
 \begin{remark}
 \cite[Section~1]{EPRINT:ArrBarJar25} correctly observes that \cite{EC:JanRoyXu25} requires stronger KEM security properties, but does not specify \emph{why}. There are, in fact, two orthogonal reasons:
