@@ -40,7 +40,6 @@
 \usepackage{multirow} % merge cells in a table
 \usepackage{ocgx} % spoiler hack
 \usepackage{soul} % allow line break in underline
-\usepackage[nottoc]{tocbibind} % force the References section to appear in the table of contents; see https://tex.stackexchange.com/a/8459 and comments therein
 \usepackage{wasysym} % black circle in Table 2
 
 \newcommand{\codebox}[1]{
@@ -104,7 +103,7 @@
 \title{The Most Efficient Protocol for PAKE: \\
 \medskip
 \large{What Exact Stuff Do You Need to Hash at the End?}
-\thanks{The \texttt{.tex} code of this paper is available at \url{https://github.com/jiayux123/oeke}. \\ Some minor \LaTeX\;hacks, such as lines 18--25, 36--38, 43, 1075, 1118--1119 and 1972--1974, \\ might be useful to beginners.}
+\thanks{The \texttt{.tex} code of this paper is available at \url{https://github.com/jiayux123/oeke}. \\ Some minor \LaTeX\;hacks, such as lines 18--25, 36--38, 1074, 1117--1118, 1971--1973 and \\ 2067, might be useful to beginners.}
 }
 
 \author{Jiayu Xu\footnote{Oregon State University, \texttt{xujiay@oregonstate.edu}}}
@@ -349,7 +348,7 @@ We believe the security proof in \cite{EPRINT:ArrBarJar25} is mostly correct; in
   \item The two parties' passwords are different, and the adversary is passive; and
   \item The two parties' passwords are equal, and the adversary is passive except that it modifies the authenticator $\tau'$,
 \end{itemize}
-the proof in \cite{EPRINT:ArrBarJar25} fails to argue that changes the UC environment's views in the real world and the ideal world are indistinguishhable. We refer to Games 12 and 14 in \Cref{sec:games} for a detailed explanation.
+the proof in \cite{EPRINT:ArrBarJar25} fails to argue that the UC environment's views in the real world and the ideal world are indistinguishable. We refer to Games 12 and 14 in \Cref{sec:games} for a detailed explanation.
 
 \paragraph{Improvement \#4: more detailed presentation of the security proof.}
 Perhaps our most significant improvement over \cite{EPRINT:ArrBarJar25} lies in the presentation of the security proof. The most complicated and subtle step of the proof is the last game (our Game 17 in \Cref{sec:games}, their games $\mathsf{G}_{18}$ and $\mathsf{G}_{19}$ in Section 5); the argument in \cite{EPRINT:ArrBarJar25} has a ``reduction within reduction'', i.e., the reduction simulates the game in a manner that is indistinguishable from, but not identical to, the real game, and a second ``inner'' reduction is needed to show this indistinguishability. This complicated proof strategy makes their argument hard to follow, and is in fact unnecessary: we show how to make a cleaner argument by defining a separate, tailored KEM property, which is implied by standard properties and which we reduce to in the game.
@@ -2065,6 +2064,7 @@ This entire work is on OEKE only, and one might wonder including/excluding certa
 Finally, we mention the future direction of the greatest practical significance. The current description and security analysis of the Tempo protocol \cite[Figure~2]{TCHES:ArrBarJar26} assume the ``hash everything'' version. Given how similar the security proof for Tempo is to the proof for OEKE-2F, we speculate that the same optimization --- removing certain items from the ROs while relying on mildly stronger security properties of the underlying KEM scheme --- can be made in Tempo, which would further protect the protocol against side-channel attacks.
 
 \bibliographystyle{alpha}
+\addcontentsline{toc}{section}{References} % force the References section to appear in the table of contents; see https://lookherefirst.wordpress.com/2008/10/05/add-the-bibliography-in-the-table-of-contents or https://tex.stackexchange.com/a/86623
 \bibprolog{When we cite (say) \cite[Definition~9]{RSA:AbdBelRog01}, we always refer to the full version (if available) rather than the proceedings version.}
 \bibliography{bib.bib}
 \newpage
