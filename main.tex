@@ -218,7 +218,7 @@ OEKE & \makecell{\cite{CCS:BreChePoi03} \\ 4 hash-to-group} & \makecell{\cite{EC
 \end{table}
 
 \paragraph{What exact stuff do you need to hash at the end?}
-The above appears to be the happy ending of the whole story, and the reader might wonder why I wrote this (super long) paper at all. The reason is simple: \emph{The OEKE-2F protocols analyzed in \cite{EC:JanRoyXu25} and \cite{EPRINT:ArrBarJar25} are different!} Looking at their respective protocol descriptions (\cite[Figure~19]{EC:JanRoyXu25} and \cite[Fig.4]{EPRINT:ArrBarJar25}), one can realize that the authenticator $\tau'$ and the session key $SK$ are derived differently in these two works: in \cite{EC:JanRoyXu25} they are $\Htag(K)$ and $\Hkey(K)$, i.e., exactly as in \Cref{fig:oeke}, whereas in \cite{EPRINT:ArrBarJar25} they are $\Htag(\pw,pk,s,T,c,K)$ and $\Hkey(\pw,pk,s,T,c,K)$, i.e., the hash of the KEM key $K$ together with
+The above appears to be the happy ending of the whole story, and the reader might wonder why I wrote this (super long) paper at all. The reason is simple: \emph{The OEKE-2F protocols analyzed in \cite{EC:JanRoyXu25} and \cite{EPRINT:ArrBarJar25} are different!} Looking at their respective protocol descriptions (\cite[Figure~19]{EC:JanRoyXu25} and \cite[Fig.4]{EPRINT:ArrBarJar25}), one can realize that the authenticator $\tau'$ and the session key $SK$ are derived differently in these two works: in \cite{EC:JanRoyXu25} they are $\Htag(K)$ and $\Hkey(K)$, i.e., exactly as in \Cref{fig:oeke}, whereas in \cite{EPRINT:ArrBarJar25} they are $\Htag(\pw,pk,s,T,c,K)$ and $\Hkey(\pw,pk,s,T,c,K)$, i.e., the hashes of the KEM key $K$ together with
 \begin{itemize}
   \item The password $\pw$,
   \item The KEM public key $pk$,
@@ -237,6 +237,8 @@ paper & protocol name & items hashed & \makecell{encryption \\ mechanism} & secu
 \cite{EC:SanGuJar23} & EKE-KEM & $pk$ & half IC & UC \\
 \hline
 \cite{ACNS:BCPRR23} & OCAKE & $\pw,\phi,c$ & IC & UC \\
+\hline
+\cite{CANS:AHHRW24} & OCAKE & $\pw,pk,\phi,c$ & IC & game-based \\
 \hline
 \cite{EC:JanRoyXu25} & OEKE & & 2F & UC \\
 \hline
@@ -294,7 +296,7 @@ K := Y^x \< \< \\
 \caption{The OEKE-2F protocol with Diffie--Hellman KEM}
 \label{fig:oeke-dh}
 \end{figure}
-One does not need to understand the UC PAKE functionality --- or \emph{anything} about UC --- to see that this protocol is completely insecure. The adversary $\adv$ disregards $P'$, and sends $(Y := 1, \tau' := \Htag(1))$ to $P$; this will cause $P$'s check to pass, and $P$ will compute its session key as $\Hkey(Y^x) = \Hkey(1)$. In other words, $\adv$ can predict $P$'s session key without knowing $P$'s password --- which shouldn't be allowed by any reasonable security notion of PAKE.
+One does not need to understand the UC PAKE functionality --- or \emph{anything} about UC --- to see that this protocol is completely insecure. The adversary $\adv$ disregards $P'$, and sends $(Y = 1, \tau' = \Htag(1))$ to $P$; this will cause $P$'s check to pass, and $P$ will compute its session key as $\Hkey(Y^x) = \Hkey(1)$. In other words, $\adv$ can predict $P$'s session key without knowing $P$'s password --- which shouldn't be allowed by any reasonable security notion of PAKE.
 
 There are three ways to fix this:
 \begin{itemize}
@@ -610,7 +612,7 @@ The proof is deferred to \Cref{app:uni-ano-ro-proof}.
 \subsection{Additional KEM Properties Used in Other Versions}
 \label{sec:kem-additional}
 \paragraph{Ciphertext binding.}
-This property roughly says that given an honest tuple of $(pk,c,K)$, an adversary cannot feasibly find another valid $(pk,c^*,K)$ tuple (i.e., a new ciphertext that works for the same public key and the same KEM key). In other words, the public key/KEM key pair $(pk,K)$ binds a ciphertext. This essentially requires that the adversary cannot merely change the \emph{format} of the ciphertext without changing its actual content.
+This property roughly says that given an honest tuple of $(pk,c,K)$, an adversary cannot feasibly find another valid $(pk,c^*,K)$ tuple (i.e., a new ciphertext that works for the same public key and the same KEM key). In other words, the public key/KEM key pair $(pk,K)$ binds a ciphertext. This essentially requires that the adversary cannot re-randomize a ciphertext it sees.
 \begin{definition}
 \label{def:cbind}
 A KEM scheme is \emph{ciphertext binding (CBIND)} if for any PPT adversary $\adv$, the probability that $\adv$ wins the following game is negligible:
@@ -761,7 +763,7 @@ It is instructive to see what cryptographic assumptions the various KEM properti
 \begin{itemize}
   \item UNI-PK says that $X = g^x$ is indistinguishable from a uniformly random element of $\group$, which holds perfectly.
   \item OW says that given $(X = g^x, Y = g^y)$ it is infeasible to compute $K = g^{xy}$, which is the Computational Diffie--Hellman (CDH) assumption.
-  \item OW-1PCA says that given $(X = g^x, Y = g^y)$ and one-time access to an oracle that on input $(Y' \neq Y, K')$ checks if $(Y')^x = K'$, it is infeasible to compute $K = g^{xy}$. This is the Gap Diffie--Hellman (GDH) assumption, except that (1) when the adversary makes a DH oracle query, its first input is fixed to be $X$, (2) when the adversary makes a DH oracle query, its second input must not be equal to $Y$, and (3) the adversary can query the (restricted) DH oracle only once.\footnote{GDH with restriction (1) in place, namely the oracle only takes two inputs $(Y',Z)$ and checks if $Z = (Y')^x$, is sometimes called ``Strong Diffie--Hellman (SDH)'' \cite[Definition~9]{RSA:AbdBelRog01}. (Some works, e.g., \cite[Section~2]{CiC:LLMT25}, use the term ``GDH'' to refer to SDH.) Restriction (2) is redundant since a query on $(Y,K')$ is equivalent to a query on $(Y \cdot g, K' \cdot X)$. As such, this assumption could be properly named ``1SDH''.} This limited version of GDH can be reduced to CDH (on the single oracle query, the reduction to CDH returns 1 with probability 1/2 and 0 with probability 1/2; in this way the reduction has a 1/2 chance of simulating the game correctly).
+  \item OW-1PCA says that given $(X = g^x, Y = g^y)$ and one-time access to an oracle that on input $(Y' \neq Y, K')$ checks if $(Y')^x = K'$, it is infeasible to compute $K = g^{xy}$. This is the Gap Diffie--Hellman (GDH) assumption, except that (1) when the adversary makes a DH oracle query, its first input is fixed to be $X$, (2) when the adversary makes a DH oracle query, its second input must not be equal to $Y$, and (3) the adversary can query the (restricted) DH oracle only once.\footnote{GDH with restriction (1) in place, namely the oracle only takes two inputs $(Y',K')$ and checks if $K' = (Y')^x$, is sometimes called ``Strong Diffie--Hellman (SDH)'' \cite[Definition~9]{RSA:AbdBelRog01}. (Some works, e.g., \cite[Section~2]{CiC:LLMT25}, use the term ``GDH'' to refer to SDH.) Restriction (2) is redundant since a query on $(Y,K')$ is equivalent to a query on $(Y \cdot g, K' \cdot X)$. As such, this assumption could be properly named ``1SDH''.} This limited version of GDH can be reduced to CDH (on the single oracle query, the reduction to CDH returns 1 with probability 1/2 and 0 with probability 1/2; in this way the reduction has a 1/2 chance of simulating the game correctly).
   \item ANO says that $(X = g^x, Y = g^y)$ and $(X' = g^{x'}, Y = g^y)$ for another $x' \gets \mathbb{Z}_q$ are indistinguishable, which holds perfectly. (This property holds perfectly for any KEM scheme where the ciphertext does not rely on the public key.) It of course holds perfectly even if the adversary is additionally given the plaintext-checking oracle.
   \item CBIND says that given $(X = g^x, Y = g^y)$ it is infeasible to come up with $Y^* \neq Y$ such that $(Y^*)^x = X^y$, which holds statistically (such $Y^*$ does not exist unless $x = 0$, which happens with negligible probability $1/q$).
   \item UNPRE says that it is infeasible to come up with $(Y^*,K^*)$ such that $K^* = (Y^*)^x$. \textbf{This property does NOT hold for the Diffie--Hellman KEM scheme as described above}, since the adversary can simply output $(Y^* = 1, K^* = 1)$. (This is what caused us trouble in \Cref{sec:oeke-dh}.) To fix this, we have to dictate that the identity group element \emph{not} be a valid ciphertext, i.e., $\Decap(\star,1)$ must output $\bot$. Then UNPRE is a statistical property.
