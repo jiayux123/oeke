@@ -103,7 +103,7 @@
 \title{The Most Efficient Protocol for PAKE: \\
 \medskip
 \large{What Exact Stuff Do You Need to Hash at the End?}
-\thanks{The \texttt{.tex} code of this paper is available at \url{https://github.com/jiayux123/oeke}. \\ Some minor \LaTeX\;hacks, such as lines 18--25, 36--38, 1076, 1119--1120, 1973--1975 and \\ 2069, might be useful to beginners.}
+\thanks{The \texttt{.tex} code of this paper is available at \url{https://github.com/jiayux123/oeke}. \\ Some minor \LaTeX\;hacks, such as lines 18--25, 36--38, 1078, 1121--1122, 1975--1977 and \\ 2074, might be useful to beginners.}
 }
 
 \author{Jiayu Xu\footnote{Oregon State University, \texttt{xujiay@oregonstate.edu}}}
@@ -442,7 +442,7 @@ The information above could be overwhelming, but the general takeaway is:
 Overall, we hope that this work will help the community converge upon a ``right'' version of OEKE. Since the password $\pw$ can be removed from the hash ``for free'', we advocate removing it for better defense against side-channel attacks. Whether other items can/should be removed depends on the underlying KEM scheme; in \Cref{sec:dh-kem} we show that the Diffie--Hellman KEM scheme --- with 1 excluded from valid ciphertexts --- satisfies all properties we consider, but leave the analysis of post-quantum KEM schemes (or KEM schemes based on RSA) for future work.
 
 \subsection{How to Read This Paper}
-I certainly don't expect anyone to read through all 106 pages of this paper. (Well, perhaps the 2-page table of contents and the 3-page references shouldn't count, but even then it's still over 100 pages.) As I said right before \Cref{sec:oeke-dh}, I have organized the paper in such a way that you should gain an intermediate level of understanding of the technical details after reading \Cref{sec:intro,sec:prelim}. In particular, \Cref{sec:kem-standard,sec:kem-additional} explain why certain KEM properties are needed in certain OEKE variants.
+I certainly don't expect anyone to read through all 108 pages of this paper. (Well, perhaps the 2-page table of contents and the 3-page references shouldn't count, but even then it's still over 100 pages.) As I said right before \Cref{sec:oeke-dh}, I have organized the paper in such a way that you should gain an intermediate level of understanding of the technical details after reading \Cref{sec:intro,sec:prelim}. In particular, \Cref{sec:kem-standard,sec:kem-additional} explain why certain KEM properties are needed in certain OEKE variants.
 
 Below I discuss who should read further:
 \begin{itemize}
@@ -647,6 +647,8 @@ A KEM scheme is \emph{unpredictable (UNPRE)} if for any PPT adversary $\adv$, th
     }
 \]
 \end{definition}
+A similar property in for public-key encryption schemes, called decryption robustness, was first studied in \cite{RSA:AMORS26}.
+
 UNPRE is needed in OEKE variants where $pk$ is removed from $\Htag$ inputs. If the OEKE adversary $\adv$ can come up with $c^*,K^*$ that break the UNPRE property, then it can compute $\tau^* := \Htag(\dots, K^*)$ and send $(c^*,\tau^*)$ to $P$. This causes $P$'s check to pass, and $P$ will output $SK := \Hkey(K^*)$, which $\adv$ can compute. If $\pw$ is also removed from $\Htag$ inputs then $\adv$ can predict $P$'s session key without knowing the password, which clearly breaks the security of OEKE. (This is the attack in \Cref{sec:oeke-dh}.) If $\pw$ is included in $\Htag$ then this attack requires $\adv$ to know $\pw$, so $\adv$ is not ``actually'' breaking the security of OEKE, but at least the UC simulator cannot tell that $\adv$ is performing this attack (it cannot decide whether $\Decap(sk,c^*) = K^*$), so it is unclear how the simulator should proceed in this case. (If $pk$ is included in $\Htag$ then the attack above does not work, since $\adv$ cannot compute the correct $\tau^* = \Htag(\dots, pk, \dots)$ without knowing $pk$.)
 \begin{remark}
 \cite{EPRINT:ArrBarJar25} seems to have noticed that some form of unpredictability is needed if $pk$ is removed from $\Htag$ inputs. \cite[Section~5]{EPRINT:ArrBarJar25} says:
@@ -2065,6 +2067,9 @@ This entire work is on OEKE only, and one might wonder including/excluding certa
 \paragraph{Extension to Tempo.}
 Finally, we mention the future direction of the greatest practical significance. The current description and security analysis of the Tempo protocol \cite[Figure~2]{TCHES:ArrBarJar26} assume the ``hash everything'' version. Given how similar the security proof for Tempo is to the proof for OEKE-2F, we speculate that the same optimization --- removing certain items from the ROs while relying on mildly stronger security properties of the underlying KEM scheme --- can be made in Tempo, which would further protect the protocol against side-channel attacks.
 
+\paragraph{Acknowledgement.}
+I thank Afonso Arriaga for pointing me to \cite{RSA:AMORS26}, which in turn helped me realize an error in my proof of \Cref{lem:unpre} (see \Cref{fn:error}).
+
 \bibliographystyle{alpha}
 \addcontentsline{toc}{section}{References} % force the References section to appear in the table of contents; see https://lookherefirst.wordpress.com/2008/10/05/add-the-bibliography-in-the-table-of-contents or https://tex.stackexchange.com/a/86623
 \bibprolog{When we cite (say) \cite[Definition~9]{RSA:AbdBelRog01}, we always refer to the full version (if available) rather than the proceedings version.}
@@ -3183,17 +3188,28 @@ which is negligible. (Note that $\adv$ does not use its input $pk'$, so a weaker
 \subsection{Proof of \Cref{lem:unpre}}
 \label{app:unpre}
 \begin{proof}
-For any PPT adversary $\adv$ in the UNPRE game, we construct a reduction $\red_\text{CR}$ to the CR property of the KEM scheme. $\red_\text{CR}$ ignores its input $(pk,pk')$ and invokes $\adv$. When $\adv$ outputs $(c^*,K^*)$, $\red_\text{CR}$ also outputs $(c^*,K^*)$.
+The proof is similar to that of \cite[Theorem~2]{RSA:AMORS26}. For any PPT adversary $\adv$ in the UNPRE game, we construct a reduction $\red_\text{CR}$ to the CR property of the KEM scheme. $\red_\text{CR}$ ignores its input $(pk,pk')$ and invokes $\adv$. When $\adv$ outputs $(c^*,K^*)$, $\red_\text{CR}$ also outputs $(c^*,K^*)$.
 
 We have
 \begin{align*}
-\Pr[\Decap(sk,c^*) = K^*] &= \Adv_\adv^\text{UNPRE}, \\
-\Pr[\Decap(sk',c^*) = K^*] &= \Adv_\adv^\text{UNPRE},
+& \Adv_\adv^\text{UNPRE} = \Pr[\Decap(sk,c^*) = K^*], \\
+& \Adv_\adv^\text{UNPRE} = \Pr[\Decap(sk',c^*) = K^*], \\
+& \Adv_{\red_\text{CR}}^\text{CR} = \Pr[\Decap(sk,c^*) = K^* \land \Decap(sk',c^*) = K^*].
 \end{align*}
-and the two events are independent of each other. (They are independent because any \emph{fixed} pair of $c^*$ and $K^*$ completely determines a set $S$ of secret keys $sk^*$ such that $\Decap(sk^*,c^*) = K^*$. Therefore, $\Decap(sk,c^*) = K^*$ is equivalent to $sk \in S$, and $\Decap(sk',c^*) = K^*$ is equivalent to $sk' \in S$; since $sk$ and $sk'$ are generated independently, ``$sk \in S$'' and ``$sk' \in S$'' are independent of each other. Since the two events are independent for \emph{any} fixed pair of $c^*$ and $K^*$, they must also be independent for any random variables $c^*$ and $K^*$.) If both events happen then $\red_\text{CR}$ wins the CR game. Thus,
+For any \emph{fixed} pair of $c^*$ and $K^*$, events $\Decap(sk,c^*) = K^*$ and $\Decap(sk',c^*) = K^*$ are independent of each other: $c^*$ and $K^*$ completely determine a set $S$ of secret keys $sk^*$ such that $\Decap(sk^*,c^*) = K^*$. Therefore, $\Decap(sk,c^*) = K^*$ is equivalent to $sk \in S$, and $\Decap(sk',c^*) = K^*$ is equivalent to $sk' \in S$; since $sk$ and $sk'$ are generated independently, ``$sk \in S$'' and ``$sk' \in S$'' are independent of each other.
+
+However, $c^*$ and $K^*$ are in fact random variables dependent on $\adv$'s randomness $\rho$. Therefore, we need to sum over all fixed pairs of $c_0$ and $K_0$.\footnote{\label{fn:error}A prior version of this work said events $\Decap(sk,c^*) = K^*$ and $\Decap(sk',c^*) = K^*$ (for random variables $c^*$ and $K^*$) are independent of each other, which is incorrect. This can be said only if $\adv$ is deterministic.} We have (let $R$ be $\adv$'s randomness space)
+\begin{align*}
+& \Pr[\Decap(sk,c^*) = K^* \land \Decap(sk',c^*) = K^*] \\
+=& \sum_{c_0,K_0} \left(\Pr_{\rho \gets R}[\adv(\rho) = (c_0,K_0)] \cdot \Pr_{\substack{(\star,sk) \gets \Gen \\ (\star,sk') \gets \Gen}}[\Decap(sk,c_0) = K_0 \land \Decap(sk',c_0) = K_0]\right) \\
+=& \sum_{c_0,K_0} \left(\Pr_{\rho \gets R}[\adv(\rho) = (c_0,K_0)] \cdot \Pr_{(\star,sk) \gets \Gen}[\Decap(sk,c_0) = K_0]^2\right) \\
+\geq& \left(\sum_{c_0,K_0} \Pr_{\rho \gets R}[\adv(\rho) = (c_0,K_0)] \cdot \Pr_{(\star,sk) \gets \Gen}[\Decap(sk,c_0) = K_0]\right)^2 \\
+=& \Pr[\Decap(sk,c^*) = K^*]^2,
+\end{align*}
+so
 \[
-\Adv_\adv^\text{UNPRE} = \sqrt{\Adv_{\red_\text{CR}}^\text{CR}},
+\Adv_\adv^\text{UNPRE} \leq \sqrt{\Adv_{\red_\text{CR}}^\text{CR}},
 \]
 which is negligible.
 \end{proof}
-\end{document} 
+\end{document}
