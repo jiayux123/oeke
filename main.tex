@@ -331,7 +331,7 @@ In \Cref{sec:basic} we analyze the ``hash everything'' version of OEKE-2F, where
 Of course, the immediate question is why we analyze this protocol again. The answer is that we make multiple improvements over \cite{EPRINT:ArrBarJar25}, which we elaborate below.
 
 \paragraph{Improvement \#1: modeling explicit authentication.}
-As we have discussed, OEKE has the feature of one-side explicit authentication (1EA): the initiator can tell whether authentication succeeds or not, and output a real session key or the rejection symbol $\bot$ accordingly. This is, unfortunately, not mentioned in \cite{EPRINT:ArrBarJar25} (nor in \cite{EC:JanRoyXu25}): if authentication fails, they let the initiator output a uniformly random string as the session key instead of $\bot$. The reason is that the standard UC PAKE functionality is implicit-authentication-only, i.e., it does not allow a protocol party to output $\bot$; thus, the protocol in \cite{EPRINT:ArrBarJar25} has to do away with 1EA in order to fit the UC PAKE functionality.
+As we have discussed, OEKE has the feature of one-side explicit authentication (1EA): the initiator can tell whether authentication succeeds or not, and output a real session key or the rejection symbol $\bot$ accordingly. This is, unfortunately, not modeled in \cite{EPRINT:ArrBarJar25} (nor in \cite{EC:JanRoyXu25}): if authentication fails, they let the initiator output a uniformly random string as the session key instead of $\bot$. The reason is that the standard UC PAKE functionality is implicit-authentication-only, i.e., it does not allow a protocol party to output $\bot$; thus, the protocol in \cite{EPRINT:ArrBarJar25} has to do away with 1EA in order to fit the UC PAKE functionality.
 
 In this work, we propose a UC functionality for PAKE-1EA, and show that the original OEKE-2F protocol --- where the initiator outputs a real session key or $\bot$ --- realizes it. In this way, we prove for the first time in the literature that (any variant of) OEKE satisfies the 1EA property.\footnote{\cite{ACNS:BCPRR23} also gives a PAKE-1EA functionality, but their functionality is problematic and cannot be realized by OEKE (see \Cref{rem:ocake} below).} Our PAKE-1EA functionality only involves a minor modification to the standard PAKE functionality.
 
@@ -647,7 +647,7 @@ A KEM scheme is \emph{unpredictable (UNPRE)} if for any PPT adversary $\adv$, th
     }
 \]
 \end{definition}
-A similar property in for public-key encryption schemes, called decryption robustness, was first studied in \cite{RSA:AMORS26}.
+A similar property for public-key encryption schemes, called decryption robustness, was first studied in \cite{RSA:AMORS26}.
 
 UNPRE is needed in OEKE variants where $pk$ is removed from $\Htag$ inputs. If the OEKE adversary $\adv$ can come up with $c^*,K^*$ that break the UNPRE property, then it can compute $\tau^* := \Htag(\dots, K^*)$ and send $(c^*,\tau^*)$ to $P$. This causes $P$'s check to pass, and $P$ will output $SK := \Hkey(K^*)$, which $\adv$ can compute. If $\pw$ is also removed from $\Htag$ inputs then $\adv$ can predict $P$'s session key without knowing the password, which clearly breaks the security of OEKE. (This is the attack in \Cref{sec:oeke-dh}.) If $\pw$ is included in $\Htag$ then this attack requires $\adv$ to know $\pw$, so $\adv$ is not ``actually'' breaking the security of OEKE, but at least the UC simulator cannot tell that $\adv$ is performing this attack (it cannot decide whether $\Decap(sk,c^*) = K^*$), so it is unclear how the simulator should proceed in this case. (If $pk$ is included in $\Htag$ then the attack above does not work, since $\adv$ cannot compute the correct $\tau^* = \Htag(\dots, pk, \dots)$ without knowing $pk$.)
 \begin{remark}
@@ -655,7 +655,7 @@ UNPRE is needed in OEKE variants where $pk$ is removed from $\Htag$ inputs. If t
 \begin{displayquote}
   \emph{We note that, although it is tempting to remove $pk$ from the $\Htag$ input by arguing that $(\pw,[(s,T)])$ fix a single $pk$ following the IC intuition. However [sic], this gives rise to cases in the proof where the adversary may try to break the protocol by delivering ciphertexts that are valid for all public keys. It is likely that these cases can be excluded by assuming additional properties on the KEM, but we choose not to do so.}
 \end{displayquote}
-It appears to us that ``delivering ciphertexts that are valid for all public keys'' should be ``finding a ciphertext/KEM key pair that is valid for all public keys, and delivering the ciphertext''. That is, if one can find a ``special'' pair of $c^*$ and $K^*$ such that $\Decap(sk,c^*) = K^*$ for any valid secret key $sk$, then the UNPRE property trivially breaks down, and the OEKE adversary can run the aforementioned attack.
+It appears to us that ``delivering ciphertexts that are valid for all public keys'' should be ``finding a ciphertext/KEM key pair that is valid for all public keys, and delivering the ciphertext''. That is, if one can find a ``special'' pair of $c^*$ and $K^*$ such that $\Decap(sk,c^*) = K^*$ for every valid secret key $sk$, then the UNPRE property trivially breaks down, and the OEKE adversary can run the aforementioned attack.
 \end{remark}
 
 \paragraph{Key binding.}
@@ -1084,7 +1084,7 @@ K := \Decap(sk,c^*) \< \< \< \< \\
 \end{itemize}
 By correctness of the KEM scheme (cf. \Cref{sec:protocol-uc}), in Game 0 $K = K'$, and thus $\tau = \tau'$, except with probability $\varepsilon_\text{correctness}$. This means that except with probability $\varepsilon_\text{correctness}$, $P$'s check $\tau^* \stackrel{?}{=} \tau$ in Game 0 is equivalent to $P$'s check $\tau^* \stackrel{?}{=} \tau'$ in Game 1. If the check passes then both games set $SK := \Hkey(K)$, otherwise both games set $SK := \bot$. We have
 \[
-\Dist_\env^{0,1} = \varepsilon_\text{correctness}.
+\Dist_\env^{0,1} \leq \varepsilon_\text{correctness}.
 \]
 
 \emph{{\color{red}This game corresponds to games $\mathsf{G}_3$--$\mathsf{G}_5$ in \cite{EPRINT:ArrBarJar25}. We believe having a single game that handles both the $\tau^* = \tau'$ case and the $\tau^* \neq \tau'$ case is much cleaner.}}
@@ -1803,7 +1803,7 @@ If $\adv$ sends $c^*$ such that $\Decap(sk,c^*) = K'$, then $\red_\text{CBIND}$ 
 
 If $\Decap(sk,c) \neq K'$, i.e., $K \neq K'$, then of course $P'$'s query is not $\Htag(\pw,pk,\allowbreak s,T,K)$. This yields the claim.
 \end{proof}
-We conclude that the ``hash $pw$, $pk$ and $(s,T)$'' version is secure under the CBIND property of the KEM scheme (in addition to UNI-PK, OW-1PCA and ANO-1PCA that are already needed in the ``hash everything'' version).
+We conclude that the ``hash $\pw$, $pk$ and $(s,T)$'' version is secure under the CBIND property of the KEM scheme (in addition to UNI-PK, OW-1PCA and ANO-1PCA that are already needed in the ``hash everything'' version).
 
 \subsection{The ``Hash $\pw$ and $(s,T)$'' Version}
 \label{sec:hash-pw-st}
@@ -2143,7 +2143,7 @@ Looking ahead, all subsequent ``attacks'' follow a similar pattern:
   \item In the first protocol message, $\adv$ decrypts $(s,T)$ and re-encrypts to some other $(s^*,T^*)$, and
   \item In the second protocol message, $\adv$ forwards $\tau'$ (but may or may not modify $c$).
 \end{itemize}
-If we include $(s,T)$ in $\Htag$ inputs, this will immediately result in $P$ rejecting, since $P$'s check will fail. However, without $(s,T)$ in the hash, we have to take this scenario into account. The difference from what's in this section is that if we additionally remove $\pw$ and/or $pk$ from the hash, then $\adv$ can re-encrypt $pk^*$ under $\pw'$, where $\pw'$ is equal or not equal to $pw$, and $pk^*$ is equal or not equal to $pk$. Hence, \Cref{fig:attack-no-st} is a special case of all subsequent ``attacks''.
+If we include $(s,T)$ in $\Htag$ inputs, this will immediately result in $P$ rejecting, since $P$'s check will fail. However, without $(s,T)$ in the hash, we have to take this scenario into account. The difference from what's in this section is that if we additionally remove $\pw$ and/or $pk$ from the hash, then $\adv$ can re-encrypt $pk^*$ under $\pw'$, where $\pw'$ is equal or not equal to $\pw$, and $pk^*$ is equal or not equal to $pk$. Hence, \Cref{fig:attack-no-st} is a special case of all subsequent ``attacks''.
 \end{remark}
 
 We show the new simulator in \Cref{fig:oeke-sim-hash-pw-pk}. (Only the steps after receiving $(c^*,\tau^*)$ are included.)
@@ -3198,7 +3198,7 @@ We have
 \end{align*}
 For any \emph{fixed} pair of $c^*$ and $K^*$, events $\Decap(sk,c^*) = K^*$ and $\Decap(sk',c^*) = K^*$ are independent of each other: $c^*$ and $K^*$ completely determine a set $S$ of secret keys $sk^*$ such that $\Decap(sk^*,c^*) = K^*$. Therefore, $\Decap(sk,c^*) = K^*$ is equivalent to $sk \in S$, and $\Decap(sk',c^*) = K^*$ is equivalent to $sk' \in S$; since $sk$ and $sk'$ are generated independently, ``$sk \in S$'' and ``$sk' \in S$'' are independent of each other.
 
-However, $c^*$ and $K^*$ are in fact random variables dependent on $\adv$'s randomness $\rho$. Therefore, we need to sum over all fixed pairs of $c_0$ and $K_0$.\footnote{\label{fn:error}A prior version of this work said events $\Decap(sk,c^*) = K^*$ and $\Decap(sk',c^*) = K^*$ (for random variables $c^*$ and $K^*$) are independent of each other, which is incorrect. This can be said only if $\adv$ is deterministic.} We have (let $R$ be $\adv$'s randomness space)
+However, $c^*$ and $K^*$ are in fact random variables dependent on $\adv$'s randomness $\rho$. Therefore, we need to sum over all fixed pairs of $c_0$ and $K_0$.\footnote{\label{fn:error}A prior version of this work said events $\Decap(sk,c^*) = K^*$ and $\Decap(sk',c^*) = K^*$ (for random variables $c^*$ and $K^*$) are independent of each other, which is incorrect. This can be said only if $\adv$ is deterministic. A similar error appears in \cite[Section~5.3,~Hybrid~2]{EC:JanRoyXu25} (``These are just $q$ independent events'').} We have (let $R$ be $\adv$'s randomness space)
 \begin{align*}
 & \Pr[\Decap(sk,c^*) = K^* \land \Decap(sk',c^*) = K^*] \\
 =& \sum_{c_0,K_0} \left(\Pr_{\rho \gets R}[\adv(\rho) = (c_0,K_0)] \cdot \Pr_{\substack{(\star,sk) \gets \Gen \\ (\star,sk') \gets \Gen}}[\Decap(sk,c_0) = K_0 \land \Decap(sk',c_0) = K_0]\right) \\
@@ -3212,4 +3212,4 @@ so
 \]
 which is negligible.
 \end{proof}
-\end{document}
+\end{document} 
